@@ -1,0 +1,223 @@
+import { SEOFragment, SEOType } from "@/shared/graphql";
+import { gql } from "@apollo/client";
+
+export const GET_SAMPLE_ESSAYS = gql`
+  query GET_SAMPLE_ESSAYS($skill: ID = "speaking", $orderby: [PostObjectsConnectionOrderbyInput] = [{field: DATE, order: DESC}], $quarter: String, $questionType: String, $search: String, $year: String, $offsetPagination: OffsetPagination = {offset: 0, size: 10}, $sampleSource: String, $topic: String, $part: String, $passage: String, $task: String) {
+    sampleEssayType(id: $skill, idType: SLUG) {
+      sampleEssays(
+        where: {
+         orderby: $orderby, year: $year, search: $search, quarter: $quarter, questionType: $questionType, offsetPagination: $offsetPagination, sampleSource: $sampleSource, topic: $topic, part: $part, passage: $passage, task: $task
+        }
+      ) {
+        edges {
+          node {
+            id
+            slug
+            title
+            date
+            featuredImage {
+              node {
+                sourceUrl(size: LARGE)
+                altText
+              }
+            }
+            sampleEssayFields {
+              quarter
+            }
+            speakingSampleEssayFields {
+              part
+              questionType
+            }
+            writingSampleEssayFields {
+              topic
+              task
+            }
+            postMeta {
+              views
+              proUserOnly
+            }
+            hasAccess
+          }
+        }
+        pageInfo {
+          offsetPagination {
+            total
+            hasMore
+            hasPrevious
+          }
+        }
+      }
+      ${SEOFragment}
+    }
+  }
+`;
+
+export type GET_SAMPLE_ESSAY_VARIABLES = {
+  skill?: "speaking" | "writing" | "reading" | "listening";
+  orderby?: {
+    field: string;
+    order: string;
+  }[];
+  quarter?: string;
+  questionType?: string;
+  search?: string;
+  year?: string;
+  offsetPagination?: {
+    offset: number;
+    size: number;
+  };
+};
+
+export type SampleEssay = {
+  id: string;
+  slug: string;
+  title: string;
+  date: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText: string;
+    };
+  };
+  sampleEssayFields: {
+    quarter: [string, string];
+  };
+  speakingSampleEssayFields: {
+    part: [string, string];
+    questionType: [string, string];
+  };
+  writingSampleEssayFields: {
+    topic: [string, string];
+    task: [string, string];
+  };
+  hasAccess: boolean;
+  postMeta: {
+    views: number;
+    proUserOnly: boolean;
+  };
+};
+
+export type SampleEssayResponse = {
+  sampleEssayType: {
+    sampleEssays: {
+      edges: {
+        node: SampleEssay;
+      }[];
+      pageInfo: {
+        offsetPagination: {
+          total: number;
+          hasMore: boolean;
+          hasPrevious: boolean;
+        };
+      };
+    };
+    seo: SEOType;
+  };
+};
+
+export const GET_FILTER_DATA = gql`
+  query GET_FILTER_DATA {
+    sampleSources(first: 100) {
+      nodes {
+        name
+        slug
+      }
+    }
+    annualPeriods(first: 100) {
+      nodes {
+        name
+        slug
+      }
+    }
+  }
+`;
+
+export type GET_FILTER_DATA_RESPONSE = {
+  sampleSources: {
+    nodes: {
+      name: string;
+      slug: string;
+    }[];
+  };
+  annualPeriods: {
+    nodes: {
+      name: string;
+      slug: string;
+    }[];
+  };
+};
+
+export const GET_SAMPLE_ESSAY_BY_SLUG = gql`
+  query GET_SAMPLE_ESSAY_BY_SLUG($id: ID!) {
+    sampleEssay(id: $id) {
+      id
+      slug
+      title
+      date
+      featuredImage {
+        node {
+          sourceUrl(size: LARGE)
+          altText
+        }
+      }
+      sampleEssayFields {
+        quarter
+      }
+      speakingSampleEssayFields {
+        part
+        questionType
+      }
+      writingSampleEssayFields {
+        topic
+        task
+      }
+      postMeta {
+        views
+        proUserOnly
+      }
+      content
+      content
+      hasAccess
+      ${SEOFragment}
+    }
+  }
+`;
+
+export type SingleSampleEssay = {
+  id: string;
+  slug: string;
+  title: string;
+  date: string;
+  featuredImage?: {
+    node: {
+      sourceUrl: string;
+      altText: string;
+    };
+  };
+  sampleEssayFields: {
+    quarter: [string, string];
+  };
+  speakingSampleEssayFields: {
+    part: [string, string];
+    questionType: string[];
+  };
+  writingSampleEssayFields: {
+    topic: string[];
+    task: [string, string];
+  };
+  postMeta: {
+    views: number;
+    proUserOnly: boolean;
+  };
+  content: string;
+  seo: SEOType;
+  hasAccess: boolean;
+};
+
+export type GET_SAMPLE_ESSAY_BY_SLUG_VARIABLES = {
+  id: string;
+};
+
+export type GET_SAMPLE_ESSAY_BY_SLUG_RESPONSE = {
+  sampleEssay: SingleSampleEssay;
+};
