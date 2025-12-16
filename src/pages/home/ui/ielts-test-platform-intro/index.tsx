@@ -8,68 +8,133 @@ const TEST_NAVIGATIONS = [
     name: "FULL TEST",
     href: ROUTES.EXAM.ARCHIVE,
     icon: "/full_test.jpg",
+    count: 25,
   },
   {
     name: "LISTENING",
     href: ROUTES.PRACTICE.ARCHIVE_LISTENING,
     icon: "/listening.jpg",
+    count: 30,
   },
   {
     name: "READING",
     href: ROUTES.PRACTICE.ARCHIVE_READING,
     icon: "/reading.jpg",
+    count: 20,
   },
   {
     name: "SAMPLE WRITING",
     href: ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING,
     icon: "/writing.jpg",
+    count: 15,
   },
   {
     name: "SAMPLE SPEAKING",
     href: ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING,
     icon: "/speaking.jpg",
+    count: 15,
   },
 ];
 
 export const IeltsTestPlatformIntro = () => {
   return (
-    <div className="py-12 md:py-16 bg-gradient-to-b from-secondary-300 text-center">
-      <Container className="space-y-12">
-        <div className="space-y-1">
-          <h1 className="uppercase text-3xl md:text-5xl font-bold text-quaternary-600">
-            NỀN TẢNG LUYỆN <br className="sm:hidden" /> THI IELTS TRÊN MÁY
-          </h1>
-          <h2 className="text-lg md:text-2xl font-semibold italic">
-            Thi thử như thật, chinh phục band điểm với kho đề sát thực tế nhất
+    <div className="relative py-16 md:py-20 overflow-hidden">
+      {/* Gradient Shape Background - Half top with color, half bottom white */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-white"></div>
+
+        {/* Gradient Shape Decorative */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: "254px",
+            height: "254px",
+            right: "26%",
+            top: "294px",
+            background: "linear-gradient(180deg, #FB64AD 0%, #C586EE 100%)",
+            filter: "blur(200px)",
+            transform: "rotate(-45deg)",
+          }}
+        ></div>
+      </div>
+
+      <Container className="relative z-10">
+        <div className="text-center space-y-6 mb-12">
+          {/* Categories Button */}
+          <div className="flex justify-center">
+            <span
+              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white uppercase"
+              style={{
+                backgroundColor: "rgba(217, 74, 86, 0.15)",
+                color: "#d94a56",
+              }}
+            >
+              CATEGORIES
+            </span>
+          </div>
+
+          {/* Main Heading */}
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight block">
+            <div style={{ color: "#374151" }}>
+              Explore Top Courses Caterories
+            </div>
+            <div>
+              <span style={{ color: "#374151" }}>That </span>
+              <span style={{ color: "#2563eb" }}>Change </span>
+              <span
+                className="bg-clip-text text-transparent inline-block"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                Yourself
+              </span>
+            </div>
           </h2>
         </div>
-        <div className="sm:w-9/12 md:w-7/12 mx-auto relative">
-          <Image
-            src="/intro-mascot.png"
-            alt="mascot"
-            height={300}
-            width={300}
-            priority
-            className="object-contain absolute -translate-x-full -left-6 top-1/2 -translate-y-1/2"
-          />
-          <div className="flex flex-wrap -m-2 md:-m-4 justify-center">
-            {TEST_NAVIGATIONS.map((item, index) => (
-              <div className="p-2 md:p-4 w-1/2 sm:w-1/3" key={index}>
-                <Link
-                  href={item.href}
-                  className={`aspect-square relative p-4 space-y-2 bg-gradient-to-r bg-[length:200%] overflow-hidden bg-left hover:bg-right duration-300 ease-in-out rounded-2xl flex flex-col justify-center items-center`}
-                >
-                  <Image
-                    src={item.icon}
-                    alt={item.name}
-                    fill
-                    sizes="100%"
-                    className="object-contain"
-                  />
-                </Link>
+
+        {/* Category Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+          {TEST_NAVIGATIONS.map((item, index) => (
+            <Link
+              key={index}
+              href={item.href}
+              className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 text-center hover:-translate-y-1"
+            >
+              <div className="space-y-4">
+                {/* Icon */}
+                <div className="flex justify-center">
+                  <div className="relative w-20 h-20">
+                    <Image
+                      src={item.icon}
+                      alt={item.name}
+                      fill
+                      sizes="80px"
+                      className="object-contain rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h5 className="font-semibold text-lg text-gray-900">
+                  {item.name}
+                </h5>
+
+                {/* Course Count Link */}
+                <div className="flex items-center justify-center gap-1 text-gray-600 group-hover:text-[#d94a56] transition-colors">
+                  <span className="text-sm font-medium">
+                    {item.count} Courses
+                  </span>
+                  <span className="material-symbols-rounded text-base">
+                    arrow_forward
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
+            </Link>
+          ))}
         </div>
       </Container>
     </div>

@@ -1,5 +1,8 @@
 import { Container } from "@/shared/ui";
 import { IeltsTestPlatformIntro } from "./ielts-test-platform-intro";
+import { HeroBanner } from "./hero-banner";
+import { WhyChooseUs } from "./why-choose-us";
+import { Testimonials } from "./testimonials";
 import { PracticeTest, SampleEssaysSlider } from "@/widgets/blocks";
 import { useAuth } from "@/appx/providers";
 import { PracticeHistory, TargetScore } from "@/widgets";
@@ -9,6 +12,7 @@ export const PageHome = () => {
   const { isSignedIn } = useAuth();
   return (
     <>
+      <HeroBanner />
       <IeltsTestPlatformIntro />
       <div className="py-16">
         <Container className="space-y-16">
@@ -47,6 +51,8 @@ export const PageHome = () => {
           />
         </Container>
       </div>
+      <WhyChooseUs />
+      <Testimonials />
     </>
   );
 };

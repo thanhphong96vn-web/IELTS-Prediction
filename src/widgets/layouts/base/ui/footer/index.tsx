@@ -2,104 +2,318 @@ import Link from "next/link";
 import { Container } from "@/shared/ui";
 import { FacebookRoundedIcon, ZaloIcon } from "@/shared/ui/icons";
 import { useAppContext } from "@/appx/providers";
-import { useMemo } from "react";
+import { Button, Input } from "antd";
+import { ROUTES } from "@/shared/routes";
 import Image from "next/image";
+import { useState } from "react";
 
 export const Footer = () => {
   const {
     masterData: {
       websiteOptions: {
         websiteOptionsFields: {
-          generalSettings: { facebook, email, zalo },
+          generalSettings: {
+            facebook,
+            email,
+            phoneNumber,
+            logo,
+            zalo,
+            buyProLink,
+          },
         },
       },
+      allSettings: { generalSettingsTitle },
     },
   } = useAppContext();
 
-  const socials = useMemo(
-    () => [
-      {
-        icon: <ZaloIcon className="h-6 w-6" />,
-        url: zalo,
-        name: "Zalo OA",
-      },
-      {
-        icon: <FacebookRoundedIcon className="h-6 w-6" />,
-        url: facebook,
-        name: "Facebook",
-      },
-      {
-        icon: (
-          <Image
-            src="/mail.webp"
-            alt="mail"
-            width={24}
-            height={24}
-            unoptimized
-          />
-        ),
-        url: email,
-        name: "Mail",
-      },
-    ],
-    [zalo, facebook, email]
-  );
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+
+  const socialLinks = [
+    {
+      icon: <FacebookRoundedIcon className="w-6 h-6" />,
+      url: facebook,
+      name: "Facebook",
+    },
+    {
+      icon: <ZaloIcon className="w-6 h-6" />,
+      url: zalo,
+      name: "Zalo",
+    },
+    {
+      icon: (
+        <Image src="/mail.webp" alt="mail" width={24} height={24} unoptimized />
+      ),
+      url: email ? `mailto:${email}` : null,
+      name: "Mail",
+    },
+  ].filter((item) => Boolean(item.url));
+
+  // Chỉ dùng những route thực sự tồn tại trong dự án
+  const usefulLinks = [
+    { label: "Home", href: ROUTES.HOME },
+    { label: "IELTS Exam Library", href: ROUTES.EXAM.ARCHIVE },
+    {
+      label: "Practice - Listening",
+      href: ROUTES.PRACTICE.ARCHIVE_LISTENING,
+    },
+    {
+      label: "Practice - Reading",
+      href: ROUTES.PRACTICE.ARCHIVE_READING,
+    },
+    { label: "Sample Essays", href: "/sample-essay" },
+    { label: "Blog", href: "/post-archive" },
+  ];
+
+  const companyLinks = [
+    { label: "Contact Us", href: "/contact" },
+    { label: "My Dashboard", href: ROUTES.ACCOUNT.DASHBOARD },
+    { label: "My Profile", href: ROUTES.ACCOUNT.MY_PROFILE },
+    { label: "Payment History", href: ROUTES.ACCOUNT.PAYMENT_HISTORY },
+  ];
+
+  const legalLinks = [
+    { label: "Terms of service", href: "/terms-of-use" },
+    { label: "Privacy policy", href: "/privacy-policy" },
+    { label: "Login & Register", href: ROUTES.LOGIN() },
+  ];
+
+  const handleNewsletterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle newsletter subscription
+    console.log("Newsletter email:", newsletterEmail);
+    setNewsletterEmail("");
+  };
 
   return (
-    <footer className="bg-primary text-white text-base">
-      <Container className="py-10">
-        <div className="space-y-4">
-          <h3 className="font-bold text-xl">About us</h3>
-          <p className="font-nunito">
-            IELTS Prediction Test (IPT) specializes in providing highly
-            accuratte test simulations and forecast sets that closely reflect
-            the real IELTS exam. With years of experience, we offer trsted
-            predictions specifically for the paper-based IELTS in Southeast
-            Asia. Our answer keys are carefully craftedsure exceptional
-            accuracy. For further information, please contact us at{" "}
-            <Link
-              className="underline underline-offset-2"
-              href="mailto:ieltsprediction9@gmail.com"
-            >
-              ieltsprediction9@gmail.com
-            </Link>
-            .
-          </p>
-          <div>
-            <ul className="space-y-2 -m-1">
-              {socials.map((item) => (
-                <li
-                  className="flex flex-wrap items-center space-x-2 p-1 gap-y-1"
-                  key={item.url}
+    <footer className="bg-gray-100">
+      {/* CTA Banner Section */}
+      <div className="relative bg-gray-50 py-12 overflow-hidden">
+        <Container>
+          <div className="relative bg-white rounded-xl shadow-lg p-6 md:p-8 md:py-14 flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Left Side - Text Content */}
+            <div className="flex-1">
+              <h2
+                className="text-2xl md:text-3xl font-bold mb-2"
+                style={{ color: "#991b1b" }}
+              >
+                Ready to start creating a standard website?
+              </h2>
+              <p className="text-gray-600 text-base">
+                Finest choice for your home & office
+              </p>
+            </div>
+
+            {/* Right Side - Button */}
+            <div>
+              {buyProLink ? (
+                <Link href={buyProLink}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    className="rounded-lg px-8 h-12 text-base font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                    style={{
+                      background: "#d94a56",
+                      borderColor: "#d94a56",
+                    }}
+                  >
+                    Purchase Histudy
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  type="primary"
+                  size="large"
+                  className="rounded-lg px-8 h-12 text-base font-medium"
+                  style={{
+                    background: "#d94a56",
+                    borderColor: "#d94a56",
+                  }}
+                  disabled
                 >
-                  <div className="w-32 flex items-center space-x-4">
-                    {item.icon}
-                    <p className="font-semibold font-nunito">{item.name}</p>
+                  Purchase {generalSettingsTitle || "Histudy"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </Container>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className="bg-white">
+        <Container className="py-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Left Section - Branding and Social */}
+            <div className="space-y-6">
+              {/* Logo */}
+              <Link href={ROUTES.HOME} className="block">
+                {logo?.node?.sourceUrl ? (
+                  <div className="relative w-32 h-12">
+                    <Image
+                      src={logo.node.sourceUrl}
+                      alt={generalSettingsTitle || "Logo"}
+                      fill
+                      className="object-contain"
+                      sizes="128px"
+                    />
                   </div>
-                  <div className="flex-1">
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 bg-[#d94a56] rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {generalSettingsTitle?.charAt(0) || "L"}
+                      </span>
+                    </div>
+                    <span className="text-[#d94a56] font-bold text-xl">
+                      {generalSettingsTitle || "Logo"}
+                    </span>
+                  </div>
+                )}
+              </Link>
+
+              {/* Tagline */}
+              <p className="text-gray-700 text-sm leading-relaxed">
+                IELTS Prediction Test (IPT) specializes in providing highly
+                accuratte test simulations and forecast sets that closely
+                reflect the real IELTS exam.
+              </p>
+
+              {/* Social Media Icons */}
+              <div className="flex gap-3">
+                {socialLinks.map((social, index) => (
+                  <Link
+                    key={index}
+                    href={social.url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                    title={social.name}
+                  >
+                    {social.icon}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Contact Button */}
+              <Link href="/contact">
+                <Button
+                  className="border-2 text-gray-700 rounded-lg h-10 px-4 hover:bg-[#d94a56] hover:text-white hover:border-[#d94a56] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  style={{
+                    borderColor: "#d94a56",
+                  }}
+                >
+                  Contact With Us{" "}
+                  <span className="ml-2 material-symbols-rounded text-sm">
+                    arrow_forward
+                  </span>
+                </Button>
+              </Link>
+            </div>
+
+            {/* Middle Section - Useful Links */}
+            <div>
+              <h3 className="font-bold text-gray-800 mb-4">Useful Links</h3>
+              <ul className="space-y-3">
+                {usefulLinks.map((link, index) => (
+                  <li key={index}>
                     <Link
-                      className="underline underline-offset-2"
-                      rel="noopener noreferrer nofollow"
-                      href={item.url}
-                      target="_blank"
-                      title={item.name}
+                      href={link.href}
+                      className="text-gray-700 hover:text-[#d94a56] transition-colors text-sm"
                     >
-                      {item.url}
+                      {link.label}
                     </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Middle Section - Our Company */}
+            <div>
+              <h3 className="font-bold text-gray-800 mb-4">Our Company</h3>
+              <ul className="space-y-3">
+                {companyLinks.map((link, index) => (
+                  <li key={index}>
+                    <Link
+                      href={link.href}
+                      className="text-gray-700 hover:text-[#d94a56] transition-colors text-sm"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right Section - Get Contact & Newsletter */}
+            <div className="space-y-6">
+              {/* Get Contact */}
+              <div>
+                <h3 className="font-bold text-gray-800 mb-4">Get Contact</h3>
+                <ul className="space-y-3 text-sm text-gray-700">
+                  <li>Phone: {phoneNumber || "(406) 555-0120"}</li>
+                  <li>
+                    E-mail:{" "}
+                    <Link
+                      href={`mailto:${email}`}
+                      className="hover:text-[#d94a56] transition-colors"
+                    >
+                      {email || "admin@example.com"}
+                    </Link>
+                  </li>
+                  <li>Address: 15205 North Kierland Blvd.</li>
+                </ul>
+              </div>
+
+              {/* Newsletter */}
+              <div>
+                <h3 className="font-bold text-gray-800 mb-4">Newsletter</h3>
+                <form onSubmit={handleNewsletterSubmit} className="space-y-3">
+                  <Input
+                    placeholder="Enter Your E-Email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    className="border-gray-300"
+                  />
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    className="w-full rounded-lg border-none h-10 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                    style={{
+                      background: "#d94a56",
+                    }}
+                  >
+                    Subscribe
+                  </Button>
+                </form>
+              </div>
+            </div>
           </div>
-          <div className="text-xs space-y-3">
+        </Container>
+      </div>
+
+      {/* Bottom Section - Copyright and Legal Links */}
+      <div className="border-t border-gray-200">
+        <Container className="py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
             <p>
-              © 2025 IELTS Prediction Test (IPT). All rights reserved. IELTS
-              Prediction Test (IPT) is a registered trademark of IELTS
-              Prediction Test (IPT).
+              Copyright © 2025 {generalSettingsTitle || "Rainbow-Themes"}. All
+              Rights Reserved
             </p>
+            <div className="flex flex-wrap items-center gap-2">
+              {legalLinks.map((link, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  {index > 0 && <span className="text-gray-400">|</span>}
+                  <Link
+                    href={link.href}
+                    className="hover:text-gray-700 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </Container>
+        </Container>
+      </div>
     </footer>
   );
 };

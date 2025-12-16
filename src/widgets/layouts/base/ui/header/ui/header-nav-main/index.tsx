@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ConfigProvider, Dropdown } from "antd";
 import { createStyles } from "antd-style";
 import { ROUTES } from "@/shared/routes";
@@ -7,49 +7,44 @@ import { MasterData, useAppContext } from "@/appx/providers";
 
 const useStyle = createStyles(({ css }) => ({
   headerNavMenu: css`
-    &::after {
-      content: "";
-      position: absolute;
-      display: inline-block;
-      width: 100%;
-      height: 100%;
-      left: 0;
-      top: 0;
-      background: linear-gradient(
-        to bottom,
-        color-mix(in oklab, var(--color-primary) 50%, transparent),
-        var(--color-primary-500)
-      );
-      backdrop-filter: blur(15px);
-      z-index: -1;
-    }
-
     .ant-dropdown-menu,
     &.ant-dropdown-menu {
-      border-radius: 0;
-      box-shadow: -14px 9px 36px -14px var(--color-primary-200);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       z-index: 1;
-      background-color: transparent;
-      padding: 0;
+      background-color: white;
+      padding: 8px 0;
+      min-width: 200px;
+      border: 1px solid #e5e7eb;
 
-      .ant-dropdown-menu-item,
+      .ant-dropdown-menu-item {
+        color: #374151 !important;
+        font-weight: 400;
+        padding: 10px 16px;
+        line-height: 1.5;
+        border-radius: 0;
+        transition: all 0.2s;
+
+        &:hover {
+          background-color: #f3f4f6 !important;
+          color: #2563eb !important;
+        }
+      }
+
       .ant-dropdown-menu-submenu-title,
       .ant-dropdown-menu-submenu-expand-icon
-        .ant-dropdown-menu-submenu-arrow-icon,
-      .ant-dropdown-menu-submenu-expand-icon
         .ant-dropdown-menu-submenu-arrow-icon {
-        color: #f1ebeb !important;
-        font-weight: 600;
-        line-height: 50px;
-        padding-top: 0;
-        padding-bottom: 0;
+        color: #374151 !important;
+        font-weight: 400;
+        padding: 10px 16px;
+        line-height: 1.5;
         border-radius: 0;
       }
     }
 
-    .ant-dropdown-menu-item-active,
-    .ant-dropdown-menu-submenu-active {
-      background-color: var(--color-primary-500) !important;
+    .ant-dropdown-menu-item-active {
+      background-color: #f3f4f6 !important;
+      color: #2563eb !important;
     }
   `,
 }));
@@ -77,29 +72,15 @@ function createModifiedMenuData(
 export const HeaderNavMain = () => {
   const { styles } = useStyle();
   const { masterData } = useAppContext();
+  const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>(
+    {}
+  );
 
   const menuDataMapped = useMemo(() => {
     if (!masterData?.menuData["main-menu"]) return [];
     const menuData = masterData.menuData;
 
     return [
-      {
-        label: (
-          <span className="text-[32px]">
-            <svg
-              width="1em"
-              height="1em"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 1664 1896.0833"
-              fill="currentColor"
-            >
-              <path d="M1408 992v480q0 26-19 45t-45 19H960v-384H704v384H320q-26 0-45-19t-19-45V992q0-1 .5-3t.5-3l575-474 575 474q1 2 1 6zm223-69l-62 74q-8 9-21 11h-3q-13 0-21-7L832 424l-692 577q-12 8-24 7-13-2-21-11l-62-74q-8-10-7-23.5T37 878l719-599q32-26 76-26t76 26l244 204V288q0-14 9-23t23-9h192q14 0 23 9t9 23v408l219 182q10 8 11 21.5t-7 23.5z" />
-            </svg>
-          </span>
-        ),
-        uri: ROUTES.HOME,
-        children: [],
-      },
       ...menuData["main-menu"].map((item) => ({
         ...item,
         children: createModifiedMenuData(item.children, (item) => (
@@ -121,14 +102,29 @@ export const HeaderNavMain = () => {
                   rootClassName: styles.headerNavMenu,
                 }}
                 align={{ offset: [0, 0] }}
+                onOpenChange={(open) => {
+                  setOpenDropdowns((prev) => ({
+                    ...prev,
+                    [index]: open,
+                  }));
+                }}
+                open={openDropdowns[index]}
+                trigger={["hover"]}
               >
                 <Link
-                  className="px-2.5 flex items-center justify-center leading-[50px] h-full hover:bg-primary-400 transition-all duration-150"
+                  className={`px-2.5 flex items-center justify-center h-full transition-all duration-150 hover:bg-gray-100 ${
+                    openDropdowns[index] ? "text-[#2563eb]" : "text-gray-700"
+                  }`}
                   href={menu.uri}
+                  style={{ lineHeight: "50px" }}
                 >
                   <span>{menu.label}</span>
                   {menu.children.length > 0 && (
-                    <i className="material-symbols-rounded ml-2">
+                    <i
+                      className={`material-symbols-rounded ml-2 text-sm transition-transform ${
+                        openDropdowns[index] ? "rotate-180" : ""
+                      }`}
+                    >
                       keyboard_arrow_down
                     </i>
                   )}
@@ -136,8 +132,9 @@ export const HeaderNavMain = () => {
               </Dropdown>
             ) : (
               <Link
-                className="px-2.5 flex items-center justify-center leading-[50px] h-full hover:bg-primary-400 transition-all duration-150"
+                className="px-2.5 flex items-center justify-center h-full transition-all duration-150 text-gray-700 hover:bg-gray-100"
                 href={menu.uri}
+                style={{ lineHeight: "50px" }}
               >
                 <span>{menu.label}</span>
               </Link>

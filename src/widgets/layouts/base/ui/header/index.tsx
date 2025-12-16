@@ -4,13 +4,13 @@ import { Container } from "@/shared/ui";
 import { HeaderNavMain } from "./ui/header-nav-main";
 import { useEffect, useMemo, useState } from "react";
 import { Button, Drawer, Menu } from "antd";
-import { HeaderAccount } from "./ui/header-account";
 import { ROUTES } from "@/shared/routes";
 import { useRouter } from "next/router";
 import { Avatar } from "@/entities";
 import { MasterData, MenuItem, useAppContext, useAuth } from "@/appx/providers";
 import { ItemType } from "antd/es/menu/interface";
 import _ from "lodash";
+import { FacebookRoundedIcon, ZaloIcon } from "@/shared/ui/icons";
 
 function createModifiedMenuData(
   menu: MasterData["menuData"][string] | undefined,
@@ -53,6 +53,22 @@ export const Header = () => {
 
   const { isSignedIn, signOut, currentUser } = useAuth();
   const { masterData } = useAppContext();
+
+  const {
+    websiteOptions: {
+      websiteOptionsFields: {
+        generalSettings: {
+          facebook,
+          phoneNumber,
+          logo,
+          zalo,
+          buyProLink,
+          email,
+        },
+      },
+    },
+    allSettings: { generalSettingsTitle },
+  } = masterData;
 
   const menuDataMapped = useMemo(() => {
     if (!masterData?.menuData["main-menu"]) return [];
@@ -121,7 +137,13 @@ export const Header = () => {
     }
 
     return menu;
-  }, [currentUser?.roles.nodes, isSignedIn, masterData.menuData, router.asPath, signOut]);
+  }, [
+    currentUser?.roles.nodes,
+    isSignedIn,
+    masterData.menuData,
+    router.asPath,
+    signOut,
+  ]);
 
   useEffect(() => {
     const flattenMenuData = (menuData: MasterData["menuData"]) => {
@@ -154,39 +176,192 @@ export const Header = () => {
     }
   }, [masterData.menuData, router.pathname]);
 
+  const topBarSocialLinks = [
+    {
+      icon: <FacebookRoundedIcon className="w-4 h-4" />,
+      url: facebook,
+      name: "Facebook",
+    },
+    {
+      icon: <ZaloIcon className="w-4 h-4" />,
+      url: zalo,
+      name: "Zalo",
+    },
+    {
+      icon: (
+        <Image
+          src="/mail.webp"
+          alt="mail"
+          width={16}
+          height={16}
+          unoptimized
+          className="w-4 h-4"
+        />
+      ),
+      url: email ? `mailto:${email}` : null,
+      name: "Email",
+    },
+  ].filter((item) => Boolean(item.url));
+
   return (
     <header className="bg-white">
-      <Container className="py-1 md:py-2 h-[50px] sm:h-[70px] md:h-[150px]">
-        <div className="flex items-center h-full justify-between">
-          <Link
-            title="Home"
-            href={ROUTES.HOME}
-            className="h-full md:w-44 aspect-[750/449] relative duration-300"
-          >
-            <Image
-              sizes="100%"
-              alt="logo"
-              src="/logo.png"
-              priority
-              fill
-              className="object-contain"
-            />
-          </Link>
-          <div className="md:hidden">
-            <button type="button" className="block" onClick={showDrawer}>
-              <i className="material-symbols-rounded block!">menu</i>
+      {/* Top Bar */}
+      <div
+        className="bg-[#192335] text-white text-sm hidden md:block"
+        style={{ backgroundColor: "#192335" }}
+      >
+        <Container className="py-2">
+          <div className="flex items-center justify-between">
+            {/* Left Side - Contact & Social Stats */}
+            <div className="flex items-center gap-6 whitespace-nowrap">
+              {facebook && (
+                <div className="flex items-center gap-2">
+                  <FacebookRoundedIcon className="w-4 h-4" />
+                  <span className="text-xs whitespace-nowrap">
+                    500k Followers
+                  </span>
+                </div>
+              )}
+              {phoneNumber && (
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-rounded text-base">
+                    phone
+                  </span>
+                  <span className="text-xs whitespace-nowrap">
+                    {phoneNumber}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Middle Section - Promotional Banner */}
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <Button
+                className="bg-[#2563eb] border-none text-white rounded-md h-6 px-2 text-xs font-bold whitespace-nowrap"
+                style={{ backgroundColor: "#2563eb" }}
+              >
+                Hot
+              </Button>
+              <span className="text-xl">👋</span>
+              <span className="text-xs whitespace-nowrap">
+                Intro price. Get {generalSettingsTitle || "Histudy"} for Big
+                Sale -95% off.
+              </span>
+            </div>
+
+            {/* Right Side - Social Links */}
+            <div className="flex items-center gap-3">
+              {topBarSocialLinks.map((social, index) => (
+                <Link
+                  key={index}
+                  href={social.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white hover:text-gray-300 transition-colors"
+                  title={social.name}
+                >
+                  {social.icon}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </div>
+
+      {/* Main Navigation Bar */}
+      <Container className="py-4">
+        <div className="flex items-center justify-between">
+          {/* Left Side - Logo */}
+          <div className="flex items-center gap-4">
+            <Link
+              title="Home"
+              href={ROUTES.HOME}
+              className="h-12 max-h-12 w-auto relative flex items-center overflow-hidden"
+            >
+              {logo?.node?.sourceUrl ? (
+                <div className="relative h-12 max-h-12 w-auto max-w-[200px] flex items-center">
+                  <Image
+                    src={logo.node.sourceUrl}
+                    alt={generalSettingsTitle || "Logo"}
+                    width={120}
+                    height={48}
+                    className="object-contain max-h-full max-w-full"
+                    style={{ maxHeight: "48px", maxWidth: "200px" }}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                    style={{ backgroundColor: "#d94a56" }}
+                  >
+                    {generalSettingsTitle?.charAt(0) || "L"}
+                  </div>
+                  <span
+                    className="font-bold text-xl whitespace-nowrap"
+                    style={{ color: "#d94a56" }}
+                  >
+                    {generalSettingsTitle || "Logo"}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
+
+          {/* Middle Section - Navigation Links */}
+          <div className="hidden lg:flex items-center">
+            <HeaderNavMain />
+          </div>
+
+          {/* Right Side - User Actions */}
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              className="text-gray-700 hover:text-[#d94a56] transition-colors"
+              title="Search"
+            >
+              <span className="material-symbols-rounded text-xl">search</span>
+            </button>
+            <div className="h-6 w-px bg-gray-300"></div>
+            {isSignedIn ? (
+              <div className="flex items-center gap-2">
+                <Avatar currentUser={currentUser} size={32} />
+                <span className="text-sm font-medium text-gray-700">
+                  {currentUser?.name || "User"}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link
+                  href={ROUTES.REGISTER}
+                  className="text-sm font-medium text-gray-700 hover:text-[#d94a56] transition-colors"
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  href={ROUTES.LOGIN()}
+                  className="text-sm font-medium text-gray-700 hover:text-[#d94a56] transition-colors"
+                >
+                  Login
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden">
+            <button
+              type="button"
+              className="block"
+              onClick={showDrawer}
+              title="Menu"
+            >
+              <span className="material-symbols-rounded text-2xl">menu</span>
             </button>
           </div>
         </div>
       </Container>
-      <div className="bg-primary text-white text-sm hidden md:block">
-        <Container className="h-[50px]">
-          <div className="flex items-center h-full justify-between font-bold font-nunito">
-            <HeaderNavMain />
-            <HeaderAccount />
-          </div>
-        </Container>
-      </div>
+
       <Drawer
         classNames={{
           header: "!py-2",
@@ -205,7 +380,10 @@ export const Header = () => {
                     <p className="font-bold space-x-2">
                       <span>{currentUser?.name}</span>
                       {currentUser?.userData.isPro && (
-                        <span className="rounded py-px px-1 font-semibold text-white text-xs shadow bg-primary">
+                        <span
+                          className="rounded py-px px-1 font-semibold text-white text-xs shadow"
+                          style={{ backgroundColor: "#d94a56" }}
+                        >
                           PRO
                         </span>
                       )}
@@ -226,7 +404,7 @@ export const Header = () => {
             shape="circle"
             onClick={onClose}
           >
-            <i className="material-symbols-rounded">close</i>
+            <span className="material-symbols-rounded">close</span>
           </Button>
         }
       >
