@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/shared/ui";
 import { HeaderNavMain } from "./ui/header-nav-main";
+import dayjs from "dayjs";
 import { useEffect, useMemo, useState } from "react";
-import { Button, Drawer, Menu } from "antd";
+import { Button, Drawer, Menu, Dropdown, Divider } from "antd";
 import { ROUTES } from "@/shared/routes";
 import { useRouter } from "next/router";
 import { Avatar } from "@/entities";
@@ -38,6 +39,7 @@ export const Header = () => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [activeKey, setActiveKey] = useState<string>("");
+  const [currentTime, setCurrentTime] = useState(dayjs().format("HH:mm"));
 
   const showDrawer = () => {
     setOpen(true);
@@ -51,20 +53,20 @@ export const Header = () => {
     setOpen(false);
   }, [router.pathname]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(dayjs().format("HH:mm"));
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
   const { isSignedIn, signOut, currentUser } = useAuth();
   const { masterData } = useAppContext();
 
   const {
     websiteOptions: {
       websiteOptionsFields: {
-        generalSettings: {
-          facebook,
-          phoneNumber,
-          logo,
-          zalo,
-          buyProLink,
-          email,
-        },
+        generalSettings: { facebook, phoneNumber, logo, zalo, email },
       },
     },
     allSettings: { generalSettingsTitle },
@@ -76,7 +78,7 @@ export const Header = () => {
 
     const menu = [
       ...createModifiedMenuData(menuData["main-menu"], (item) => (
-        <Link href={item.uri}>{item.label}</Link>
+        <Link href={item.uri || "#"}>{item.label}</Link>
       ))!,
     ];
 
@@ -93,9 +95,7 @@ export const Header = () => {
         },
         {
           key: "3",
-          label: (
-            <Link href={ROUTES.ACCOUNT.PAYMENT_HISTORY}>Payment History</Link>
-          ),
+          label: <Link href={ROUTES.ACCOUNT.ORDER_HISTORY}>Order History</Link>,
         },
         ...(currentUser?.roles.nodes[0].name === "administrator"
           ? [
@@ -315,21 +315,82 @@ export const Header = () => {
 
           {/* Right Side - User Actions */}
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="text-gray-700 hover:text-[#d94a56] transition-colors"
-              title="Search"
-            >
-              <span className="material-symbols-rounded text-xl">search</span>
-            </button>
-            <div className="h-6 w-px bg-gray-300"></div>
+            {/* <div className="text-gray-700">
+              <span className="material-symbols-rounded text-xl">
+                drag_indicator
+              </span>
+            </div> */}
+            <div className="h-6 w-[2px] bg-gray-300"></div>
             {isSignedIn ? (
-              <div className="flex items-center gap-2">
-                <Avatar currentUser={currentUser} size={32} />
-                <span className="text-sm font-medium text-gray-700">
-                  {currentUser?.name || "User"}
-                </span>
-              </div>
+              <Dropdown
+                placement="bottomRight"
+                trigger={["hover", "click"]}
+                dropdownRender={() => (
+                  <div className="bg-white rounded-lg shadow-lg min-w-[220px] py-2">
+                    {/* User Info Section */}
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <Avatar currentUser={currentUser} size={40} />
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">
+                          {currentUser?.name || "User"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {currentTime} (GMT+07:00)
+                        </p>
+                      </div>
+                    </div>
+                    <Divider className="my-0" />
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <Link href={ROUTES.ACCOUNT.DASHBOARD}>
+                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                          My Dashboard
+                        </div>
+                      </Link>
+                      <Link href={ROUTES.ACCOUNT.MY_PROFILE}>
+                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                          My Profile
+                        </div>
+                      </Link>
+                      <Link href={ROUTES.ACCOUNT.ORDER_HISTORY}>
+                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                          Payment History
+                        </div>
+                      </Link>
+                      {currentUser?.roles.nodes[0].name === "administrator" && (
+                        <>
+                          <Divider className="my-1" />
+                          <Link href={ROUTES.ADMIN.DASHBOARD}>
+                            <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                              Admin Dashboard
+                            </div>
+                          </Link>
+                        </>
+                      )}
+                      <Divider className="my-1" />
+                      <div
+                        className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer flex items-center gap-2"
+                        onClick={signOut}
+                      >
+                        <span className="material-symbols-rounded text-base">
+                          logout
+                        </span>
+                        <span>Logout</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              >
+                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                  <Avatar currentUser={currentUser} size={32} />
+                  <span className="text-sm font-medium text-gray-700">
+                    {currentUser?.name || "User"}
+                  </span>
+                  <span className="material-symbols-rounded text-lg text-gray-500">
+                    keyboard_arrow_down
+                  </span>
+                </div>
+              </Dropdown>
             ) : (
               <div className="flex items-center gap-3">
                 <Link

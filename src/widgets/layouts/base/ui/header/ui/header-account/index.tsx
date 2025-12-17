@@ -43,9 +43,7 @@ export function HeaderAccount() {
       },
       {
         key: "3",
-        label: (
-          <Link href={ROUTES.ACCOUNT.PAYMENT_HISTORY}>Payment History</Link>
-        ),
+        label: <Link href={ROUTES.ACCOUNT.ORDER_HISTORY}>Order History</Link>,
       },
       ...(currentUser?.roles.nodes[0].name === "administrator"
         ? [

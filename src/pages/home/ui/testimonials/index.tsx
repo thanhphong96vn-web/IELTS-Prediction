@@ -136,8 +136,10 @@ const TestimonialCard = ({
 
 export const Testimonials = () => {
   // Duplicate testimonials for seamless loop
+  // Create a copy before reversing to avoid mutating the original array
+  const reversedTestimonials = [...TESTIMONIALS].reverse();
   const testimonialsRow1 = [...TESTIMONIALS, ...TESTIMONIALS];
-  const testimonialsRow2 = [...TESTIMONIALS.reverse(), ...TESTIMONIALS];
+  const testimonialsRow2 = [...reversedTestimonials, ...reversedTestimonials];
 
   return (
     <div className="bg-white py-16 md:py-20 overflow-hidden">

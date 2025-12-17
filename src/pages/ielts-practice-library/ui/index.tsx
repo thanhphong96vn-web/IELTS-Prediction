@@ -77,18 +77,17 @@ export const PageIELTSPracticeLibrary = ({
   useEffect(() => {
     if (!router.isReady) return;
     const { page, ...rest } = router.query;
-    
+
     // Lấy giá trị hiện tại của form (hoặc giá trị mặc định nếu lần đầu load)
-    const currentValues = getValues(); 
+    const currentValues = getValues();
 
     // Cập nhật form state từ URL
     reset({
-      ...currentValues, 
+      ...currentValues,
       ...rest,
       page: page ? Number(page) : 1, // Đảm bảo page là số, mặc định là 1
     } as FilterFormValues);
   }, [router.query, router.isReady, reset, getValues]);
-
 
   // 2. Logic gọi API dựa trên router params (GIỮ NGUYÊN)
   useEffect(() => {
@@ -105,9 +104,9 @@ export const PageIELTSPracticeLibrary = ({
     } = router.query;
     const size = Number(pageSize) || PAGE_SIZE;
     // Đảm bảo page được lấy từ URL (router.query.page)
-    const currentPage = Number(page) || 1; 
+    const currentPage = Number(page) || 1;
     const offset = (currentPage - 1) * size;
-    
+
     const params = {
       search,
       offsetPagination: {
@@ -154,51 +153,58 @@ export const PageIELTSPracticeLibrary = ({
   // 3. Logic Sync Form ra URL (Sửa lỗi Pagination bị hỏng và Reset Page khi filter)
   useEffect(() => {
     if (!isDirty) return;
-    
+
     const formValues = watch();
     const currentRouterQuery = router.query;
-    
+
     // --- BƯỚC 1: KIỂM TRA CÁC FILTER KHÁC PAGE/SIZE CÓ THAY ĐỔI KHÔNG ---
     let nonPageFilterChanged = false;
 
     // Các keys cần so sánh (Tất cả trừ page, size)
     const keysToCheck: Array<keyof FilterFormValues> = [
-        "progress", "question_form", "sort", "search", "quarter", "year", "source", "part"
+      "progress",
+      "question_form",
+      "sort",
+      "search",
+      "quarter",
+      "year",
+      "source",
+      "part",
     ];
 
     const normalize = (value: any, key: string) => {
-        if (_.isNil(value) || value === '') return undefined;
-        // Xử lý giá trị mặc định/rỗng để không bị coi là thay đổi
-        if (key === 'sort' && value === 'newest') return undefined;
-        if (key === 'search' && value === '') return undefined; 
-        if (_.isArray(value) && value.length === 0) return undefined;
-        
-        return _.isArray(value) ? value.join(',') : String(value);
+      if (_.isNil(value) || value === "") return undefined;
+      // Xử lý giá trị mặc định/rỗng để không bị coi là thay đổi
+      if (key === "sort" && value === "newest") return undefined;
+      if (key === "search" && value === "") return undefined;
+      if (_.isArray(value) && value.length === 0) return undefined;
+
+      return _.isArray(value) ? value.join(",") : String(value);
     };
 
     for (const key of keysToCheck) {
-        const formValue = normalize(formValues[key], key);
-        const urlValue = normalize(currentRouterQuery[key], key);
-        
-        // So sánh giá trị đã chuẩn hóa
-        if (formValue !== urlValue) {
-            nonPageFilterChanged = true;
-            break; 
-        }
+      const formValue = normalize(formValues[key], key);
+      const urlValue = normalize(currentRouterQuery[key], key);
+
+      // So sánh giá trị đã chuẩn hóa
+      if (formValue !== urlValue) {
+        nonPageFilterChanged = true;
+        break;
+      }
     }
-    
+
     // --- BƯỚC 2: TẠO QUERY STRING MỚI VÀ SYNC RA URL ---
     const queryParams = new URLSearchParams();
 
     Object.keys(formValues).forEach((key) => {
       const value = formValues[key as keyof FilterFormValues];
-      
+
       // Xóa tham số nếu là giá trị mặc định, rỗng, hoặc page=1, hoặc size=PAGE_SIZE
       if (
         value === "all" ||
         !value ||
         (key === "sort" && value === "newest") ||
-        (key === "page" && value === 1) || 
+        (key === "page" && value === 1) ||
         (key === "size" && value === PAGE_SIZE)
       ) {
         queryParams.delete(key);
@@ -216,15 +222,15 @@ export const PageIELTSPracticeLibrary = ({
     // 3. ÁP DỤNG NGHIỆP VỤ RESET PAGE
     // Nếu có filter khác page/size thay đổi VÀ page đang không phải 1
     if (nonPageFilterChanged && formValues.page !== 1) {
-        // Cập nhật form state để page=1, điều này sẽ kích hoạt useEffect này chạy lại 
-        // Lần chạy lại tiếp theo sẽ push router với page=1 (tức là không có param 'page' trên URL)
-        setValue("page", 1, { shouldDirty: true });
-        return; // Thoát để lần chạy tiếp theo mới push router
+      // Cập nhật form state để page=1, điều này sẽ kích hoạt useEffect này chạy lại
+      // Lần chạy lại tiếp theo sẽ push router với page=1 (tức là không có param 'page' trên URL)
+      setValue("page", 1, { shouldDirty: true });
+      return; // Thoát để lần chạy tiếp theo mới push router
     }
-    
+
     // Nếu có filter khác page/size thay đổi, VÀ page ĐÃ là 1 (hoặc sau khi đã reset về 1)
     if (nonPageFilterChanged) {
-        queryParams.delete("page");
+      queryParams.delete("page");
     }
 
     const newSearch = queryParams.toString();
@@ -238,9 +244,73 @@ export const PageIELTSPracticeLibrary = ({
     }
   }, [filterValues, isDirty, router, setValue]);
 
+  const skill = router.pathname.split("/").pop() || "";
+  const isListening = skill === "listening";
+  const isReading = skill === "reading";
+  const showBanner = isListening || isReading;
+
   return (
     <FormProvider {...methods}>
       {/* <SEOHeader fullHead={category.seo.fullHead} title={category.seo.title} /> */}
+
+      {/* Practice Banner Section */}
+      {showBanner && (
+        <div
+          className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
+          style={{
+            background: "#fffef5",
+          }}
+        >
+          <Container className="relative z-10">
+            <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
+                {isListening
+                  ? "IELTS Listening Practice Tests"
+                  : "IELTS Reading Practice Tests"}
+              </h1>
+              <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
+                {isListening ? (
+                  <>
+                    <div>
+                      IELTS Listening Practice Tests Online miễn phí tại DOL
+                      Academy với đề
+                    </div>
+                    <div>
+                      thi, audio, transcript, answer key, giải thích chi tiết từ
+                      vựng đi kèm và
+                    </div>
+                    <div>trải nghiệm làm bài thi thử như trên máy.</div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      IELTS Reading Practice Tests Online miễn phí tại DOL
+                      Academy với đề
+                    </div>
+                    <div>
+                      thi, transcript, answer key, giải thích chi tiết từ vựng
+                      đi kèm và
+                    </div>
+                    <div>trải nghiệm làm bài thi thử như trên máy.</div>
+                  </>
+                )}
+              </div>
+              <Button
+                type="primary"
+                style={{
+                  background: "#d94a56",
+                  borderColor: "#d94a56",
+                  color: "#ffffff",
+                }}
+                className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
+              >
+                Tìm hiểu khóa học
+              </Button>
+            </div>
+          </Container>
+        </div>
+      )}
+
       <Container className="space-y-12 pb-5">
         <div className="space-y-2">
           <div className="pt-5 pb-3">
@@ -342,7 +412,7 @@ export const PageIELTSPracticeLibrary = ({
                 <Pagination
                   // [FIX] Dùng 'current' để đồng bộ với URL/state
                   current={router.query.page ? Number(router.query.page) : 1}
-                  pageSize={variables?.offsetPagination.size || PAGE_SIZE} 
+                  pageSize={variables?.offsetPagination.size || PAGE_SIZE}
                   total={data.quizzes.pageInfo.offsetPagination.total || 0}
                   showSizeChanger={false}
                   onChange={(page, pageSize) => {

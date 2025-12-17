@@ -1,5 +1,5 @@
 import { Container } from "@/shared/ui";
-import { Breadcrumb, Empty, Pagination, Spin, Tabs } from "antd";
+import { Breadcrumb, Empty, Pagination, Spin, Tabs, Button } from "antd";
 import Link from "next/link";
 import { Filter } from "./filter";
 import { FormProvider, useForm } from "react-hook-form";
@@ -126,6 +126,58 @@ export const PageIELTSExamLibrary = () => {
   return (
     <FormProvider {...methods}>
       <SEOHeader fullHead={""} title={"IELTS Exam Library"} />
+
+      {/* Hero Banner Section */}
+      <div
+        className="relative w-full py-16 md:py-24 flex items-center justify-center"
+        style={{
+          background:
+            "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
+        }}
+      >
+        <Container className="flex flex-col items-center justify-center text-center">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-800 mb-4">
+            Subscription
+          </h1>
+          <Breadcrumb
+            items={[
+              {
+                title: <Link href="/">Home</Link>,
+              },
+              {
+                title: "IELTS Exam Library",
+              },
+            ]}
+            className="text-gray-500"
+          />
+        </Container>
+      </div>
+
+      {/* Subscription Hero Section */}
+      <div
+        className="relative w-full py-2 flex items-center justify-center"
+        style={{
+          background: "#ffe0e3",
+        }}
+      >
+        <Container className="flex flex-row items-center justify-between gap-4">
+          <h6 className="text-sm md:text-base lg:text-base font-normal text-gray-800 whitespace-nowrap m-0">
+            Tài khoản của bạn đã hết hạn, gia hạn ngay!!!
+          </h6>
+          <Button
+            type="primary"
+            style={{
+              background: "#d94a56",
+              borderColor: "#d94a56",
+              color: "#ffffff",
+            }}
+            className="hover:bg-[#c0394a]! hover:border-[#c0394a]! whitespace-nowrap"
+          >
+            Gia hạn
+          </Button>
+        </Container>
+      </div>
+
       <Container className="space-y-4 pb-5">
         <div className="space-y-2">
           <div className="pt-5 pb-3">

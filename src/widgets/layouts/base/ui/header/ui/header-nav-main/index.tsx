@@ -84,7 +84,7 @@ export const HeaderNavMain = () => {
       ...menuData["main-menu"].map((item) => ({
         ...item,
         children: createModifiedMenuData(item.children, (item) => (
-          <Link href={item.uri}>{item.label}</Link>
+          <Link href={item.uri || "#"}>{item.label}</Link>
         )),
       })),
     ];
@@ -115,7 +115,7 @@ export const HeaderNavMain = () => {
                   className={`px-2.5 flex items-center justify-center h-full transition-all duration-150 hover:bg-gray-100 ${
                     openDropdowns[index] ? "text-[#2563eb]" : "text-gray-700"
                   }`}
-                  href={menu.uri}
+                  href={menu.uri || "#"}
                   style={{ lineHeight: "50px" }}
                 >
                   <span>{menu.label}</span>
@@ -133,7 +133,7 @@ export const HeaderNavMain = () => {
             ) : (
               <Link
                 className="px-2.5 flex items-center justify-center h-full transition-all duration-150 text-gray-700 hover:bg-gray-100"
-                href={menu.uri}
+                href={menu.uri || "#"}
                 style={{ lineHeight: "50px" }}
               >
                 <span>{menu.label}</span>

@@ -1,4 +1,4 @@
-import { Button, DatePicker, Input, Select } from "antd";
+import { Button, DatePicker, Input, Select, Breadcrumb } from "antd";
 import { Controller, useForm } from "react-hook-form";
 import { AvatarUpload, Container } from "@/shared/ui";
 import { AuthLayout } from "@/widgets/layouts";
@@ -83,6 +83,35 @@ export function PageRegister() {
 
   return (
     <div className="space-y-7">
+      {/* Hero Banner Section */}
+      <div
+        className="py-10 md:py-12"
+        style={{
+          background:
+            "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
+        }}
+      >
+        <Container>
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Login & Register
+            </h1>
+            <div className="flex justify-center">
+              <Breadcrumb
+                items={[
+                  {
+                    title: <Link href={ROUTES.HOME}>Home</Link>,
+                  },
+                  {
+                    title: "Login & Register",
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        </Container>
+      </div>
+
       <Container className="max-w-[500px]">
         <div className="bg-white p-8 rounded-lg shadow-sm">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8">

@@ -29,23 +29,23 @@ export const Footer = () => {
   const [newsletterEmail, setNewsletterEmail] = useState("");
 
   const socialLinks = [
-    {
+      {
       icon: <FacebookRoundedIcon className="w-6 h-6" />,
-      url: facebook,
-      name: "Facebook",
-    },
+        url: facebook,
+        name: "Facebook",
+      },
     {
       icon: <ZaloIcon className="w-6 h-6" />,
       url: zalo,
       name: "Zalo",
     },
-    {
-      icon: (
+      {
+        icon: (
         <Image src="/mail.webp" alt="mail" width={24} height={24} unoptimized />
-      ),
+        ),
       url: email ? `mailto:${email}` : null,
-      name: "Mail",
-    },
+        name: "Mail",
+      },
   ].filter((item) => Boolean(item.url));
 
   // Chỉ dùng những route thực sự tồn tại trong dự án
@@ -65,10 +65,11 @@ export const Footer = () => {
   ];
 
   const companyLinks = [
+    { label: "About Us", href: ROUTES.ABOUT_US },
     { label: "Contact Us", href: "/contact" },
     { label: "My Dashboard", href: ROUTES.ACCOUNT.DASHBOARD },
     { label: "My Profile", href: ROUTES.ACCOUNT.MY_PROFILE },
-    { label: "Payment History", href: ROUTES.ACCOUNT.PAYMENT_HISTORY },
+    { label: "Order History", href: ROUTES.ACCOUNT.ORDER_HISTORY },
   ];
 
   const legalLinks = [
@@ -94,7 +95,7 @@ export const Footer = () => {
             <div className="flex-1">
               <h2
                 className="text-2xl md:text-3xl font-bold mb-2"
-                style={{ color: "#991b1b" }}
+                style={{ color: "#000" }}
               >
                 Ready to start creating a standard website?
               </h2>
@@ -104,7 +105,7 @@ export const Footer = () => {
             </div>
 
             {/* Right Side - Button */}
-            <div>
+          <div>
               {buyProLink ? (
                 <Link href={buyProLink}>
                   <Button
@@ -180,14 +181,14 @@ export const Footer = () => {
               {/* Social Media Icons */}
               <div className="flex gap-3">
                 {socialLinks.map((social, index) => (
-                  <Link
+                    <Link
                     key={index}
                     href={social.url || "#"}
-                    target="_blank"
+                      target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                     title={social.name}
-                  >
+                    >
                     {social.icon}
                   </Link>
                 ))}
@@ -206,8 +207,8 @@ export const Footer = () => {
                     arrow_forward
                   </span>
                 </Button>
-              </Link>
-            </div>
+                    </Link>
+                  </div>
 
             {/* Middle Section - Useful Links */}
             <div>
@@ -238,10 +239,10 @@ export const Footer = () => {
                     >
                       {link.label}
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
             {/* Right Section - Get Contact & Newsletter */}
             <div className="space-y-6">
@@ -310,9 +311,9 @@ export const Footer = () => {
                   </Link>
                 </div>
               ))}
-            </div>
           </div>
-        </Container>
+        </div>
+      </Container>
       </div>
     </footer>
   );

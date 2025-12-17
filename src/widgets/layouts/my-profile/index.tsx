@@ -23,9 +23,18 @@ export const MyProfileLayout = ({
       link: ROUTES.ACCOUNT.MY_PROFILE,
     },
     {
-      label: "Payment History",
-      icon: "credit_card_clock",
-      link: ROUTES.ACCOUNT.PAYMENT_HISTORY,
+      label: "Order History",
+      icon: "shopping_cart",
+      link: ROUTES.ACCOUNT.ORDER_HISTORY,
+    },
+    {
+      type: "divider",
+    },
+    {
+      label: "Logout",
+      icon: "logout",
+      link: "#",
+      danger: true,
     },
   ];
 
@@ -40,12 +49,11 @@ export const MyProfileLayout = ({
               <ComparePlans />
             </div>
             <div className="w-full md:w-8/12 p-4">
-              <h1 className="text-xl font-bold mb-2 text-primary">
-                {
-                  ACCOUNT_NAVIGATION.find(
-                    (item) => item.link === router.pathname
-                  )?.label
-                }
+              <h1 className="text-xl font-bold mb-6 text-gray-900">
+                {ACCOUNT_NAVIGATION.find(
+                  (item) =>
+                    item.link === router.pathname && !item.type && !item.danger
+                )?.label || "Dashboard"}
               </h1>
               {children}
             </div>

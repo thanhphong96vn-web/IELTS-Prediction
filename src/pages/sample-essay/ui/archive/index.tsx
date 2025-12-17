@@ -10,6 +10,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { Filter } from "./filter";
 import { DefaultView } from "./single-item";
+import { HorizontalItem } from "./horizontal-item";
 
 const PAGE_SIZE = 18;
 
@@ -134,9 +135,96 @@ export const PageArchive = ({
     );
   }, [filterValues, isDirty, router, skill]);
 
+  const isWriting = skill === "writing";
+  const isSpeaking = skill === "speaking";
+  const showBanner = isWriting || isSpeaking;
+
   return (
     <FormProvider {...methods}>
       <SEOHeader fullHead={seo.fullHead} title={seo.title} />
+
+      {/* Sample Essay Banner Section */}
+      {showBanner && (
+        <div
+          className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
+          style={{
+            background: "#fffef5",
+          }}
+        >
+          <Container className="relative z-10">
+            <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
+              {isWriting ? (
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center">
+                  <div>DOL IELTS Writing</div>
+                  <div className="relative inline-block">
+                    <span className="relative inline-block">
+                      Task 1 Academic
+                      <span
+                        className="absolute bottom-0 left-0 right-0 h-3 opacity-30"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)",
+                        }}
+                      ></span>
+                    </span>{" "}
+                    Sample
+                  </div>
+                </h1>
+              ) : (
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center">
+                  <div>DOL IELTS Speaking</div>
+                  <div className="relative inline-block">
+                    <span className="relative inline-block">
+                      Task 1 Academic
+                      <span
+                        className="absolute bottom-0 left-0 right-0 h-3 opacity-30"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)",
+                        }}
+                      ></span>
+                    </span>{" "}
+                    Sample
+                  </div>
+                </h1>
+              )}
+
+              <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
+                {isWriting ? (
+                  <>
+                    <div>
+                      Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn
+                      cách làm bài,
+                    </div>
+                    <div>từ vựng chi tiết theo chủ đề.</div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn
+                      cách làm bài,
+                    </div>
+                    <div>từ vựng chi tiết theo chủ đề.</div>
+                  </>
+                )}
+              </div>
+
+              <Button
+                type="primary"
+                style={{
+                  background: "#d94a56",
+                  borderColor: "#d94a56",
+                  color: "#ffffff",
+                }}
+                className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
+              >
+                Tìm hiểu khóa học
+              </Button>
+            </div>
+          </Container>
+        </div>
+      )}
+
       <Container className="pb-10">
         <div className="py-5">
           <Breadcrumb
@@ -228,10 +316,27 @@ export const PageArchive = ({
             <div className="pb-5 space-y-4 mt-4">
               {sampleEssays.edges.length > 0 ? (
                 <>
-                  <div className="flex -m-1.5 flex-wrap items-stretch">
+                  <div
+                    className={
+                      skill === "writing" || skill === "speaking"
+                        ? "space-y-4"
+                        : "flex -m-1.5 flex-wrap items-stretch"
+                    }
+                  >
                     {sampleEssays.edges.map((item, index) => (
-                      <div className="p-1.5 w-1/2 md:w-1/3" key={index}>
-                        <DefaultView post={item} skill={skill} />
+                      <div
+                        className={
+                          skill === "writing" || skill === "speaking"
+                            ? "w-full"
+                            : "p-1.5 w-1/2 md:w-1/3"
+                        }
+                        key={index}
+                      >
+                        {skill === "writing" || skill === "speaking" ? (
+                          <HorizontalItem post={item} skill={skill} />
+                        ) : (
+                          <DefaultView post={item} skill={skill} />
+                        )}
                       </div>
                     ))}
                   </div>

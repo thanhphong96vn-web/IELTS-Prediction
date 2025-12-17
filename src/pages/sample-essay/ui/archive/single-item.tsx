@@ -89,6 +89,7 @@ export const DefaultView = ({
   const { label, colorIndex } = getFieldInfo();
   const listItems = getListItems();
 
+  // Original vertical card layout for all skills (including Writing and Speaking on home page)
   return (
     <article className="rounded-lg shadow overflow-hidden h-full group relative">
       <ProLink
@@ -97,7 +98,7 @@ export const DefaultView = ({
         href={ROUTES.SAMPLE_ESSAY.SINGLE(post.slug)}
         className="text-left"
       >
-        <div className="aspect-[3/2] overflow-hidden relative block">
+        <div className="aspect-3/2 overflow-hidden relative block">
           {post.postMeta.proUserOnly && (
             <div className="absolute top-3 right-3 z-10">
               <div
