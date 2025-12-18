@@ -17,6 +17,24 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  webpack: (config, { isServer, webpack }) => {
+    // Đảm bảo các file trong lib/server chỉ được bundle ở server-side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+      };
+      
+      // Exclude lib/server khỏi client bundle
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /^~server/,
+        })
+      );
+    }
+    return config;
+  },
   eslint: {
     // Cảnh báo: Điều này cho phép build thành công ngay cả khi có lỗi ESLint.
     ignoreDuringBuilds: true,

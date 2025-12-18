@@ -1,42 +1,16 @@
-import { ROUTES } from "@/shared/routes";
 import { Container } from "@/shared/ui";
 import Image from "next/image";
 import Link from "next/link";
+import type { TestPlatformIntroConfig } from "./types";
 
-const TEST_NAVIGATIONS = [
-  {
-    name: "FULL TEST",
-    href: ROUTES.EXAM.ARCHIVE,
-    icon: "/full_test.jpg",
-    count: 25,
-  },
-  {
-    name: "LISTENING",
-    href: ROUTES.PRACTICE.ARCHIVE_LISTENING,
-    icon: "/listening.jpg",
-    count: 30,
-  },
-  {
-    name: "READING",
-    href: ROUTES.PRACTICE.ARCHIVE_READING,
-    icon: "/reading.jpg",
-    count: 20,
-  },
-  {
-    name: "SAMPLE WRITING",
-    href: ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING,
-    icon: "/writing.jpg",
-    count: 15,
-  },
-  {
-    name: "SAMPLE SPEAKING",
-    href: ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING,
-    icon: "/speaking.jpg",
-    count: 15,
-  },
-];
+interface IeltsTestPlatformIntroProps {
+  config: TestPlatformIntroConfig;
+}
 
-export const IeltsTestPlatformIntro = () => {
+export const IeltsTestPlatformIntro = ({
+  config,
+}: IeltsTestPlatformIntroProps) => {
+  const { badge, title, categories } = config;
   return (
     <div className="relative py-16 md:py-20 overflow-hidden">
       {/* Gradient Shape Background - Half top with color, half bottom white */}
@@ -69,18 +43,16 @@ export const IeltsTestPlatformIntro = () => {
                 color: "#d94a56",
               }}
             >
-              CATEGORIES
+              {badge.text}
             </span>
           </div>
 
           {/* Main Heading */}
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight block">
-            <div style={{ color: "#374151" }}>
-              Explore Top Courses Caterories
-            </div>
+            <div style={{ color: "#374151" }}>{title.line1}</div>
             <div>
-              <span style={{ color: "#374151" }}>That </span>
-              <span style={{ color: "#2563eb" }}>Change </span>
+              <span style={{ color: "#374151" }}>{title.line2} </span>
+              <span style={{ color: "#2563eb" }}>{title.line3} </span>
               <span
                 className="bg-clip-text text-transparent inline-block"
                 style={{
@@ -90,7 +62,7 @@ export const IeltsTestPlatformIntro = () => {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                Yourself
+                {title.line4}
               </span>
             </div>
           </h2>
@@ -98,7 +70,7 @@ export const IeltsTestPlatformIntro = () => {
 
         {/* Category Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-          {TEST_NAVIGATIONS.map((item, index) => (
+          {categories.map((item, index) => (
             <Link
               key={index}
               href={item.href}
@@ -122,16 +94,6 @@ export const IeltsTestPlatformIntro = () => {
                 <h5 className="font-semibold text-lg text-gray-900">
                   {item.name}
                 </h5>
-
-                {/* Course Count Link */}
-                <div className="flex items-center justify-center gap-1 text-gray-600 group-hover:text-[#d94a56] transition-colors">
-                  <span className="text-sm font-medium">
-                    {item.count} Courses
-                  </span>
-                  <span className="material-symbols-rounded text-base">
-                    arrow_forward
-                  </span>
-                </div>
               </div>
             </Link>
           ))}

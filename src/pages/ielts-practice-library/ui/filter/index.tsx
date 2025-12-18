@@ -6,10 +6,12 @@ import {
   Divider,
   Drawer,
   Input,
+  Space,
+  InputRef,
 } from "antd";
 import { Controller, useForm, useFormContext } from "react-hook-form";
 import { FilterFormValues } from "..";
-import { Dispatch, SetStateAction, useEffect, useMemo } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/router";
 import _ from "lodash";
 import { QUESTION_FORMS } from "@/shared/constants";
@@ -50,8 +52,17 @@ export const Filter = ({
   const { control, setValue, reset } = useFormContext<FilterFormValues>();
   const mobileForm = useForm<FilterFormValues>();
   const skill = useMemo(() => router.pathname.split("/").pop(), [router]);
+  const searchInputRef = useRef<InputRef>(null);
 
   const { control: mobileControl, getValues, reset: mobileReset } = mobileForm;
+
+  const handleSearch = () => {
+    if (searchInputRef.current) {
+      setValue("search", searchInputRef.current.input?.value || "", {
+        shouldDirty: true,
+      });
+    }
+  };
 
   useEffect(() => {
     const queryParams = _.merge(
@@ -83,18 +94,30 @@ export const Filter = ({
         <div className="space-y-6">
           <Card>
             <h3 className="text-lg md:text-xl font-bold mb-5">Search</h3>
-            <Input.Search
-              allowClear
-              onClear={() => {
-                setValue("search", "", { shouldDirty: true });
-              }}
-              defaultValue={router.query.search?.toString() || ""}
-              placeholder="Search"
-              onSearch={(value) => {
-                setValue("search", value, { shouldDirty: true });
-              }}
-              enterButton
-            />
+            <Space.Compact style={{ width: "100%" }}>
+              <Input
+                ref={searchInputRef}
+                allowClear
+                onClear={() => {
+                  setValue("search", "", { shouldDirty: true });
+                }}
+                defaultValue={router.query.search?.toString() || ""}
+                placeholder="Search"
+                onPressEnter={handleSearch}
+              />
+              <Button
+                type="primary"
+                icon={
+                  <span
+                    className="material-symbols-rounded"
+                    style={{ display: "flex" }}
+                  >
+                    search
+                  </span>
+                }
+                onClick={handleSearch}
+              />
+            </Space.Compact>
           </Card>
           {filterData.sources.length > 0 && (
             <Card>
@@ -195,7 +218,7 @@ export const Filter = ({
               ))}
             </div>
           </Card> */}
-          
+
           {/* {filterData.years.length > 0 && (
             <Card>
               <h3 className="text-lg md:text-xl font-bold mb-5">Year</h3>
@@ -220,7 +243,7 @@ export const Filter = ({
               </div>
             </Card>
           )} */}
-          
+
           <Card>
             <h3 className="text-lg md:text-xl font-bold mb-5">Question Form</h3>
             <div className="flex flex-col gap-4">

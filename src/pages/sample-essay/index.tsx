@@ -12,6 +12,7 @@ import {
 } from "./api";
 import _ from "lodash";
 import { ROUTES } from "@/shared/routes";
+import type { SampleEssayBannerConfig } from "./ui/archive/types";
 
 export * from "./ui";
 
@@ -71,6 +72,66 @@ export const getServerSidePropsArchive = async (
     query: GET_FILTER_DATA,
   });
 
+  // Fetch banner config
+  let bannerConfig: SampleEssayBannerConfig;
+  try {
+    const protocol = context.req.headers["x-forwarded-proto"] || "http";
+    const host = context.req.headers.host || "localhost:3000";
+    const baseUrl = `${protocol}://${host}`;
+
+    const res = await fetch(
+      `${baseUrl}/api/admin/sample-essay/banner-config`,
+      {
+        headers: {
+          cookie: context.req.headers.cookie || "",
+        },
+      }
+    );
+
+    if (res.ok) {
+      bannerConfig = await res.json();
+    } else {
+      throw new Error("Failed to fetch config");
+    }
+  } catch {
+    bannerConfig = {
+      writing: {
+        title: {
+          line1: "DOL IELTS Writing",
+          line2: {
+            highlighted: "Task 1 Academic",
+            after: "Sample",
+          },
+        },
+        description: [
+          "Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn cách làm bài,",
+          "từ vựng chi tiết theo chủ đề.",
+        ],
+        button: {
+          text: "Tìm hiểu khóa học",
+          link: "#",
+        },
+      },
+      speaking: {
+        title: {
+          line1: "DOL IELTS Speaking",
+          line2: {
+            highlighted: "Task 1 Academic",
+            after: "Sample",
+          },
+        },
+        description: [
+          "Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn cách làm bài,",
+          "từ vựng chi tiết theo chủ đề.",
+        ],
+        button: {
+          text: "Tìm hiểu khóa học",
+          link: "#",
+        },
+      },
+    };
+  }
+
   return {
     props: {
       ...sampleEssayType,
@@ -78,6 +139,7 @@ export const getServerSidePropsArchive = async (
       paged: Number(paged),
       pageSize,
       skill,
+      bannerConfig,
     },
   };
 };
@@ -87,6 +149,7 @@ export type SampleEssayProps = {
   pageSize: number;
   skill: "speaking" | "writing" | "reading" | "listening";
   filterData: GET_FILTER_DATA_RESPONSE;
+  bannerConfig: SampleEssayBannerConfig;
 } & SampleEssayResponse["sampleEssayType"];
 
 export const getServerSidePropsSingle = async (

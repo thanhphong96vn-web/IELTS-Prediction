@@ -1,0 +1,37 @@
+{
+  "writing": {
+    "title": {
+      "line1": "DOL IELTS Writing",
+      "line2": {
+        "highlighted": "Task 1 Academic",
+        "after": "Sample"
+      }
+    },
+    "description": [
+      "Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn cách làm bài,",
+      "từ vựng chi tiết theo chủ đề."
+    ],
+    "button": {
+      "text": "Tìm hiểu khóa học",
+      "link": "#"
+    }
+  },
+  "speaking": {
+    "title": {
+      "line1": "DOL IELTS Speaking",
+      "line2": {
+        "highlighted": "Task 1 Academic",
+        "after": "Sample"
+      }
+    },
+    "description": [
+      "Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn cách làm bài,",
+      "từ vựng chi tiết theo chủ đề."
+    ],
+    "button": {
+      "text": "Tìm hiểu khóa học",
+      "link": "#"
+    }
+  }
+}
+

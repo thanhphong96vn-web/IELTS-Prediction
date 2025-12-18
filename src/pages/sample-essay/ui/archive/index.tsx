@@ -1,13 +1,21 @@
 import { QuizLibraryNav, SEOHeader } from "@/widgets";
 import { SampleEssayProps } from "../..";
 import { Container, Empty } from "@/shared/ui";
-import { Breadcrumb, Button, Input, Pagination, Select } from "antd";
+import {
+  Breadcrumb,
+  Button,
+  Input,
+  InputRef,
+  Pagination,
+  Select,
+  Space,
+} from "antd";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ROUTES } from "@/shared/routes";
 import _ from "lodash";
 import { Controller, FormProvider, useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Filter } from "./filter";
 import { DefaultView } from "./single-item";
 import { HorizontalItem } from "./horizontal-item";
@@ -60,9 +68,11 @@ export const PageArchive = ({
   paged,
   skill,
   filterData,
+  bannerConfig,
 }: SampleEssayProps) => {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const searchInputRef = useRef<InputRef>(null);
   const methods = useForm<FilterFormValues>({
     defaultValues: {
       sort: "newest",
@@ -75,6 +85,14 @@ export const PageArchive = ({
     formState: { isDirty },
     setValue,
   } = methods;
+
+  const handleSearch = () => {
+    if (searchInputRef.current) {
+      setValue("search", searchInputRef.current.input?.value || "", {
+        shouldDirty: true,
+      });
+    }
+  };
 
   useEffect(() => {
     setValue(
@@ -144,86 +162,64 @@ export const PageArchive = ({
       <SEOHeader fullHead={seo.fullHead} title={seo.title} />
 
       {/* Sample Essay Banner Section */}
-      {showBanner && (
-        <div
-          className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
-          style={{
-            background: "#fffef5",
-          }}
-        >
-          <Container className="relative z-10">
-            <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
-              {isWriting ? (
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center">
-                  <div>DOL IELTS Writing</div>
-                  <div className="relative inline-block">
-                    <span className="relative inline-block">
-                      Task 1 Academic
-                      <span
-                        className="absolute bottom-0 left-0 right-0 h-3 opacity-30"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)",
-                        }}
-                      ></span>
-                    </span>{" "}
-                    Sample
-                  </div>
-                </h1>
-              ) : (
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center">
-                  <div>DOL IELTS Speaking</div>
-                  <div className="relative inline-block">
-                    <span className="relative inline-block">
-                      Task 1 Academic
-                      <span
-                        className="absolute bottom-0 left-0 right-0 h-3 opacity-30"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)",
-                        }}
-                      ></span>
-                    </span>{" "}
-                    Sample
-                  </div>
-                </h1>
-              )}
+      {showBanner &&
+        (() => {
+          const bannerData = isWriting
+            ? bannerConfig.writing
+            : bannerConfig.speaking;
 
-              <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
-                {isWriting ? (
-                  <>
-                    <div>
-                      Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn
-                      cách làm bài,
+          return (
+            <div
+              className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
+              style={{
+                background: "#fffef5",
+              }}
+            >
+              <Container className="relative z-10">
+                <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center">
+                    <div>{bannerData.title.line1}</div>
+                    <div className="relative inline-block">
+                      <span className="relative inline-block">
+                        {bannerData.title.line2.highlighted}
+                        <span
+                          className="absolute bottom-0 left-0 right-0 h-3 opacity-30"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)",
+                          }}
+                        ></span>
+                      </span>{" "}
+                      {bannerData.title.line2.after}
                     </div>
-                    <div>từ vựng chi tiết theo chủ đề.</div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn
-                      cách làm bài,
-                    </div>
-                    <div>từ vựng chi tiết theo chủ đề.</div>
-                  </>
-                )}
-              </div>
+                  </h1>
 
-              <Button
-                type="primary"
-                style={{
-                  background: "#d94a56",
-                  borderColor: "#d94a56",
-                  color: "#ffffff",
-                }}
-                className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
-              >
-                Tìm hiểu khóa học
-              </Button>
+                  <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
+                    {bannerData.description.map(
+                      (line: string, index: number) => (
+                        <div key={index}>{line}</div>
+                      )
+                    )}
+                  </div>
+
+                  <Link href={bannerData.button.link}>
+                    <Button
+                      type="primary"
+                      style={{
+                        background: "#d94a56",
+                        borderColor: "#d94a56",
+                        color: "#ffffff",
+                      }}
+                      className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
+                    >
+                      {bannerData.button.text}
+                    </Button>
+                  </Link>
+                </div>
+              </Container>
             </div>
-          </Container>
-        </div>
-      )}
+          );
+        })()}
 
       <Container className="pb-10">
         <div className="py-5">
@@ -279,19 +275,29 @@ export const PageArchive = ({
                 ))} */}
               </div>
               <div className="w-full sm:hidden">
-                <Input.Search
-                  size="large"
-                  allowClear
-                  onClear={() => {
-                    setValue("search", "", { shouldDirty: true });
-                  }}
-                  defaultValue={router.query.search?.toString() || ""}
-                  placeholder="Search"
-                  onSearch={(value) => {
-                    setValue("search", value, { shouldDirty: true });
-                  }}
-                  enterButton
-                />
+                <Space.Compact style={{ width: "100%" }}>
+                  <Input
+                    ref={searchInputRef}
+                    size="large"
+                    allowClear
+                    onClear={() => {
+                      setValue("search", "", { shouldDirty: true });
+                    }}
+                    defaultValue={router.query.search?.toString() || ""}
+                    placeholder="Search"
+                    onPressEnter={handleSearch}
+                  />
+                  <Button
+                    size="large"
+                    type="primary"
+                    icon={
+                      <span className="material-symbols-rounded flex">
+                        search
+                      </span>
+                    }
+                    onClick={handleSearch}
+                  />
+                </Space.Compact>
               </div>
               <Button onClick={() => setDrawerOpen(true)} className="sm:hidden">
                 <span className="material-symbols-rounded">filter_alt</span>

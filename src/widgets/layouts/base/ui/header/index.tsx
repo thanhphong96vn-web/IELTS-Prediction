@@ -12,6 +12,7 @@ import { MasterData, MenuItem, useAppContext, useAuth } from "@/appx/providers";
 import { ItemType } from "antd/es/menu/interface";
 import _ from "lodash";
 import { FacebookRoundedIcon, ZaloIcon } from "@/shared/ui/icons";
+import type { TopBarConfig } from "./types";
 
 function createModifiedMenuData(
   menu: MasterData["menuData"][string] | undefined,
@@ -62,6 +63,7 @@ export const Header = () => {
 
   const { isSignedIn, signOut, currentUser } = useAuth();
   const { masterData } = useAppContext();
+  const [topBarConfig, setTopBarConfig] = useState<TopBarConfig | null>(null);
 
   const {
     websiteOptions: {
@@ -71,6 +73,35 @@ export const Header = () => {
     },
     allSettings: { generalSettingsTitle },
   } = masterData;
+
+  // Fetch Top Bar config on mount
+  useEffect(() => {
+    const fetchTopBarConfig = async () => {
+      try {
+        const res = await fetch("/api/admin/header/top-bar");
+        if (res.ok) {
+          const data = await res.json();
+          setTopBarConfig(data);
+        }
+      } catch {
+        // Use default config if fetch fails
+        setTopBarConfig({
+          facebookFollowers: "500k Followers",
+          phoneNumber: "",
+          promotionalBanner: {
+            buttonText: "Hot",
+            emoji: "👋",
+            text: "Intro price. Get {siteName} for Big Sale -95% off.",
+          },
+          socialLinks: {
+            enabled: true,
+            customLinks: [],
+          },
+        });
+      }
+    };
+    fetchTopBarConfig();
+  }, []);
 
   const menuDataMapped = useMemo(() => {
     if (!masterData?.menuData["main-menu"]) return [];
@@ -214,40 +245,46 @@ export const Header = () => {
           <div className="flex items-center justify-between">
             {/* Left Side - Contact & Social Stats */}
             <div className="flex items-center gap-6 whitespace-nowrap">
-              {facebook && (
+              {facebook && topBarConfig && (
                 <div className="flex items-center gap-2">
                   <FacebookRoundedIcon className="w-4 h-4" />
                   <span className="text-xs whitespace-nowrap">
-                    500k Followers
+                    {topBarConfig.facebookFollowers}
                   </span>
                 </div>
               )}
-              {phoneNumber && (
+              {(topBarConfig?.phoneNumber || phoneNumber) && (
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-rounded text-base">
                     phone
                   </span>
                   <span className="text-xs whitespace-nowrap">
-                    {phoneNumber}
+                    {topBarConfig?.phoneNumber || phoneNumber}
                   </span>
                 </div>
               )}
             </div>
 
             {/* Middle Section - Promotional Banner */}
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <Button
-                className="bg-[#2563eb] border-none text-white rounded-md h-6 px-2 text-xs font-bold whitespace-nowrap"
-                style={{ backgroundColor: "#2563eb" }}
-              >
-                Hot
-              </Button>
-              <span className="text-xl">👋</span>
-              <span className="text-xs whitespace-nowrap">
-                Intro price. Get {generalSettingsTitle || "Histudy"} for Big
-                Sale -95% off.
-              </span>
-            </div>
+            {topBarConfig && (
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <Button
+                  className="bg-[#2563eb] border-none text-white rounded-md h-6 px-2 text-xs font-bold whitespace-nowrap"
+                  style={{ backgroundColor: "#2563eb" }}
+                >
+                  {topBarConfig.promotionalBanner.buttonText}
+                </Button>
+                <span className="text-xl">
+                  {topBarConfig.promotionalBanner.emoji}
+                </span>
+                <span className="text-xs whitespace-nowrap">
+                  {topBarConfig.promotionalBanner.text.replace(
+                    "{siteName}",
+                    generalSettingsTitle || "Histudy"
+                  )}
+                </span>
+              </div>
+            )}
 
             {/* Right Side - Social Links */}
             <div className="flex items-center gap-3">
@@ -292,7 +329,7 @@ export const Header = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0"
                     style={{ backgroundColor: "#d94a56" }}
                   >
                     {generalSettingsTitle?.charAt(0) || "L"}

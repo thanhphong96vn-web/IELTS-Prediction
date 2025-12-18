@@ -1,72 +1,11 @@
 import { Container } from "@/shared/ui";
 import Image from "next/image";
+import Link from "next/link";
+import type { TestimonialsConfig } from "./types";
 
-const TESTIMONIALS = [
-  {
-    name: "Martha Maldonado",
-    title: "Executive Chairman",
-    company: "@ Google",
-    quote:
-      "After the launch, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/art-stu-1.png",
-  },
-  {
-    name: "Michael D. Lovelady",
-    title: "CEO",
-    company: "@ Google",
-    quote:
-      "Histudy education, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/art-stu-2.png",
-  },
-  {
-    name: "Valerie J. Creasman",
-    title: "Executive Designer",
-    company: "@ Google",
-    quote:
-      "Our educational, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/art-stu-3.png",
-  },
-  {
-    name: "Hannah R. Sutton",
-    title: "Executive Chairman",
-    company: "@ Facebook",
-    quote:
-      "People says about, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/i-team.png",
-  },
-  {
-    name: "Pearl B. Hill",
-    title: "Chairman SR",
-    company: "@ Facebook",
-    quote:
-      "Like this histudy, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/art-stu-1.png",
-  },
-  {
-    name: "Mandy F. Wood",
-    title: "SR Designer",
-    company: "@ Google",
-    quote:
-      "Educational template, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/art-stu-2.png",
-  },
-  {
-    name: "Mildred W. Diaz",
-    title: "Executive Officer",
-    company: "@ Yelp",
-    quote:
-      "Online leaning, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/art-stu-3.png",
-  },
-  {
-    name: "Christopher H. Win",
-    title: "Product Designer",
-    company: "@ Google",
-    quote:
-      "Remote learning, vulputate at sapien sit amet, auctor iaculis lorem. In vel hend rerit nisi. Vestibulum eget risus velit.",
-    avatar: "/img-admin/i-team.png",
-  },
-];
+interface TestimonialsProps {
+  config: TestimonialsConfig;
+}
 
 const StarRating = () => {
   return (
@@ -89,7 +28,13 @@ const TestimonialCard = ({
   company,
   quote,
   avatar,
-}: (typeof TESTIMONIALS)[0]) => {
+}: {
+  name: string;
+  title: string;
+  company: string;
+  quote: string;
+  avatar: string;
+}) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 min-w-[320px] max-w-[320px] h-full">
       <div className="relative">
@@ -134,11 +79,13 @@ const TestimonialCard = ({
   );
 };
 
-export const Testimonials = () => {
+export const Testimonials = ({ config }: TestimonialsProps) => {
+  const { title, description, button, testimonials } = config;
+
   // Duplicate testimonials for seamless loop
   // Create a copy before reversing to avoid mutating the original array
-  const reversedTestimonials = [...TESTIMONIALS].reverse();
-  const testimonialsRow1 = [...TESTIMONIALS, ...TESTIMONIALS];
+  const reversedTestimonials = [...testimonials].reverse();
+  const testimonialsRow1 = [...testimonials, ...testimonials];
   const testimonialsRow2 = [...reversedTestimonials, ...reversedTestimonials];
 
   return (
@@ -148,24 +95,23 @@ export const Testimonials = () => {
           {/* Left Side - Introduction */}
           <div className="lg:col-span-3 pl-0 lg:pl-24">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-5 leading-tight">
-              What Our Learners Say
+              {title}
             </h2>
-            <p className="text-base text-gray-600 mb-5">
-              Learning communicate to global world and build a bright future
-              with our histudy.
-            </p>
-            <button
-              className="px-6 py-3 rounded-lg text-white font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              style={{
-                background:
-                  "linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%)",
-              }}
-            >
-              <span className="flex items-center gap-2">
-                Marquee Y
-                <span className="material-symbols-rounded">arrow_forward</span>
-              </span>
-            </button>
+            <p className="text-base text-gray-600 mb-5">{description}</p>
+            <Link href={button.link}>
+              <button
+                className="px-6 py-3 rounded-lg text-white font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%)",
+                }}
+              >
+                <span className="flex items-center gap-2">
+                  {button.text}
+                  <span className="material-symbols-rounded">arrow_forward</span>
+                </span>
+              </button>
+            </Link>
           </div>
 
           {/* Right Side - Testimonials */}

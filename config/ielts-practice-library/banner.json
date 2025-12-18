@@ -1,0 +1,27 @@
+{
+  "listening": {
+    "title": "IELTS Listening Practice Tests",
+    "description": [
+      "IELTS Listening Practice Tests Online miễn phí tại DOL Academy với đề",
+      "thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và",
+      "trải nghiệm làm bài thi thử như trên máy."
+    ],
+    "button": {
+      "text": "Tìm hiểu khóa học",
+      "link": "#"
+    }
+  },
+  "reading": {
+    "title": "IELTS Reading Practice Tests",
+    "description": [
+      "IELTS Reading Practice Tests Online miễn phí tại DOL Academy với đề",
+      "thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và",
+      "trải nghiệm làm bài thi thử như trên máy."
+    ],
+    "button": {
+      "text": "Tìm hiểu khóa học",
+      "link": "#"
+    }
+  }
+}
+

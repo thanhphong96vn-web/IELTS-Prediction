@@ -1,5 +1,5 @@
 import { Container } from "@/shared/ui";
-import { Breadcrumb, Empty, Pagination, Spin, Tabs, Button } from "antd";
+import { Breadcrumb, Empty, Pagination, Spin, Tabs } from "antd";
 import Link from "next/link";
 import { Filter } from "./filter";
 import { FormProvider, useForm } from "react-hook-form";
@@ -18,6 +18,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import ExamCollection from "./exam-collection";
 import _ from "lodash";
+import type { ExamLibraryHeroConfig } from "./types";
 
 export type FilterFormValues = {
   type: "all" | "academic" | "general";
@@ -29,7 +30,13 @@ export type FilterFormValues = {
 
 const PAGE_SIZE = 10;
 
-export const PageIELTSExamLibrary = () => {
+interface PageIELTSExamLibraryProps {
+  heroConfig: ExamLibraryHeroConfig;
+}
+
+export const PageIELTSExamLibrary = ({
+  heroConfig,
+}: PageIELTSExamLibraryProps) => {
   const router = useRouter();
   const methods = useForm<FilterFormValues>({
     defaultValues: {
@@ -137,64 +144,23 @@ export const PageIELTSExamLibrary = () => {
       >
         <Container className="flex flex-col items-center justify-center text-center">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-800 mb-4">
-            Subscription
+            {heroConfig.title}
           </h1>
           <Breadcrumb
             items={[
               {
-                title: <Link href="/">Home</Link>,
+                title: <Link href="/">{heroConfig.breadcrumb.homeLabel}</Link>,
               },
               {
-                title: "IELTS Exam Library",
+                title: heroConfig.breadcrumb.currentLabel,
               },
             ]}
             className="text-gray-500"
           />
         </Container>
       </div>
-
-      {/* Subscription Hero Section */}
-      <div
-        className="relative w-full py-2 flex items-center justify-center"
-        style={{
-          background: "#ffe0e3",
-        }}
-      >
-        <Container className="flex flex-row items-center justify-between gap-4">
-          <h6 className="text-sm md:text-base lg:text-base font-normal text-gray-800 whitespace-nowrap m-0">
-            Tài khoản của bạn đã hết hạn, gia hạn ngay!!!
-          </h6>
-          <Button
-            type="primary"
-            style={{
-              background: "#d94a56",
-              borderColor: "#d94a56",
-              color: "#ffffff",
-            }}
-            className="hover:bg-[#c0394a]! hover:border-[#c0394a]! whitespace-nowrap"
-          >
-            Gia hạn
-          </Button>
-        </Container>
-      </div>
-
       <Container className="space-y-4 pb-5">
-        <div className="space-y-2">
-          <div className="pt-5 pb-3">
-            <Breadcrumb
-              items={[
-                {
-                  title: <Link href="/">Home</Link>,
-                },
-                {
-                  title: "IELTS Exam Library",
-                },
-              ]}
-            />
-          </div>
-          <h1 className="pb-4 text-3xl md:text-5xl font-extrabold text-primary">
-            IELTS Exam Library
-          </h1>
+        <div className="space-y-2 mt-4">
           <QuizLibraryNav />
           <Filter />
         </div>

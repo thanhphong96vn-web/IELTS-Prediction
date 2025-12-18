@@ -1,0 +1,53 @@
+{
+  "trustpilot": {
+    "rating": "Lê Thành Thọ",
+    "image": "/img-admin/o-trustpilot.png"
+  },
+  "headline": {
+    "line1": "Education Is The Best",
+    "line2": "Key",
+    "line3": "Success",
+    "line4": "In Life"
+  },
+  "description": {
+    "text": "Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint.",
+    "highlightText": "Velit officia consequat."
+  },
+  "buttons": {
+    "primary": {
+      "text": "Get Started",
+      "link": "/account/register"
+    },
+    "secondary": {
+      "text": "Watch Video",
+      "link": "#"
+    }
+  },
+  "bannerImage": "/img-admin/user1-128x128-1766066941081.jpg",
+  "decorativeShape": {
+    "image": "/img-admin/o-shape-1.png"
+  },
+  "featureCards": [
+    {
+      "icon": "/img-admin/o-icon-1.png",
+      "title": "Your",
+      "subtitle": "Admission Complete"
+    },
+    {
+      "icon": "/img-admin/LeThanhTho-1766066981816.jpg",
+      "value": "36k+",
+      "subtitle": "Enrolled Students",
+      "avatars": [
+        "/img-admin/art-stu-2.png",
+        "/img-admin/art-stu-1.png",
+        "/img-admin/art-stu-3.png",
+        "/img-admin/i-team.png"
+      ]
+    },
+    {
+      "icon": "/img-admin/o-icon-3.png",
+      "value": "99%",
+      "subtitle": "Satisfied"
+    }
+  ]
+}

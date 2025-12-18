@@ -21,6 +21,9 @@
       "@/*": [
         "./src/*"
       ],
+      "~server/*": [
+        "./lib/server/*"
+      ],
     },
     "plugins": [
       {

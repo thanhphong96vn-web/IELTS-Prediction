@@ -7,6 +7,7 @@ import {
   Pagination,
   Select,
   Skeleton,
+  Space,
 } from "antd";
 import Link from "next/link";
 import { Filter } from "./filter";
@@ -14,7 +15,7 @@ import { Controller, FormProvider, useForm } from "react-hook-form";
 import { QuizLibraryNav } from "@/widgets";
 import { useLazyQuery } from "@apollo/client";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import _ from "lodash";
 import {
   GET_PRACTICE_TESTS,
@@ -23,6 +24,7 @@ import {
 } from "@/entities/practice-test";
 import { QUESTION_FORMS } from "@/shared/constants";
 import { PracticeTest } from "@/widgets/blocks";
+import type { PracticeLibraryBannerConfig } from "./types";
 
 export type FilterFormValues = {
   progress: "pending" | "completed" | "in-progress";
@@ -41,15 +43,18 @@ const PAGE_SIZE = 9;
 
 export const PageIELTSPracticeLibrary = ({
   quizFilterData,
+  bannerConfig,
 }: {
   quizFilterData: {
     years: Array<string>;
     sources: Array<string>;
     parts: Array<string>;
   };
+  bannerConfig: PracticeLibraryBannerConfig;
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const router = useRouter();
+  const searchInputRef = useRef<InputRef>(null);
   const methods = useForm<FilterFormValues>({
     defaultValues: {
       sort: "newest",
@@ -65,6 +70,14 @@ export const PageIELTSPracticeLibrary = ({
     reset, // <-- ĐÃ THÊM
     getValues, // <-- ĐÃ THÊM
   } = methods;
+
+  const handleSearch = () => {
+    if (searchInputRef.current) {
+      setValue("search", searchInputRef.current.input?.value || "", {
+        shouldDirty: true,
+      });
+    }
+  };
 
   const [getData, { data, loading, called, variables }] =
     useLazyQuery<IPracticeTestResponses>(GET_PRACTICE_TESTS, {
@@ -172,7 +185,10 @@ export const PageIELTSPracticeLibrary = ({
       "part",
     ];
 
-    const normalize = (value: any, key: string) => {
+    const normalize = (
+      value: string | string[] | number | undefined,
+      key: string
+    ) => {
       if (_.isNil(value) || value === "") return undefined;
       // Xử lý giá trị mặc định/rỗng để không bị coi là thay đổi
       if (key === "sort" && value === "newest") return undefined;
@@ -242,6 +258,7 @@ export const PageIELTSPracticeLibrary = ({
         shallow: true,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterValues, isDirty, router, setValue]);
 
   const skill = router.pathname.split("/").pop() || "";
@@ -254,62 +271,49 @@ export const PageIELTSPracticeLibrary = ({
       {/* <SEOHeader fullHead={category.seo.fullHead} title={category.seo.title} /> */}
 
       {/* Practice Banner Section */}
-      {showBanner && (
-        <div
-          className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
-          style={{
-            background: "#fffef5",
-          }}
-        >
-          <Container className="relative z-10">
-            <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
-                {isListening
-                  ? "IELTS Listening Practice Tests"
-                  : "IELTS Reading Practice Tests"}
-              </h1>
-              <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
-                {isListening ? (
-                  <>
-                    <div>
-                      IELTS Listening Practice Tests Online miễn phí tại DOL
-                      Academy với đề
-                    </div>
-                    <div>
-                      thi, audio, transcript, answer key, giải thích chi tiết từ
-                      vựng đi kèm và
-                    </div>
-                    <div>trải nghiệm làm bài thi thử như trên máy.</div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      IELTS Reading Practice Tests Online miễn phí tại DOL
-                      Academy với đề
-                    </div>
-                    <div>
-                      thi, transcript, answer key, giải thích chi tiết từ vựng
-                      đi kèm và
-                    </div>
-                    <div>trải nghiệm làm bài thi thử như trên máy.</div>
-                  </>
-                )}
-              </div>
-              <Button
-                type="primary"
-                style={{
-                  background: "#d94a56",
-                  borderColor: "#d94a56",
-                  color: "#ffffff",
-                }}
-                className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
-              >
-                Tìm hiểu khóa học
-              </Button>
+      {showBanner &&
+        (() => {
+          const bannerData = isListening
+            ? bannerConfig.listening
+            : bannerConfig.reading;
+
+          return (
+            <div
+              className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
+              style={{
+                background: "#fffef5",
+              }}
+            >
+              <Container className="relative z-10">
+                <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
+                    {bannerData.title}
+                  </h1>
+                  <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
+                    {bannerData.description.map(
+                      (line: string, index: number) => (
+                        <div key={index}>{line}</div>
+                      )
+                    )}
+                  </div>
+                  <Link href={bannerData.button.link}>
+                    <Button
+                      type="primary"
+                      style={{
+                        background: "#d94a56",
+                        borderColor: "#d94a56",
+                        color: "#ffffff",
+                      }}
+                      className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
+                    >
+                      {bannerData.button.text}
+                    </Button>
+                  </Link>
+                </div>
+              </Container>
             </div>
-          </Container>
-        </div>
-      )}
+          );
+        })()}
 
       <Container className="space-y-12 pb-5">
         <div className="space-y-2">
@@ -348,19 +352,29 @@ export const PageIELTSPracticeLibrary = ({
             {data && (
               <div className="flex flex-wrap justify-between sm:justify-end gap-4">
                 <div className="w-full sm:hidden">
-                  <Input.Search
-                    size="large"
-                    allowClear
-                    onClear={() => {
-                      setValue("search", "", { shouldDirty: true });
-                    }}
-                    defaultValue={router.query.search?.toString() || ""}
-                    placeholder="Search"
-                    onSearch={(value) => {
-                      setValue("search", value, { shouldDirty: true });
-                    }}
-                    enterButton
-                  />
+                  <Space.Compact style={{ width: "100%" }}>
+                    <Input
+                      ref={searchInputRef}
+                      size="large"
+                      allowClear
+                      onClear={() => {
+                        setValue("search", "", { shouldDirty: true });
+                      }}
+                      defaultValue={router.query.search?.toString() || ""}
+                      placeholder="Search"
+                      onPressEnter={handleSearch}
+                    />
+                    <Button
+                      size="large"
+                      type="primary"
+                      icon={
+                        <span className="material-symbols-rounded flex">
+                          search
+                        </span>
+                      }
+                      onClick={handleSearch}
+                    />
+                  </Space.Compact>
                 </div>
                 <Button
                   onClick={() => setDrawerOpen(true)}

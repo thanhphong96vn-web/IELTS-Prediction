@@ -3,8 +3,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "antd";
 import { ROUTES } from "@/shared/routes";
+import type { HeroBannerConfig } from "./types";
 
-export const HeroBanner = () => {
+interface HeroBannerProps {
+  config: HeroBannerConfig;
+}
+
+export const HeroBanner = ({ config }: HeroBannerProps) => {
+  const {
+    trustpilot,
+    headline,
+    description,
+    buttons,
+    bannerImage,
+    featureCards,
+    decorativeShape,
+  } = config;
   return (
     <div
       className="relative overflow-hidden py-12 md:py-20"
@@ -59,7 +73,7 @@ export const HeroBanner = () => {
             {/* Trustpilot Rating */}
             <div className="flex items-center gap-3 relative z-10">
               <Image
-                src="/img-admin/o-trustpilot.png"
+                src={trustpilot.image}
                 alt="Trustpilot"
                 width={220}
                 height={26}
@@ -70,16 +84,16 @@ export const HeroBanner = () => {
                 className="text-base font-medium"
                 style={{ color: "#22c55e" }}
               >
-                Excellent 4.9 out of 5
+                {trustpilot.rating}
               </span>
             </div>
 
             {/* Headline */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              <span style={{ color: "#374151" }}>Education Is The Best </span>
-              <span style={{ color: "#374151" }}>Key </span>
-              <span style={{ color: "#2563eb" }}>Success </span>
-              <span style={{ color: "#a855f7" }}>In Life</span>
+              <span style={{ color: "#374151" }}>{headline.line1} </span>
+              <span style={{ color: "#374151" }}>{headline.line2} </span>
+              <span style={{ color: "#2563eb" }}>{headline.line3} </span>
+              <span style={{ color: "#a855f7" }}>{headline.line4}</span>
             </h1>
 
             {/* Description */}
@@ -87,14 +101,13 @@ export const HeroBanner = () => {
               className="text-xl md:text-2xl leading-relaxed"
               style={{ color: "#22c55e" }}
             >
-              Amet minim mollit non deserunt ullamco est sit aliqua dolor do
-              amet sint.{" "}
-              <span className="font-medium">Velit officia consequat.</span>
+              {description.text}{" "}
+              <span className="font-medium">{description.highlightText}</span>
             </p>
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href={ROUTES.REGISTER}>
+              <Link href={buttons.primary.link}>
                 <Button
                   type="primary"
                   size="large"
@@ -105,28 +118,30 @@ export const HeroBanner = () => {
                   }}
                 >
                   <span className="flex items-center gap-2">
-                    Get Started
+                    {buttons.primary.text}
                     <span className="material-symbols-rounded">
                       arrow_forward
                     </span>
                   </span>
                 </Button>
               </Link>
-              <Button
-                size="large"
-                className="h-12 px-8 rounded-lg text-base font-medium border-2 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                style={{
-                  borderColor: "#374151",
-                  color: "#374151",
-                }}
-              >
-                <span className="flex items-center gap-2">
-                  Watch Video
-                  <span className="material-symbols-rounded text-lg">
-                    play_arrow
+              <Link href={buttons.secondary.link}>
+                <Button
+                  size="large"
+                  className="h-12 px-8 rounded-lg text-base font-medium border-2 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  style={{
+                    borderColor: "#374151",
+                    color: "#374151",
+                  }}
+                >
+                  <span className="flex items-center gap-2">
+                    {buttons.secondary.text}
+                    <span className="material-symbols-rounded text-lg">
+                      play_arrow
+                    </span>
                   </span>
-                </span>
-              </Button>
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -157,7 +172,7 @@ export const HeroBanner = () => {
               <div className="relative aspect-square max-w-lg mx-auto">
                 <div className="relative w-full h-full rounded-2xl overflow-hidden">
                   <Image
-                    src="/img-admin/o-banner.png"
+                    src={bannerImage}
                     alt="Banner"
                     fill
                     className="object-contain"
@@ -167,31 +182,11 @@ export const HeroBanner = () => {
                 </div>
 
                 {/* Feature Card 1 - Top Right */}
-                <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-5 flex items-center gap-3 animate-float">
-                  <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                    <Image
-                      src="/img-admin/o-icon-1.png"
-                      alt="Icon"
-                      width={48}
-                      height={48}
-                      unoptimized
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h6 className="font-bold text-base text-gray-900">Your</h6>
-                    <p className="text-sm" style={{ color: "#ec4899" }}>
-                      Admission Complete
-                    </p>
-                  </div>
-                </div>
-
-                {/* Enrolled Card - Middle Left */}
-                <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-5 animate-float-delayed">
-                  <div className="flex items-center gap-3 mb-3">
+                {featureCards[0] && (
+                  <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-5 flex items-center gap-3 animate-float">
                     <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
                       <Image
-                        src="/img-admin/o-icon-2.png"
+                        src={featureCards[0].icon}
                         alt="Icon"
                         width={48}
                         height={48}
@@ -200,55 +195,90 @@ export const HeroBanner = () => {
                       />
                     </div>
                     <div>
-                      <h6 className="font-bold text-xl text-gray-900">36k+</h6>
-                      <p className="text-sm" style={{ color: "#22c55e" }}>
-                        Enrolled Students
+                      {featureCards[0].title && (
+                        <h6 className="font-bold text-base text-gray-900">
+                          {featureCards[0].title}
+                        </h6>
+                      )}
+                      <p className="text-sm" style={{ color: "#ec4899" }}>
+                        {featureCards[0].subtitle}
                       </p>
                     </div>
                   </div>
-                  {/* Profile Avatars */}
-                  <div className="flex -space-x-2">
-                    {[
-                      "/img-admin/art-stu-2.png",
-                      "/img-admin/art-stu-1.png",
-                      "/img-admin/art-stu-3.png",
-                      "/img-admin/i-team.png",
-                    ].map((src, i) => (
-                      <div
-                        key={i}
-                        className="w-10 h-10 rounded-full border-2 border-white overflow-hidden relative flex-shrink-0"
-                      >
+                )}
+
+                {/* Enrolled Card - Middle Left */}
+                {featureCards[1] && (
+                  <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-5 animate-float-delayed">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
                         <Image
-                          src={src}
-                          alt={`Student ${i + 1}`}
-                          fill
-                          className="object-cover"
+                          src={featureCards[1].icon}
+                          alt="Icon"
+                          width={48}
+                          height={48}
                           unoptimized
+                          className="object-contain"
                         />
                       </div>
-                    ))}
+                      <div>
+                        {featureCards[1].value && (
+                          <h6 className="font-bold text-xl text-gray-900">
+                            {featureCards[1].value}
+                          </h6>
+                        )}
+                        <p className="text-sm" style={{ color: "#22c55e" }}>
+                          {featureCards[1].subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Profile Avatars */}
+                    {featureCards[1].avatars && (
+                      <div className="flex -space-x-2">
+                        {featureCards[1].avatars.map((avatar, i) => (
+                          <div
+                            key={i}
+                            className="w-10 h-10 rounded-full border-2 border-white overflow-hidden relative flex-shrink-0"
+                          >
+                            <Image
+                              src={avatar}
+                              alt={`Student ${i + 1}`}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
 
                 {/* Feature Card 2 - Bottom Right */}
-                <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-5 flex items-center gap-3 animate-float-delayed-2">
-                  <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
-                    <Image
-                      src="/img-admin/o-icon-3.png"
-                      alt="Icon"
-                      width={48}
-                      height={48}
-                      unoptimized
-                      className="object-contain"
-                    />
+                {featureCards[2] && (
+                  <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-5 flex items-center gap-3 animate-float-delayed-2">
+                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                      <Image
+                        src={featureCards[2].icon}
+                        alt="Icon"
+                        width={48}
+                        height={48}
+                        unoptimized
+                        className="object-contain"
+                      />
+                    </div>
+                    <div>
+                      {featureCards[2].value && (
+                        <h6 className="font-bold text-xl text-gray-900">
+                          {featureCards[2].value}
+                        </h6>
+                      )}
+                      <p className="text-sm" style={{ color: "#22c55e" }}>
+                        {featureCards[2].subtitle}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h6 className="font-bold text-xl text-gray-900">99%</h6>
-                    <p className="text-sm" style={{ color: "#22c55e" }}>
-                      Satisfied
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
               {/* Decorative Shape */}
               <div
@@ -267,7 +297,7 @@ export const HeroBanner = () => {
                 />
                 <div className="absolute inset-0">
                   <Image
-                    src="/img-admin/o-shape-1.png"
+                    src={decorativeShape.image}
                     alt="Shape"
                     fill
                     unoptimized

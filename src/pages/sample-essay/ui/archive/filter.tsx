@@ -6,9 +6,11 @@ import {
   Divider,
   Drawer,
   Input,
+  InputRef,
+  Space,
 } from "antd";
 import { Control, Controller, useForm, useFormContext } from "react-hook-form";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import _ from "lodash";
 import { SampleEssayProps } from "../..";
@@ -126,16 +128,40 @@ const SearchCard: React.FC<{
   ) => void;
 }> = ({ setValue }) => {
   const router = useRouter();
+  const searchInputRef = useRef<InputRef>(null);
+
+  const handleSearch = () => {
+    if (searchInputRef.current) {
+      setValue("search", searchInputRef.current.input?.value || "", {
+        shouldDirty: true,
+      });
+    }
+  };
+
   return (
     <FilterCard title="Search">
-      <Input.Search
-        allowClear
-        onClear={() => setValue("search", "", { shouldDirty: true })}
-        defaultValue={router.query.search?.toString() || ""}
-        placeholder="Search"
-        onSearch={(value) => setValue("search", value, { shouldDirty: true })}
-        enterButton
-      />
+      <Space.Compact style={{ width: "100%" }}>
+        <Input
+          ref={searchInputRef}
+          allowClear
+          onClear={() => setValue("search", "", { shouldDirty: true })}
+          defaultValue={router.query.search?.toString() || ""}
+          placeholder="Search"
+          onPressEnter={handleSearch}
+        />
+        <Button
+          type="primary"
+          icon={
+            <span
+              className="material-symbols-rounded flex"
+              style={{ display: "flex" }}
+            >
+              search
+            </span>
+          }
+          onClick={handleSearch}
+        />
+      </Space.Compact>
     </FilterCard>
   );
 };

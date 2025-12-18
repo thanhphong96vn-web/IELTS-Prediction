@@ -1,0 +1,38 @@
+{
+  "badge": {
+    "text": "CATEGORIES"
+  },
+  "title": {
+    "line1": "Explore Top Courses Caterories",
+    "line2": "That",
+    "line3": "Change",
+    "line4": "Yourself"
+  },
+  "categories": [
+    {
+      "name": "FULL TEST",
+      "href": "/ielts-exam-library",
+      "icon": "/full_test.jpg"
+    },
+    {
+      "name": "LISTENING",
+      "href": "/ielts-practice-library/listening",
+      "icon": "/listening.jpg"
+    },
+    {
+      "name": "READING",
+      "href": "/ielts-practice-library/reading",
+      "icon": "/reading.jpg"
+    },
+    {
+      "name": "SAMPLE WRITING",
+      "href": "/ielts-writing-sample",
+      "icon": "/writing.jpg"
+    },
+    {
+      "name": "SAMPLE SPEAKING",
+      "href": "/ielts-speaking-sample",
+      "icon": "/speaking.jpg"
+    }
+  ]
+}

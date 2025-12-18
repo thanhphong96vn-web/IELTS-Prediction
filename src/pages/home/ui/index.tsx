@@ -7,13 +7,29 @@ import { PracticeTest, SampleEssaysSlider } from "@/widgets/blocks";
 import { useAuth } from "@/appx/providers";
 import { PracticeHistory, TargetScore } from "@/widgets";
 import { ROUTES } from "@/shared/routes";
+import type { HeroBannerConfig } from "./hero-banner/types";
+import type { TestPlatformIntroConfig } from "./ielts-test-platform-intro/types";
+import type { WhyChooseUsConfig } from "./why-choose-us/types";
+import type { TestimonialsConfig } from "./testimonials/types";
 
-export const PageHome = () => {
+interface PageHomeProps {
+  heroBannerConfig: HeroBannerConfig;
+  testPlatformIntroConfig: TestPlatformIntroConfig;
+  whyChooseUsConfig: WhyChooseUsConfig;
+  testimonialsConfig: TestimonialsConfig;
+}
+
+export const PageHome = ({
+  heroBannerConfig,
+  testPlatformIntroConfig,
+  whyChooseUsConfig,
+  testimonialsConfig,
+}: PageHomeProps) => {
   const { isSignedIn } = useAuth();
   return (
     <>
-      <HeroBanner />
-      <IeltsTestPlatformIntro />
+      <HeroBanner config={heroBannerConfig} />
+      <IeltsTestPlatformIntro config={testPlatformIntroConfig} />
       <div className="py-16">
         <Container className="space-y-16">
           {isSignedIn && (
@@ -51,8 +67,8 @@ export const PageHome = () => {
           />
         </Container>
       </div>
-      <WhyChooseUs />
-      <Testimonials />
+      <WhyChooseUs config={whyChooseUsConfig} />
+      <Testimonials config={testimonialsConfig} />
     </>
   );
 };

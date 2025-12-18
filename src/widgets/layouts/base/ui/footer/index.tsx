@@ -5,7 +5,8 @@ import { useAppContext } from "@/appx/providers";
 import { Button, Input } from "antd";
 import { ROUTES } from "@/shared/routes";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import type { FooterCtaBannerConfig } from "./types";
 
 export const Footer = () => {
   const {
@@ -27,6 +28,31 @@ export const Footer = () => {
   } = useAppContext();
 
   const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [ctaBannerConfig, setCtaBannerConfig] = useState<FooterCtaBannerConfig | null>(null);
+
+  // Fetch CTA Banner config on mount
+  useEffect(() => {
+    const fetchCtaBannerConfig = async () => {
+      try {
+        const res = await fetch("/api/admin/footer/cta-banner");
+        if (res.ok) {
+          const data = await res.json();
+          setCtaBannerConfig(data);
+        }
+      } catch {
+        // Use default config if fetch fails
+        setCtaBannerConfig({
+          title: "Ready to start creating a standard website?",
+          description: "Finest choice for your home & office",
+          button: {
+            text: "Purchase Histudy",
+            link: "#",
+          },
+        });
+      }
+    };
+    fetchCtaBannerConfig();
+  }, []);
 
   const socialLinks = [
       {
@@ -97,17 +123,17 @@ export const Footer = () => {
                 className="text-2xl md:text-3xl font-bold mb-2"
                 style={{ color: "#000" }}
               >
-                Ready to start creating a standard website?
+                {ctaBannerConfig?.title || "Ready to start creating a standard website?"}
               </h2>
               <p className="text-gray-600 text-base">
-                Finest choice for your home & office
+                {ctaBannerConfig?.description || "Finest choice for your home & office"}
               </p>
             </div>
 
             {/* Right Side - Button */}
-          <div>
-              {buyProLink ? (
-                <Link href={buyProLink}>
+            <div>
+              {(ctaBannerConfig?.button.link || buyProLink) ? (
+                <Link href={ctaBannerConfig?.button.link || buyProLink || "#"}>
                   <Button
                     type="primary"
                     size="large"
@@ -117,7 +143,7 @@ export const Footer = () => {
                       borderColor: "#d94a56",
                     }}
                   >
-                    Purchase Histudy
+                    {ctaBannerConfig?.button.text || "Purchase Histudy"}
                   </Button>
                 </Link>
               ) : (
@@ -131,7 +157,7 @@ export const Footer = () => {
                   }}
                   disabled
                 >
-                  Purchase {generalSettingsTitle || "Histudy"}
+                  {ctaBannerConfig?.button.text || `Purchase ${generalSettingsTitle || "Histudy"}`}
                 </Button>
               )}
             </div>
