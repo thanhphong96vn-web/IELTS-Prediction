@@ -1,13 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig, writeConfig } from "../../../../lib/server/admin-config-helper";
-
-export interface ExamLibraryHeroConfig {
-  title: string;
-  breadcrumb: {
-    homeLabel: string;
-    currentLabel: string;
-  };
-}
+import type { ExamLibraryHeroConfig } from "@/shared/types/admin-config";
 
 export default function handler(
   req: NextApiRequest,

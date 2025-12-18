@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig } from "../../../../lib/server/admin-config-helper";
-import type { TestPlatformIntroConfig } from "./test-platform-intro";
+import type { TestPlatformIntroConfig } from "@/shared/types/admin-config";
 
 /**
  * API route để đọc test platform intro config

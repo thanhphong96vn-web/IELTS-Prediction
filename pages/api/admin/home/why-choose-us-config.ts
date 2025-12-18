@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig } from "../../../../lib/server/admin-config-helper";
-import type { WhyChooseUsConfig } from "./why-choose-us";
+import type { WhyChooseUsConfig } from "@/shared/types/admin-config";
 
 /**
  * API route để đọc why choose us config

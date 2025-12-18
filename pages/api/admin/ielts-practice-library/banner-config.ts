@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig } from "../../../../lib/server/admin-config-helper";
-import type { PracticeLibraryBannerConfig } from "./banner";
+import type { PracticeLibraryBannerConfig } from "@/shared/types/admin-config";
 
 /**
  * API route để đọc practice library banner config

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
-import type { ExamLibraryHeroConfig } from "../../../api/admin/ielts-exam-library/hero-banner";
+import type { ExamLibraryHeroConfig } from "@/shared/types/admin-config";
 import AdminLayout from "../_layout";
 
 const { Panel } = Collapse;

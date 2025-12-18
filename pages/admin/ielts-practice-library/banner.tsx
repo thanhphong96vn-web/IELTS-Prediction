@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
-import type { PracticeLibraryBannerConfig } from "../../../api/admin/ielts-practice-library/banner";
+import type { PracticeLibraryBannerConfig } from "@/shared/types/admin-config";
 import AdminLayout from "../_layout";
-import Link from "next/link";
 
 const { Panel } = Collapse;
 const { TextArea } = Input;
@@ -56,8 +55,8 @@ function PracticeLibraryBannerPage() {
             typeof values.listening.description === "string"
               ? values.listening.description
                   .split("\n")
-                  .map((line) => line.trim())
-                  .filter((line) => line.length > 0)
+                  .map((line: string) => line.trim())
+                  .filter((line: string) => line.length > 0)
               : values.listening.description,
         },
         reading: {
@@ -66,8 +65,8 @@ function PracticeLibraryBannerPage() {
             typeof values.reading.description === "string"
               ? values.reading.description
                   .split("\n")
-                  .map((line) => line.trim())
-                  .filter((line) => line.length > 0)
+                  .map((line: string) => line.trim())
+                  .filter((line: string) => line.length > 0)
               : values.reading.description,
         },
       };
@@ -128,9 +127,7 @@ function PracticeLibraryBannerPage() {
               <Form.Item
                 name={["listening", "title"]}
                 label="Title"
-                rules={[
-                  { required: true, message: "Vui lòng nhập title" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập title" }]}
               >
                 <Input placeholder="IELTS Listening Practice Tests" />
               </Form.Item>
@@ -185,9 +182,7 @@ trải nghiệm làm bài thi thử như trên máy.`}
               <Form.Item
                 name={["reading", "title"]}
                 label="Title"
-                rules={[
-                  { required: true, message: "Vui lòng nhập title" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng nhập title" }]}
               >
                 <Input placeholder="IELTS Reading Practice Tests" />
               </Form.Item>
@@ -255,4 +250,3 @@ trải nghiệm làm bài thi thử như trên máy.`}
 }
 
 export default PracticeLibraryBannerPage;
-

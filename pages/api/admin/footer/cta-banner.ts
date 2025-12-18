@@ -1,14 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig, writeConfig } from "../../../../lib/server/admin-config-helper";
-
-export interface FooterCtaBannerConfig {
-  title: string;
-  description: string;
-  button: {
-    text: string;
-    link: string;
-  };
-}
+import type { FooterCtaBannerConfig } from "@/shared/types/admin-config";
 
 export default function handler(
   req: NextApiRequest,

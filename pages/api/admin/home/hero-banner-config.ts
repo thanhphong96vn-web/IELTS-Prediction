@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig } from "../../../../lib/server/admin-config-helper";
-import type { HeroBannerConfig } from "./hero-banner";
+import type { HeroBannerConfig } from "@/shared/types/admin-config";
 
 /**
  * API route để đọc hero banner config

@@ -1,22 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig, writeConfig } from "../../../../lib/server/admin-config-helper";
-
-export interface TestPlatformIntroConfig {
-  badge: {
-    text: string;
-  };
-  title: {
-    line1: string;
-    line2: string;
-    line3: string;
-    line4: string;
-  };
-  categories: Array<{
-    name: string;
-    href: string;
-    icon: string;
-  }>;
-}
+import type { TestPlatformIntroConfig } from "@/shared/types/admin-config";
 
 export default function handler(
   req: NextApiRequest,
@@ -54,4 +38,3 @@ export default function handler(
 
   return res.status(405).json({ message: "Method not allowed" });
 }
-

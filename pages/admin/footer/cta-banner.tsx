@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
-import type { FooterCtaBannerConfig } from "../../../api/admin/footer/cta-banner";
+import type { FooterCtaBannerConfig } from "@/shared/types/admin-config";
 import AdminLayout from "../_layout";
 
 const { Panel } = Collapse;

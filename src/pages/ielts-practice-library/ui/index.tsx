@@ -9,6 +9,7 @@ import {
   Skeleton,
   Space,
 } from "antd";
+import type { InputRef } from "antd/es/input";
 import Link from "next/link";
 import { Filter } from "./filter";
 import { Controller, FormProvider, useForm } from "react-hook-form";

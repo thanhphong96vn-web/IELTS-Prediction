@@ -1,21 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig, writeConfig } from "../../../../lib/server/admin-config-helper";
-
-export interface TestimonialsConfig {
-  title: string;
-  description: string;
-  button: {
-    text: string;
-    link: string;
-  };
-  testimonials: Array<{
-    name: string;
-    title: string;
-    company: string;
-    quote: string;
-    avatar: string;
-  }>;
-}
+import type { TestimonialsConfig } from "@/shared/types/admin-config";
 
 export default function handler(
   req: NextApiRequest,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
-import type { TestPlatformIntroConfig } from "../../../api/admin/home/test-platform-intro";
+import type { TestPlatformIntroConfig } from "@/shared/types/admin-config";
 import { ImageUpload } from "@/shared/ui/image-upload";
 import AdminLayout from "../_layout";
 

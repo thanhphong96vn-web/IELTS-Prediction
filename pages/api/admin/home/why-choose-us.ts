@@ -1,18 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig, writeConfig } from "../../../../lib/server/admin-config-helper";
-
-export interface WhyChooseUsConfig {
-  badge: {
-    text: string;
-  };
-  title: string;
-  description: string;
-  statistics: Array<{
-    icon: string;
-    value: string;
-    label: string;
-  }>;
-}
+import type { WhyChooseUsConfig } from "@/shared/types/admin-config";
 
 export default function handler(
   req: NextApiRequest,

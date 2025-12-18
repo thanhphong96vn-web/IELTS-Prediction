@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { readConfig } from "../../../../lib/server/admin-config-helper";
-import type { TestimonialsConfig } from "./testimonials";
+import type { TestimonialsConfig } from "@/shared/types/admin-config";
 
 /**
  * API route để đọc testimonials config

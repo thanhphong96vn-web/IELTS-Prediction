@@ -1,29 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { readConfig, writeConfig } from "../../../../lib/server/admin-config-helper";
+import {
+  readConfig,
+  writeConfig,
+} from "../../../../lib/server/admin-config-helper";
+import type { PracticeLibraryBannerConfig } from "@/shared/types/admin-config";
 
-export interface PracticeLibraryBannerConfig {
-  listening: {
-    title: string;
-    description: string[];
-    button: {
-      text: string;
-      link: string;
-    };
-  };
-  reading: {
-    title: string;
-    description: string[];
-    button: {
-      text: string;
-      link: string;
-    };
-  };
-}
-
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
   const sectionName = "ielts-practice-library/banner";
 
   if (req.method === "GET") {
@@ -56,4 +38,3 @@ export default function handler(
 
   return res.status(405).json({ message: "Method not allowed" });
 }
-

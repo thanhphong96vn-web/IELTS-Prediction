@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Form, Input, Button, Card, Collapse, message } from "antd";
 import AdminLayout from "../_layout";
-import type { TopBarConfig } from "../../../api/admin/header/top-bar";
+import type { TopBarConfig } from "@/shared/types/admin-config";
 
 const { Panel } = Collapse;
 

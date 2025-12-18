@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button, Input, Form, Card, Space, Collapse, InputNumber, message } from "antd";
-import type { WhyChooseUsConfig } from "../../../api/admin/home/why-choose-us";
+import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
+import type { WhyChooseUsConfig } from "@/shared/types/admin-config";
 import AdminLayout from "../_layout";
 
 const { Panel } = Collapse;
@@ -70,7 +70,9 @@ function WhyChooseUsPage() {
         }
       >
         <Form form={form} layout="vertical" initialValues={config}>
-          <Collapse defaultActiveKey={["badge", "title", "description", "statistics"]}>
+          <Collapse
+            defaultActiveKey={["badge", "title", "description", "statistics"]}
+          >
             {/* Badge Section */}
             <Panel header="Badge" key="badge">
               <Form.Item
