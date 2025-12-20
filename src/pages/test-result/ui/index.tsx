@@ -128,11 +128,20 @@ export function PageTestResult({
               </p>
               <Button
                 size="large"
-                onClick={
-                  post.quizFields.proUserOnly && !currentUser?.userData.isPro
-                    ? openProContentModal
-                    : () => setIsModalOpen(true)
-                }
+                onClick={() => {
+                  // Nếu chưa đăng nhập, navigate về login
+                  if (!currentUser) {
+                    window.location.href = ROUTES.LOGIN(ROUTES.TAKE_THE_TEST(post.slug));
+                    return;
+                  }
+                  // Nếu là pro content và user không phải pro, hiện modal
+                  if (post.quizFields.proUserOnly && !currentUser.userData.isPro) {
+                    openProContentModal();
+                    return;
+                  }
+                  // Ngược lại, mở modal chọn chế độ
+                  setIsModalOpen(true);
+                }}
               >
                 <span className="material-symbols-rounded text-primary!"> play_circle </span>
                 <span className="font-semibold">Take the Test</span>

@@ -76,9 +76,17 @@ export const ExamItem = ({
   const handleOpen = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      openProContentModal();
+      // Nếu chưa đăng nhập, navigate về login
+      if (!currentUser) {
+        window.location.href = ROUTES.LOGIN(itemLink);
+        return;
+      }
+      // Nếu đã đăng nhập nhưng không phải pro, hiện modal
+      if (!currentUser.userData.isPro) {
+        openProContentModal();
+      }
     },
-    [openProContentModal]
+    [openProContentModal, currentUser, itemLink]
   );
 
   return (

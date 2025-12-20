@@ -95,9 +95,17 @@ export const PracticeTestItem = ({ item }: { item: IPracticeTest }) => {
   const handleOpen = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
-      openProContentModal();
+      // Nếu chưa đăng nhập, navigate về login
+      if (!currentUser) {
+        window.location.href = ROUTES.LOGIN(ROUTES.PRACTICE.SINGLE(item.slug));
+        return;
+      }
+      // Nếu đã đăng nhập nhưng không phải pro, hiện modal
+      if (!currentUser.userData.isPro) {
+        openProContentModal();
+      }
     },
-    [openProContentModal]
+    [openProContentModal, currentUser, item.slug]
   );
 
   const { label, colorIndex } = useMemo(getFieldInfo, [getFieldInfo]);
@@ -193,7 +201,7 @@ export const PracticeTestItem = ({ item }: { item: IPracticeTest }) => {
                         size="large"
                         color="blue"
                         variant="outlined"
-                        onClick={openProContentModal}
+                        onClick={handleOpen}
                       >
                         <span className="material-symbols-rounded text-blue-500!">
                           pause_circle
@@ -201,7 +209,7 @@ export const PracticeTestItem = ({ item }: { item: IPracticeTest }) => {
                         <span className="font-semibold">Continue</span>
                       </Button>
                     ) : ( */}
-                <Button size="large" onClick={openProContentModal}>
+                <Button size="large" onClick={handleOpen}>
                   <span className="material-symbols-rounded text-primary!">
                     play_circle
                   </span>

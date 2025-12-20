@@ -22,41 +22,14 @@ import { HorizontalItem } from "./horizontal-item";
 
 const PAGE_SIZE = 18;
 
-// const skillNav = [
-//   {
-//     name: "Writing",
-//     link: ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING,
-//     icon: "/Pencil.svg",
-//     skill: "writing",
-//   },
-//   {
-//     name: "Speaking",
-//     link: ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING,
-//     icon: "/speech.png",
-//     skill: "speaking",
-//   },
-//   {
-//     name: "Reading",
-//     link: ROUTES.SAMPLE_ESSAY.ARCHIVE_READING,
-//     icon: "/Reading.png",
-//     skill: "reading",
-//   },
-//   {
-//     name: "Listening",
-//     link: ROUTES.SAMPLE_ESSAY.ARCHIVE_LISTENING,
-//     icon: "/Listening.png",
-//     skill: "listening",
-//   },
-// ];
-
 export type FilterFormValues = {
-  sampleSource: string;
-  part: string;
+  sampleSource: string | string[];
+  part: string | string[];
   sort: "newest" | "oldest" | "popular" | "a-z" | "z-a";
   search: string;
   size: number;
   year: string;
-  topic: string;
+  topic: string | string[];
   questionType: string;
   quarter: string;
 };
@@ -73,6 +46,7 @@ export const PageArchive = ({
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const searchInputRef = useRef<InputRef>(null);
+  const isSyncingFromUrl = useRef(false); // Flag để tránh vòng lặp
   const methods = useForm<FilterFormValues>({
     defaultValues: {
       sort: "newest",
@@ -84,6 +58,8 @@ export const PageArchive = ({
     watch,
     formState: { isDirty },
     setValue,
+    reset,
+    getValues,
   } = methods;
 
   const handleSearch = () => {
@@ -94,64 +70,124 @@ export const PageArchive = ({
     }
   };
 
+  // 1. Sync từ URL vào Form (chỉ khi router.query thay đổi, không trigger isDirty)
   useEffect(() => {
-    setValue(
-      "sort",
-      (router.query.sort as FilterFormValues["sort"]) || "newest"
-    );
-  }, [router.query, setValue]);
+    if (!router.isReady) return;
+
+    isSyncingFromUrl.current = true; // Đánh dấu đang sync từ URL
+
+    const currentValues = getValues();
+    const urlParams = _.omit(router.query, ["slug"]);
+
+    // Chuyển đổi array string từ URL thành array
+    const formData: Partial<FilterFormValues> = {
+      ...currentValues,
+      sort: (urlParams.sort as FilterFormValues["sort"]) || "newest",
+      search: (urlParams.search as string) || "",
+      size: urlParams.size ? Number(urlParams.size) : PAGE_SIZE,
+      year: (urlParams.year as string) || "",
+      topic: (urlParams.topic as string) || "",
+      part: (urlParams.part as string) || "",
+      questionType: (urlParams.questionType as string) || "",
+      quarter: (urlParams.quarter as string) || "",
+      sampleSource: (urlParams.sampleSource as string) || "",
+    };
+
+    // Chuyển đổi string thành array cho các field có thể là array
+    if (urlParams.topic) {
+      const topicValue = Array.isArray(urlParams.topic)
+        ? urlParams.topic[0]
+        : urlParams.topic;
+      if (typeof topicValue === "string") {
+        formData.topic = topicValue.includes(",")
+          ? topicValue.split(",")
+          : topicValue;
+      }
+    }
+    if (urlParams.part) {
+      const partValue = Array.isArray(urlParams.part)
+        ? urlParams.part[0]
+        : urlParams.part;
+      if (typeof partValue === "string") {
+        formData.part = partValue.includes(",")
+          ? partValue.split(",")
+          : partValue;
+      }
+    }
+
+    // Reset form với giá trị từ URL (không trigger isDirty)
+    reset(formData as FilterFormValues, { keepDirty: false });
+
+    // Reset flag sau một tick để cho phép useEffect 2 chạy lại nếu cần
+    setTimeout(() => {
+      isSyncingFromUrl.current = false;
+    }, 0);
+  }, [router.query, router.isReady, reset, getValues]);
 
   const filterValues = watch();
 
+  // 2. Sync từ Form ra URL (chỉ khi form thay đổi và isDirty = true)
   useEffect(() => {
-    if (!isDirty) return;
-    let params = _.omit(router.query, ["slug"]);
+    if (!isDirty || !router.isReady || isSyncingFromUrl.current) return;
 
-    Object.keys(filterValues).forEach((key) => {
-      const value = filterValues[key as keyof FilterFormValues];
+    const formValues = filterValues;
+
+    // Tạo params mới từ form values
+    const params: Record<string, string> = {};
+
+    Object.keys(formValues).forEach((key) => {
+      const value = formValues[key as keyof FilterFormValues];
+
+      // Bỏ qua các giá trị mặc định/rỗng
       if (
         value === "all" ||
         !value ||
         value === "newest" ||
-        (key === "size" && value === PAGE_SIZE)
+        (key === "size" && value === PAGE_SIZE) ||
+        (key === "search" && value === "")
       ) {
-        params = _.omit(params, key);
+        return;
+      }
+
+      if (_.isArray(value)) {
+        if (value.length > 0) {
+          params[key] = value.join(",");
+        }
       } else {
-        if (_.isArray(value)) {
-          if (value.length === 0) {
-            params = _.omit(params, key);
-          } else {
-            _.set(params, key, value.join(","));
-          }
-        } else _.set(params, key, value.toString());
+        params[key] = value.toString();
       }
     });
 
+    // So sánh với URL hiện tại để tránh push không cần thiết
     const queryParams = new URLSearchParams();
-
     Object.entries(params).forEach(([key, value]) => {
-      if (value) queryParams.append(key, value.toString());
+      if (value) {
+        queryParams.append(key, value);
+      }
     });
 
-    const queryString = queryParams.toString();
+    const newQueryString = queryParams.toString();
+    const currentQueryString = new URLSearchParams(
+      window.location.search
+    ).toString();
 
-    if (queryString) {
-      router.push(
-        `${
-          skill === "speaking"
-            ? `${ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING}`
-            : `${ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING}`
-        }?${queryString}`
-      );
-      return;
+    // Chỉ push nếu query string thực sự thay đổi
+    if (newQueryString !== currentQueryString) {
+      const newPath = newQueryString
+        ? `${
+            skill === "speaking"
+              ? ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING
+              : ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING
+          }?${newQueryString}`
+        : skill === "speaking"
+        ? ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING
+        : ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING;
+
+      // Bỏ shallow: true để trigger getServerSideProps và fetch data mới
+      router.push(newPath);
     }
-
-    router.push(
-      skill === "speaking"
-        ? `${ROUTES.SAMPLE_ESSAY.ARCHIVE_SPEAKING}`
-        : `${ROUTES.SAMPLE_ESSAY.ARCHIVE_WRITING}`
-    );
-  }, [filterValues, isDirty, router, skill]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterValues, isDirty, router.isReady, skill]);
 
   const isWriting = skill === "writing";
   const isSpeaking = skill === "speaking";
