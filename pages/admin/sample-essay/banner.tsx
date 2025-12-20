@@ -19,7 +19,7 @@ function SampleEssayBannerPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/sample-essay/banner");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       // Convert description array to string for TextArea
@@ -36,7 +36,7 @@ function SampleEssayBannerPage() {
       };
       form.setFieldsValue(formData);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -75,9 +75,9 @@ function SampleEssayBannerPage() {
         body: JSON.stringify(configData),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(configData);
       // Update form với description dạng string
       form.setFieldsValue({
@@ -91,7 +91,7 @@ function SampleEssayBannerPage() {
         },
       });
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -101,7 +101,7 @@ function SampleEssayBannerPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -113,7 +113,7 @@ function SampleEssayBannerPage() {
         title={
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold m-0">
-              Quản lý Sample Essay Banner
+              Manage Sample Essay Banner
             </h1>
           </div>
         }
@@ -126,7 +126,7 @@ function SampleEssayBannerPage() {
                 name={["writing", "title", "line1"]}
                 label="Title Line 1"
                 rules={[
-                  { required: true, message: "Vui lòng nhập title line 1" },
+                  { required: true, message: "Please enter title line 1" },
                 ]}
               >
                 <Input placeholder="DOL IELTS Writing" />
@@ -137,13 +137,13 @@ function SampleEssayBannerPage() {
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập highlighted text",
+                    message: "Please enter highlighted text",
                   },
                 ]}
               >
                 <Input placeholder="Task 1 Academic" />
                 <p className="text-xs text-gray-500 mt-1">
-                  Phần text này sẽ được underline với màu vàng
+                  This text will be underlined with yellow color
                 </p>
               </Form.Item>
               <Form.Item
@@ -152,7 +152,7 @@ function SampleEssayBannerPage() {
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập text sau highlighted",
+                    message: "Please enter text after highlighted",
                   },
                 ]}
               >
@@ -160,11 +160,11 @@ function SampleEssayBannerPage() {
               </Form.Item>
               <Form.Item
                 name={["writing", "description"]}
-                label="Description (mỗi dòng một phần tử trong array)"
+                label="Description (each line is an array element)"
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập description",
+                    message: "Please enter description",
                   },
                 ]}
               >
@@ -174,7 +174,7 @@ function SampleEssayBannerPage() {
 từ vựng chi tiết theo chủ đề.`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Mỗi dòng sẽ là một phần tử trong mảng description
+                  Each line will be an element in the description array
                 </p>
               </Form.Item>
               <Form.Item
@@ -183,7 +183,7 @@ từ vựng chi tiết theo chủ đề.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button text",
+                    message: "Please enter button text",
                   },
                 ]}
               >
@@ -195,7 +195,7 @@ từ vựng chi tiết theo chủ đề.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button link",
+                    message: "Please enter button link",
                   },
                 ]}
               >
@@ -209,7 +209,7 @@ từ vựng chi tiết theo chủ đề.`}
                 name={["speaking", "title", "line1"]}
                 label="Title Line 1"
                 rules={[
-                  { required: true, message: "Vui lòng nhập title line 1" },
+                  { required: true, message: "Please enter title line 1" },
                 ]}
               >
                 <Input placeholder="DOL IELTS Speaking" />
@@ -220,13 +220,13 @@ từ vựng chi tiết theo chủ đề.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập highlighted text",
+                    message: "Please enter highlighted text",
                   },
                 ]}
               >
                 <Input placeholder="Task 1 Academic" />
                 <p className="text-xs text-gray-500 mt-1">
-                  Phần text này sẽ được underline với màu vàng
+                  This text will be underlined with yellow color
                 </p>
               </Form.Item>
               <Form.Item
@@ -235,7 +235,7 @@ từ vựng chi tiết theo chủ đề.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập text sau highlighted",
+                    message: "Please enter text after highlighted",
                   },
                 ]}
               >
@@ -243,11 +243,11 @@ từ vựng chi tiết theo chủ đề.`}
               </Form.Item>
               <Form.Item
                 name={["speaking", "description"]}
-                label="Description (mỗi dòng một phần tử trong array)"
+                label="Description (each line is an array element)"
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập description",
+                    message: "Please enter description",
                   },
                 ]}
               >
@@ -257,7 +257,7 @@ từ vựng chi tiết theo chủ đề.`}
 từ vựng chi tiết theo chủ đề.`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Mỗi dòng sẽ là một phần tử trong mảng description
+                  Each line will be an element in the description array
                 </p>
               </Form.Item>
               <Form.Item
@@ -266,7 +266,7 @@ từ vựng chi tiết theo chủ đề.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button text",
+                    message: "Please enter button text",
                   },
                 ]}
               >
@@ -278,7 +278,7 @@ từ vựng chi tiết theo chủ đề.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button link",
+                    message: "Please enter button link",
                   },
                 ]}
               >
@@ -294,7 +294,7 @@ từ vựng chi tiết theo chủ đề.`}
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

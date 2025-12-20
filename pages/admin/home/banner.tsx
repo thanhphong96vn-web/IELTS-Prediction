@@ -19,12 +19,12 @@ function HeroBannerPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/home/hero-banner");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       form.setFieldsValue(data);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -39,12 +39,12 @@ function HeroBannerPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(values);
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -54,7 +54,7 @@ function HeroBannerPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -65,7 +65,7 @@ function HeroBannerPage() {
       <Card
         title={
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold m-0">Quản lý Hero Banner</h1>
+            <h1 className="text-2xl font-bold m-0">Manage Hero Banner</h1>
           </div>
         }
       >
@@ -85,7 +85,7 @@ function HeroBannerPage() {
               <Form.Item
                 name={["trustpilot", "rating"]}
                 label="Rating Text"
-                rules={[{ required: true, message: "Vui lòng nhập rating" }]}
+                rules={[{ required: true, message: "Please enter rating" }]}
               >
                 <Input placeholder="Excellent 4.9 out of 5" />
               </Form.Item>
@@ -93,7 +93,7 @@ function HeroBannerPage() {
                 name={["trustpilot", "image"]}
                 label="Trustpilot Image"
                 rules={[
-                  { required: true, message: "Vui lòng upload hình ảnh" },
+                  { required: true, message: "Please upload image" },
                 ]}
               >
                 <ImageUpload />
@@ -104,29 +104,29 @@ function HeroBannerPage() {
             <Panel header="Headline" key="headline">
               <Form.Item
                 name={["headline", "line1"]}
-                label="Dòng 1"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 1" }]}
+                label="Line 1"
+                rules={[{ required: true, message: "Please enter line 1" }]}
               >
                 <Input placeholder="Education Is The Best" />
               </Form.Item>
               <Form.Item
                 name={["headline", "line2"]}
-                label="Dòng 2"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 2" }]}
+                label="Line 2"
+                rules={[{ required: true, message: "Please enter line 2" }]}
               >
                 <Input placeholder="Key" />
               </Form.Item>
               <Form.Item
                 name={["headline", "line3"]}
-                label="Dòng 3"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 3" }]}
+                label="Line 3"
+                rules={[{ required: true, message: "Please enter line 3" }]}
               >
                 <Input placeholder="Success" />
               </Form.Item>
               <Form.Item
                 name={["headline", "line4"]}
-                label="Dòng 4"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 4" }]}
+                label="Line 4"
+                rules={[{ required: true, message: "Please enter line 4" }]}
               >
                 <Input placeholder="In Life" />
               </Form.Item>
@@ -136,9 +136,9 @@ function HeroBannerPage() {
             <Panel header="Description" key="description">
               <Form.Item
                 name={["description", "text"]}
-                label="Text chính"
+                label="Main Text"
                 rules={[
-                  { required: true, message: "Vui lòng nhập text chính" },
+                  { required: true, message: "Please enter main text" },
                 ]}
               >
                 <Input.TextArea
@@ -148,9 +148,9 @@ function HeroBannerPage() {
               </Form.Item>
               <Form.Item
                 name={["description", "highlightText"]}
-                label="Text highlight"
+                label="Highlight Text"
                 rules={[
-                  { required: true, message: "Vui lòng nhập text highlight" },
+                  { required: true, message: "Please enter highlight text" },
                 ]}
               >
                 <Input placeholder="Velit officia consequat." />
@@ -167,7 +167,7 @@ function HeroBannerPage() {
                     rules={[
                       {
                         required: true,
-                        message: "Vui lòng nhập text button",
+                        message: "Please enter button text",
                       },
                     ]}
                   >
@@ -176,7 +176,7 @@ function HeroBannerPage() {
                   <Form.Item
                     name={["buttons", "primary", "link"]}
                     label="Link"
-                    rules={[{ required: true, message: "Vui lòng nhập link" }]}
+                    rules={[{ required: true, message: "Please enter link" }]}
                   >
                     <Input placeholder="/account/register" />
                   </Form.Item>
@@ -188,7 +188,7 @@ function HeroBannerPage() {
                     rules={[
                       {
                         required: true,
-                        message: "Vui lòng nhập text button",
+                        message: "Please enter button text",
                       },
                     ]}
                   >
@@ -197,7 +197,7 @@ function HeroBannerPage() {
                   <Form.Item
                     name={["buttons", "secondary", "link"]}
                     label="Link"
-                    rules={[{ required: true, message: "Vui lòng nhập link" }]}
+                    rules={[{ required: true, message: "Please enter link" }]}
                   >
                     <Input placeholder="#" />
                   </Form.Item>
@@ -211,7 +211,7 @@ function HeroBannerPage() {
                 name="bannerImage"
                 label="Banner Image"
                 rules={[
-                  { required: true, message: "Vui lòng upload hình ảnh" },
+                  { required: true, message: "Please upload image" },
                 ]}
               >
                 <ImageUpload />
@@ -220,7 +220,7 @@ function HeroBannerPage() {
                 name={["decorativeShape", "image"]}
                 label="Decorative Shape Image"
                 rules={[
-                  { required: true, message: "Vui lòng upload hình ảnh" },
+                  { required: true, message: "Please upload image" },
                 ]}
               >
                 <ImageUpload />
@@ -244,7 +244,7 @@ function HeroBannerPage() {
                             danger
                             onClick={() => remove(field.name)}
                           >
-                            Xóa
+                            Delete
                           </Button>
                         }
                       >
@@ -254,7 +254,7 @@ function HeroBannerPage() {
                           rules={[
                             {
                               required: true,
-                              message: "Vui lòng upload icon",
+                              message: "Please upload icon",
                             },
                           ]}
                         >
@@ -278,7 +278,7 @@ function HeroBannerPage() {
                           rules={[
                             {
                               required: true,
-                              message: "Vui lòng nhập subtitle",
+                              message: "Please enter subtitle",
                             },
                           ]}
                         >
@@ -306,7 +306,7 @@ function HeroBannerPage() {
                                       }
                                       className="p-0"
                                     >
-                                      Xóa Avatar này
+                                      Delete this Avatar
                                     </Button>
                                   </div>
                                 </Form.Item>
@@ -316,7 +316,7 @@ function HeroBannerPage() {
                                 onClick={() => addAvatar()}
                                 className="w-full"
                               >
-                                + Thêm Avatar
+                                + Add Avatar
                               </Button>
                             </>
                           )}
@@ -328,7 +328,7 @@ function HeroBannerPage() {
                       onClick={() => add()}
                       className="w-full"
                     >
-                      + Thêm Feature Card
+                      + Add Feature Card
                     </Button>
                   </>
                 )}
@@ -343,7 +343,7 @@ function HeroBannerPage() {
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

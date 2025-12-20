@@ -92,17 +92,6 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
-  {
-    key: "full-test",
-    icon: <FileTextOutlined />,
-    label: "Full Test",
-    children: [
-      {
-        key: "/admin/full-test/hero",
-        label: "Hero",
-      },
-    ],
-  },
 ];
 
 interface AdminLayoutProps {
@@ -119,7 +108,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
-  // Tìm key hiện tại dựa trên pathname
+  // Find current key based on pathname
   const getSelectedKeys = () => {
     const path = router.asPath;
     for (const item of menuItems) {
@@ -145,7 +134,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }
       }
     }
-    return ["home"]; // Default mở section Home
+    return ["home"]; // Default open Home section
   };
 
   return (

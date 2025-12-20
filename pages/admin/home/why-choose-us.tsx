@@ -19,12 +19,12 @@ function WhyChooseUsPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/home/why-choose-us");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       form.setFieldsValue(data);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -39,12 +39,12 @@ function WhyChooseUsPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(values);
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -54,7 +54,7 @@ function WhyChooseUsPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -65,7 +65,7 @@ function WhyChooseUsPage() {
       <Card
         title={
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold m-0">Quản lý Why Choose Us</h1>
+            <h1 className="text-2xl font-bold m-0">Manage Why Choose Us</h1>
           </div>
         }
       >
@@ -79,7 +79,7 @@ function WhyChooseUsPage() {
                 name={["badge", "text"]}
                 label="Badge Text"
                 rules={[
-                  { required: true, message: "Vui lòng nhập badge text" },
+                  { required: true, message: "Please enter badge text" },
                 ]}
               >
                 <Input placeholder="Why Choose Us" />
@@ -91,7 +91,7 @@ function WhyChooseUsPage() {
               <Form.Item
                 name="title"
                 label="Title"
-                rules={[{ required: true, message: "Vui lòng nhập title" }]}
+                rules={[{ required: true, message: "Please enter title" }]}
               >
                 <Input placeholder="Creating A Community Of Life Long Learners." />
               </Form.Item>
@@ -103,7 +103,7 @@ function WhyChooseUsPage() {
                 name="description"
                 label="Description"
                 rules={[
-                  { required: true, message: "Vui lòng nhập description" },
+                  { required: true, message: "Please enter description" },
                 ]}
               >
                 <TextArea
@@ -130,7 +130,7 @@ function WhyChooseUsPage() {
                             danger
                             onClick={() => remove(field.name)}
                           >
-                            Xóa
+                            Delete
                           </Button>
                         }
                       >
@@ -138,12 +138,12 @@ function WhyChooseUsPage() {
                           name={[field.name, "icon"]}
                           label="Icon (Material Symbol)"
                           rules={[
-                            { required: true, message: "Vui lòng nhập icon" },
+                            { required: true, message: "Please enter icon" },
                           ]}
                         >
                           <Input placeholder="favorite" />
                           <p className="text-xs text-gray-500 mt-1">
-                            Tên icon từ Material Symbols (ví dụ: favorite,
+                            Icon name from Material Symbols (e.g., favorite,
                             show_chart, cast, map)
                           </p>
                         </Form.Item>
@@ -151,7 +151,7 @@ function WhyChooseUsPage() {
                           name={[field.name, "value"]}
                           label="Value"
                           rules={[
-                            { required: true, message: "Vui lòng nhập value" },
+                            { required: true, message: "Please enter value" },
                           ]}
                         >
                           <Input placeholder="500+" />
@@ -160,7 +160,7 @@ function WhyChooseUsPage() {
                           name={[field.name, "label"]}
                           label="Label"
                           rules={[
-                            { required: true, message: "Vui lòng nhập label" },
+                            { required: true, message: "Please enter label" },
                           ]}
                         >
                           <Input placeholder="Learners & counting" />
@@ -172,7 +172,7 @@ function WhyChooseUsPage() {
                       onClick={() => add()}
                       className="w-full"
                     >
-                      + Thêm Statistic
+                      + Add Statistic
                     </Button>
                   </>
                 )}
@@ -187,7 +187,7 @@ function WhyChooseUsPage() {
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

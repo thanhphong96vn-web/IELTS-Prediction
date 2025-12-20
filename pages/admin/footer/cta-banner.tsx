@@ -18,12 +18,12 @@ function FooterCtaBannerPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/footer/cta-banner");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       form.setFieldsValue(data);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -38,12 +38,12 @@ function FooterCtaBannerPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(values);
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -53,7 +53,7 @@ function FooterCtaBannerPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -64,9 +64,7 @@ function FooterCtaBannerPage() {
       <Card
         title={
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold m-0">
-              Quản lý Footer CTA Banner
-            </h1>
+            <h1 className="text-2xl font-bold m-0">Manage Footer CTA Banner</h1>
           </div>
         }
       >
@@ -77,7 +75,7 @@ function FooterCtaBannerPage() {
               <Form.Item
                 name="title"
                 label="Title"
-                rules={[{ required: true, message: "Vui lòng nhập title" }]}
+                rules={[{ required: true, message: "Please enter title" }]}
               >
                 <Input placeholder="Ready to start creating a standard website?" />
               </Form.Item>
@@ -85,7 +83,7 @@ function FooterCtaBannerPage() {
                 name="description"
                 label="Description"
                 rules={[
-                  { required: true, message: "Vui lòng nhập description" },
+                  { required: true, message: "Please enter description" },
                 ]}
               >
                 <Input placeholder="Finest choice for your home & office" />
@@ -94,7 +92,7 @@ function FooterCtaBannerPage() {
                 name={["button", "text"]}
                 label="Button Text"
                 rules={[
-                  { required: true, message: "Vui lòng nhập button text" },
+                  { required: true, message: "Please enter button text" },
                 ]}
               >
                 <Input placeholder="Purchase Histudy" />
@@ -103,7 +101,7 @@ function FooterCtaBannerPage() {
                 name={["button", "link"]}
                 label="Button Link"
                 rules={[
-                  { required: true, message: "Vui lòng nhập button link" },
+                  { required: true, message: "Please enter button link" },
                 ]}
               >
                 <Input placeholder="#" />
@@ -118,7 +116,7 @@ function FooterCtaBannerPage() {
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

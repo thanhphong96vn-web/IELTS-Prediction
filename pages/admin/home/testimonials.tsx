@@ -20,12 +20,12 @@ function TestimonialsPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/home/testimonials");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       form.setFieldsValue(data);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -40,12 +40,12 @@ function TestimonialsPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(values);
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -55,7 +55,7 @@ function TestimonialsPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -67,7 +67,7 @@ function TestimonialsPage() {
         title={
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold m-0">
-              Quản lý Testimonials (What Our Learners Say)
+              Manage Testimonials (What Our Learners Say)
             </h1>
           </div>
         }
@@ -79,7 +79,7 @@ function TestimonialsPage() {
               <Form.Item
                 name="title"
                 label="Title"
-                rules={[{ required: true, message: "Vui lòng nhập title" }]}
+                rules={[{ required: true, message: "Please enter title" }]}
               >
                 <Input placeholder="What Our Learners Say" />
               </Form.Item>
@@ -87,7 +87,7 @@ function TestimonialsPage() {
                 name="description"
                 label="Description"
                 rules={[
-                  { required: true, message: "Vui lòng nhập description" },
+                  { required: true, message: "Please enter description" },
                 ]}
               >
                 <TextArea
@@ -99,7 +99,7 @@ function TestimonialsPage() {
                 name={["button", "text"]}
                 label="Button Text"
                 rules={[
-                  { required: true, message: "Vui lòng nhập button text" },
+                  { required: true, message: "Please enter button text" },
                 ]}
               >
                 <Input placeholder="Marquee Y" />
@@ -108,7 +108,7 @@ function TestimonialsPage() {
                 name={["button", "link"]}
                 label="Button Link"
                 rules={[
-                  { required: true, message: "Vui lòng nhập button link" },
+                  { required: true, message: "Please enter button link" },
                 ]}
               >
                 <Input placeholder="#" />
@@ -132,7 +132,7 @@ function TestimonialsPage() {
                             danger
                             onClick={() => remove(field.name)}
                           >
-                            Xóa
+                            Delete
                           </Button>
                         }
                       >
@@ -140,7 +140,7 @@ function TestimonialsPage() {
                           name={[field.name, "name"]}
                           label="Name"
                           rules={[
-                            { required: true, message: "Vui lòng nhập name" },
+                            { required: true, message: "Please enter name" },
                           ]}
                         >
                           <Input placeholder="Martha Maldonado" />
@@ -149,7 +149,7 @@ function TestimonialsPage() {
                           name={[field.name, "title"]}
                           label="Title"
                           rules={[
-                            { required: true, message: "Vui lòng nhập title" },
+                            { required: true, message: "Please enter title" },
                           ]}
                         >
                           <Input placeholder="Executive Chairman" />
@@ -160,7 +160,7 @@ function TestimonialsPage() {
                           rules={[
                             {
                               required: true,
-                              message: "Vui lòng nhập company",
+                              message: "Please enter company",
                             },
                           ]}
                         >
@@ -170,7 +170,7 @@ function TestimonialsPage() {
                           name={[field.name, "quote"]}
                           label="Quote"
                           rules={[
-                            { required: true, message: "Vui lòng nhập quote" },
+                            { required: true, message: "Please enter quote" },
                           ]}
                         >
                           <TextArea
@@ -184,7 +184,7 @@ function TestimonialsPage() {
                           rules={[
                             {
                               required: true,
-                              message: "Vui lòng upload avatar",
+                              message: "Please upload avatar",
                             },
                           ]}
                         >
@@ -197,7 +197,7 @@ function TestimonialsPage() {
                       onClick={() => add()}
                       className="w-full"
                     >
-                      + Thêm Testimonial
+                      + Add Testimonial
                     </Button>
                   </>
                 )}
@@ -212,7 +212,7 @@ function TestimonialsPage() {
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

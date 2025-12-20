@@ -21,7 +21,7 @@ function PracticeLibraryBannerPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/ielts-practice-library/banner");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       // Convert description array to string for TextArea
@@ -38,7 +38,7 @@ function PracticeLibraryBannerPage() {
       };
       form.setFieldsValue(formData);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -77,9 +77,9 @@ function PracticeLibraryBannerPage() {
         body: JSON.stringify(configData),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(configData);
       // Update form với description dạng string
       form.setFieldsValue({
@@ -93,7 +93,7 @@ function PracticeLibraryBannerPage() {
         },
       });
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -103,7 +103,7 @@ function PracticeLibraryBannerPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -115,7 +115,7 @@ function PracticeLibraryBannerPage() {
         title={
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold m-0">
-              Quản lý Practice Library Banner
+              Manage Practice Library Banner
             </h1>
           </div>
         }
@@ -127,17 +127,17 @@ function PracticeLibraryBannerPage() {
               <Form.Item
                 name={["listening", "title"]}
                 label="Title"
-                rules={[{ required: true, message: "Vui lòng nhập title" }]}
+                rules={[{ required: true, message: "Please enter title" }]}
               >
                 <Input placeholder="IELTS Listening Practice Tests" />
               </Form.Item>
               <Form.Item
                 name={["listening", "description"]}
-                label="Description (mỗi dòng một phần tử trong array)"
+                label="Description (each line is an array element)"
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập description",
+                    message: "Please enter description",
                   },
                 ]}
               >
@@ -148,7 +148,7 @@ thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kè
 trải nghiệm làm bài thi thử như trên máy.`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Mỗi dòng sẽ là một phần tử trong mảng description
+                  Each line will be an element in the description array
                 </p>
               </Form.Item>
               <Form.Item
@@ -157,7 +157,7 @@ trải nghiệm làm bài thi thử như trên máy.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button text",
+                    message: "Please enter button text",
                   },
                 ]}
               >
@@ -169,7 +169,7 @@ trải nghiệm làm bài thi thử như trên máy.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button link",
+                    message: "Please enter button link",
                   },
                 ]}
               >
@@ -182,17 +182,17 @@ trải nghiệm làm bài thi thử như trên máy.`}
               <Form.Item
                 name={["reading", "title"]}
                 label="Title"
-                rules={[{ required: true, message: "Vui lòng nhập title" }]}
+                rules={[{ required: true, message: "Please enter title" }]}
               >
                 <Input placeholder="IELTS Reading Practice Tests" />
               </Form.Item>
               <Form.Item
                 name={["reading", "description"]}
-                label="Description (mỗi dòng một phần tử trong array)"
+                label="Description (each line is an array element)"
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập description",
+                    message: "Please enter description",
                   },
                 ]}
               >
@@ -203,7 +203,7 @@ thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và
 trải nghiệm làm bài thi thử như trên máy.`}
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Mỗi dòng sẽ là một phần tử trong mảng description
+                  Each line will be an element in the description array
                 </p>
               </Form.Item>
               <Form.Item
@@ -212,7 +212,7 @@ trải nghiệm làm bài thi thử như trên máy.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button text",
+                    message: "Please enter button text",
                   },
                 ]}
               >
@@ -224,7 +224,7 @@ trải nghiệm làm bài thi thử như trên máy.`}
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập button link",
+                    message: "Please enter button link",
                   },
                 ]}
               >
@@ -240,7 +240,7 @@ trải nghiệm làm bài thi thử như trên máy.`}
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

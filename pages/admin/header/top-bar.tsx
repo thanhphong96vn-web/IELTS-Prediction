@@ -21,7 +21,7 @@ export default function TopBarAdminPage() {
         form.setFieldsValue(data);
       }
     } catch (error) {
-      message.error("Không tải được config");
+      message.error("Failed to load config");
     }
   };
 
@@ -35,13 +35,13 @@ export default function TopBarAdminPage() {
       });
 
       if (res.ok) {
-        message.success("Lưu thành công");
+        message.success("Save successful");
       } else {
         const data = await res.json();
-        message.error(data.message || "Lưu thất bại");
+        message.error(data.message || "Save failed");
       }
     } catch (error) {
-      message.error("Lưu thất bại");
+      message.error("Save failed");
     } finally {
       setLoading(false);
     }
@@ -49,7 +49,7 @@ export default function TopBarAdminPage() {
 
   return (
     <AdminLayout>
-      <Card title="Quản lý Top Bar">
+      <Card title="Manage Top Bar">
         <Form
           form={form}
           layout="vertical"
@@ -72,8 +72,8 @@ export default function TopBarAdminPage() {
             <Panel header="Facebook Followers" key="1">
               <Form.Item
                 name="facebookFollowers"
-                label="Text hiển thị"
-                rules={[{ required: true, message: "Vui lòng nhập text" }]}
+                label="Display Text"
+                rules={[{ required: true, message: "Please enter text" }]}
               >
                 <Input placeholder="500k Followers" />
               </Form.Item>
@@ -82,8 +82,8 @@ export default function TopBarAdminPage() {
             <Panel header="Phone Number" key="2">
               <Form.Item
                 name="phoneNumber"
-                label="Số điện thoại"
-                extra="Để trống để dùng số điện thoại từ General Settings"
+                label="Phone Number"
+                extra="Leave empty to use phone number from General Settings"
               >
                 <Input placeholder="+84 123 456 789" />
               </Form.Item>
@@ -94,7 +94,7 @@ export default function TopBarAdminPage() {
                 name={["promotionalBanner", "buttonText"]}
                 label="Text Button"
                 rules={[
-                  { required: true, message: "Vui lòng nhập text button" },
+                  { required: true, message: "Please enter button text" },
                 ]}
               >
                 <Input placeholder="Hot" />
@@ -103,7 +103,7 @@ export default function TopBarAdminPage() {
               <Form.Item
                 name={["promotionalBanner", "emoji"]}
                 label="Emoji"
-                rules={[{ required: true, message: "Vui lòng nhập emoji" }]}
+                rules={[{ required: true, message: "Please enter emoji" }]}
               >
                 <Input placeholder="👋" />
               </Form.Item>
@@ -111,8 +111,8 @@ export default function TopBarAdminPage() {
               <Form.Item
                 name={["promotionalBanner", "text"]}
                 label="Text"
-                rules={[{ required: true, message: "Vui lòng nhập text" }]}
-                extra="Sử dụng {siteName} để hiển thị tên site động"
+                rules={[{ required: true, message: "Please enter text" }]}
+                extra="Use {siteName} to display dynamic site name"
               >
                 <Input.TextArea
                   rows={3}
@@ -130,7 +130,7 @@ export default function TopBarAdminPage() {
             }}
           >
             <Button type="primary" htmlType="submit" loading={loading}>
-              Lưu thay đổi
+              Save changes
             </Button>
           </Form.Item>
         </Form>

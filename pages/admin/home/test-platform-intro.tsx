@@ -19,12 +19,12 @@ function TestPlatformIntroPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/home/test-platform-intro");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       form.setFieldsValue(data);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -39,12 +39,12 @@ function TestPlatformIntroPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(values);
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -54,7 +54,7 @@ function TestPlatformIntroPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -66,7 +66,7 @@ function TestPlatformIntroPage() {
         title={
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold m-0">
-              Quản lý Test Platform Intro
+              Manage Test Platform Intro
             </h1>
           </div>
         }
@@ -79,7 +79,7 @@ function TestPlatformIntroPage() {
                 name={["badge", "text"]}
                 label="Badge Text"
                 rules={[
-                  { required: true, message: "Vui lòng nhập badge text" },
+                  { required: true, message: "Please enter badge text" },
                 ]}
               >
                 <Input placeholder="CATEGORIES" />
@@ -90,29 +90,29 @@ function TestPlatformIntroPage() {
             <Panel header="Title" key="title">
               <Form.Item
                 name={["title", "line1"]}
-                label="Dòng 1"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 1" }]}
+                label="Line 1"
+                rules={[{ required: true, message: "Please enter line 1" }]}
               >
                 <Input placeholder="Explore Top Courses Caterories" />
               </Form.Item>
               <Form.Item
                 name={["title", "line2"]}
-                label="Dòng 2"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 2" }]}
+                label="Line 2"
+                rules={[{ required: true, message: "Please enter line 2" }]}
               >
                 <Input placeholder="That" />
               </Form.Item>
               <Form.Item
                 name={["title", "line3"]}
-                label="Dòng 3"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 3" }]}
+                label="Line 3"
+                rules={[{ required: true, message: "Please enter line 3" }]}
               >
                 <Input placeholder="Change" />
               </Form.Item>
               <Form.Item
                 name={["title", "line4"]}
-                label="Dòng 4"
-                rules={[{ required: true, message: "Vui lòng nhập dòng 4" }]}
+                label="Line 4"
+                rules={[{ required: true, message: "Please enter line 4" }]}
               >
                 <Input placeholder="Yourself" />
               </Form.Item>
@@ -135,15 +135,15 @@ function TestPlatformIntroPage() {
                             danger
                             onClick={() => remove(field.name)}
                           >
-                            Xóa
+                            Delete
                           </Button>
                         }
                       >
                         <Form.Item
                           name={[field.name, "name"]}
-                          label="Tên"
+                          label="Name"
                           rules={[
-                            { required: true, message: "Vui lòng nhập tên" },
+                            { required: true, message: "Please enter name" },
                           ]}
                         >
                           <Input placeholder="FULL TEST" />
@@ -152,7 +152,7 @@ function TestPlatformIntroPage() {
                           name={[field.name, "href"]}
                           label="Link"
                           rules={[
-                            { required: true, message: "Vui lòng nhập link" },
+                            { required: true, message: "Please enter link" },
                           ]}
                         >
                           <Input placeholder="/ielts-exam-library" />
@@ -161,7 +161,7 @@ function TestPlatformIntroPage() {
                           name={[field.name, "icon"]}
                           label="Icon"
                           rules={[
-                            { required: true, message: "Vui lòng upload icon" },
+                            { required: true, message: "Please upload icon" },
                           ]}
                         >
                           <ImageUpload />
@@ -173,7 +173,7 @@ function TestPlatformIntroPage() {
                       onClick={() => add()}
                       className="w-full"
                     >
-                      + Thêm Category
+                      + Add Category
                     </Button>
                   </>
                 )}
@@ -188,7 +188,7 @@ function TestPlatformIntroPage() {
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>

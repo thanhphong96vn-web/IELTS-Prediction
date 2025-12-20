@@ -18,12 +18,12 @@ function ExamLibraryHeroBannerPage() {
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/ielts-exam-library/hero-banner");
-      if (!res.ok) throw new Error("Không thể tải config");
+      if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
       form.setFieldsValue(data);
     } catch {
-      message.error("Lỗi khi tải config");
+      message.error("Error loading config");
     }
   };
 
@@ -38,12 +38,12 @@ function ExamLibraryHeroBannerPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Lưu thất bại");
+      if (!res.ok) throw new Error("Save failed");
 
-      message.success("Lưu config thành công");
+      message.success("Config saved successfully");
       setConfig(values);
     } catch {
-      message.error("Có lỗi khi lưu config");
+      message.error("Error saving config");
     } finally {
       setSaving(false);
     }
@@ -53,7 +53,7 @@ function ExamLibraryHeroBannerPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Đang tải config...</div>
+          <div className="text-gray-600">Loading config...</div>
         </div>
       </AdminLayout>
     );
@@ -65,7 +65,7 @@ function ExamLibraryHeroBannerPage() {
         title={
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold m-0">
-              Quản lý IELTS Exam Library Hero
+              Manage IELTS Exam Library Hero
             </h1>
           </div>
         }
@@ -76,7 +76,7 @@ function ExamLibraryHeroBannerPage() {
               <Form.Item
                 name="title"
                 label="Title"
-                rules={[{ required: true, message: "Vui lòng nhập title" }]}
+                rules={[{ required: true, message: "Please enter title" }]}
               >
                 <Input placeholder="IELTS Exam Library" />
               </Form.Item>
@@ -84,7 +84,7 @@ function ExamLibraryHeroBannerPage() {
                 name={["breadcrumb", "homeLabel"]}
                 label="Breadcrumb Home Label"
                 rules={[
-                  { required: true, message: "Vui lòng nhập breadcrumb home" },
+                  { required: true, message: "Please enter breadcrumb home" },
                 ]}
               >
                 <Input placeholder="Home" />
@@ -95,7 +95,7 @@ function ExamLibraryHeroBannerPage() {
                 rules={[
                   {
                     required: true,
-                    message: "Vui lòng nhập breadcrumb current",
+                    message: "Please enter breadcrumb current",
                   },
                 ]}
               >
@@ -111,7 +111,7 @@ function ExamLibraryHeroBannerPage() {
               loading={saving}
               size="large"
             >
-              Lưu thay đổi
+              Save changes
             </Button>
           </Space>
         </Form>
