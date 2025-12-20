@@ -18,6 +18,24 @@ type AnswerFormValues = {
   answers: (string | number[] | object)[];
 };
 
+// Hàm helper để loại bỏ thẻ span với class fill-history-correct
+const removeFillHistoryCorrectTags = (text: string | undefined): string => {
+  if (!text) return "";
+  let cleanedText = String(text);
+  // Loại bỏ các thẻ span với class fill-history-correct, chỉ giữ lại nội dung bên trong
+  // Xử lý cả trường hợp class có nhiều giá trị hoặc không có dấu ngoặc kép
+  cleanedText = cleanedText.replace(
+    /<span[^>]*class\s*=\s*["']?[^"'>]*fill-history-correct[^"'>]*["']?[^>]*>(.*?)<\/span>/gi,
+    "$1"
+  );
+  // Xử lý thêm trường hợp nested spans (chạy 2 lần để xử lý spans lồng nhau)
+  cleanedText = cleanedText.replace(
+    /<span[^>]*class\s*=\s*["']?[^"'>]*fill-history-correct[^"'>]*["']?[^>]*>(.*?)<\/span>/gi,
+    "$1"
+  );
+  return cleanedText;
+};
+
 function ReviewExplanation({
   quiz,
   testResult,
@@ -42,33 +60,46 @@ function ReviewExplanation({
     userAnswer: string | undefined;
     correctAnswer: string;
   }) => {
+    // Loại bỏ thẻ span trước khi so sánh và hiển thị
+    const cleanedUserAnswer = removeFillHistoryCorrectTags(userAnswer);
+    const cleanedCorrectAnswer = removeFillHistoryCorrectTags(correctAnswer);
+
     const isCorrect =
-      userAnswer &&
-      correctAnswer &&
-      userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
-    const isNoAnswer = !userAnswer || userAnswer.trim() === "";
+      cleanedUserAnswer &&
+      cleanedCorrectAnswer &&
+      cleanedUserAnswer.trim().toLowerCase() ===
+        cleanedCorrectAnswer.trim().toLowerCase();
+    const isNoAnswer = !cleanedUserAnswer || cleanedUserAnswer.trim() === "";
 
     if (isCorrect) {
       return (
         <div className="mb-[-15px] border border-dashed border-green-600 leading-[22px] text-[17px] font-bold text-center bg-green-50 text-green-600 p-2 py-[1px] rounded-md prose prose-sm max-w-none">
-          <TextSelectionWrapper>{parse(correctAnswer)}</TextSelectionWrapper>
+          <TextSelectionWrapper>
+            {parse(cleanedCorrectAnswer)}
+          </TextSelectionWrapper>
         </div>
       );
     }
     if (isNoAnswer) {
       return (
         <div className="mb-[-15px] text-[17px] leading-[22px] font-bold border border-dashed border-gray-400 text-center bg-gray-100 text-gray-500 p-2 py-[1px] rounded-md prose prose-sm max-w-none">
-          <TextSelectionWrapper>{parse(correctAnswer)}</TextSelectionWrapper>
+          <TextSelectionWrapper>
+            {parse(cleanedCorrectAnswer)}
+          </TextSelectionWrapper>
         </div>
       );
     }
     return (
       <div className="mb-[-15px] flex flex-row gap-2 leading-[20px] border text-center border-dashed border-red-500 bg-red-50 text-red-700 p-2 py-[1px] rounded-md prose prose-sm max-w-none">
         <div className="line-through">
-          <TextSelectionWrapper>{parse(userAnswer!)}</TextSelectionWrapper>
+          <TextSelectionWrapper>
+            {parse(cleanedUserAnswer)}
+          </TextSelectionWrapper>
         </div>
         <div className="text-green-600">
-          <TextSelectionWrapper>{parse(correctAnswer)}</TextSelectionWrapper>
+          <TextSelectionWrapper>
+            {parse(cleanedCorrectAnswer)}
+          </TextSelectionWrapper>
         </div>
       </div>
     );
@@ -492,9 +523,22 @@ function ReviewExplanation({
 
         const contentHtml = q.explanations
           .map((exp: any, index: number) => {
-            const text = exp?.content;
+            let text = exp?.content;
             if (text && String(text).trim() !== "") {
               hasAnyExplanation = true;
+
+              // Loại bỏ các thẻ span với class fill-history-correct, chỉ giữ lại nội dung bên trong
+              // Xử lý cả trường hợp class có nhiều giá trị hoặc không có dấu ngoặc kép
+              text = String(text).replace(
+                /<span[^>]*class\s*=\s*["']?[^"'>]*fill-history-correct[^"'>]*["']?[^>]*>(.*?)<\/span>/gi,
+                "$1"
+              );
+              // Xử lý thêm trường hợp nested spans
+              text = String(text).replace(
+                /<span[^>]*class\s*=\s*["']?[^"'>]*fill-history-correct[^"'>]*["']?[^>]*>(.*?)<\/span>/gi,
+                "$1"
+              );
+
               if (isFillup) {
                 return `<p><b>Q.${q.startIndex + 1 + index}:</b> ${text}</p>`;
               }

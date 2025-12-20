@@ -1,6 +1,24 @@
 import { ScoreResult } from "@/shared/lib/calculateScore";
 import _ from "lodash";
 import { twMerge } from "tailwind-merge";
+import parse from "html-react-parser";
+
+// Hàm helper để loại bỏ thẻ span với class fill-history-correct
+const removeFillHistoryCorrectTags = (text: string | undefined): string => {
+  if (!text) return "";
+  let cleanedText = String(text);
+  // Loại bỏ các thẻ span với class fill-history-correct, chỉ giữ lại nội dung bên trong
+  cleanedText = cleanedText.replace(
+    /<span[^>]*class\s*=\s*["']?[^"'>]*fill-history-correct[^"'>]*["']?[^>]*>(.*?)<\/span>/gi,
+    "$1"
+  );
+  // Xử lý thêm trường hợp nested spans
+  cleanedText = cleanedText.replace(
+    /<span[^>]*class\s*=\s*["']?[^"'>]*fill-history-correct[^"'>]*["']?[^>]*>(.*?)<\/span>/gi,
+    "$1"
+  );
+  return cleanedText;
+};
 
 function AnswerKeys({
   data,
@@ -53,7 +71,9 @@ function AnswerKeys({
                           <div className="flex flex-wrap items-center gap-x-2">
                             {/* Hiển thị câu trả lời của người dùng */}
                             <p className={!q.correct && q.userAnswer ? "line-through text-red-500" : ""}>
-                              {q.userAnswer || (
+                              {q.userAnswer ? (
+                                parse(removeFillHistoryCorrectTags(q.userAnswer))
+                              ) : (
                                 <span className="text-gray-400 font-semibold">
                                   Missed
                                 </span>
@@ -63,7 +83,7 @@ function AnswerKeys({
                             {/* Nếu sai, hiển thị đáp án đúng */}
                             {!q.correct && (
                               <p className="font-semibold text-green-600">
-                                {q.answer}
+                                {parse(removeFillHistoryCorrectTags(q.answer))}
                               </p>
                             )}
                           </div>
