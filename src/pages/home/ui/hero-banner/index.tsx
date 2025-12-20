@@ -2,7 +2,6 @@ import { Container } from "@/shared/ui";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "antd";
-import { ROUTES } from "@/shared/routes";
 import type { HeroBannerConfig } from "./types";
 
 interface HeroBannerProps {
@@ -71,17 +70,19 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
             </div>
 
             {/* Trustpilot Rating */}
-            <div className="flex items-center gap-3 relative z-10">
-              <Image
-                src={trustpilot.image}
-                alt="Trustpilot"
-                width={220}
-                height={26}
-                unoptimized
-                className="object-contain"
-              />
+            <div className="flex items-center gap-3 relative z-10 flex-wrap">
+              <div className="relative max-w-[220px] max-h-[26px] shrink-0">
+                <Image
+                  src={trustpilot.image}
+                  alt="Trustpilot"
+                  width={220}
+                  height={26}
+                  unoptimized
+                  className="object-contain w-full h-full"
+                />
+              </div>
               <span
-                className="text-base font-medium"
+                className="text-base font-medium wrap-break-word"
                 style={{ color: "#22c55e" }}
               >
                 {trustpilot.rating}
@@ -89,7 +90,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight wrap-break-word">
               <span style={{ color: "#374151" }}>{headline.line1} </span>
               <span style={{ color: "#374151" }}>{headline.line2} </span>
               <span style={{ color: "#2563eb" }}>{headline.line3} </span>
@@ -98,7 +99,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
 
             {/* Description */}
             <p
-              className="text-xl md:text-2xl leading-relaxed"
+              className="text-lg sm:text-xl md:text-2xl leading-relaxed wrap-break-word"
               style={{ color: "#22c55e" }}
             >
               {description.text}{" "}
@@ -107,36 +108,40 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href={buttons.primary.link}>
+              <Link href={buttons.primary.link} className="shrink-0">
                 <Button
                   type="primary"
                   size="large"
-                  className="h-12 px-8 rounded-lg text-base font-medium border-none transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-white"
+                  className="h-12 px-4 sm:px-8 rounded-lg text-sm sm:text-base font-medium border-none transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-white w-full sm:w-auto"
                   style={{
                     background:
                       "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
                   }}
                 >
-                  <span className="flex items-center gap-2">
-                    {buttons.primary.text}
-                    <span className="material-symbols-rounded">
+                  <span className="flex items-center gap-2 justify-center">
+                    <span className="truncate max-w-[200px] sm:max-w-none">
+                      {buttons.primary.text}
+                    </span>
+                    <span className="material-symbols-rounded shrink-0">
                       arrow_forward
                     </span>
                   </span>
                 </Button>
               </Link>
-              <Link href={buttons.secondary.link}>
+              <Link href={buttons.secondary.link} className="shrink-0">
                 <Button
                   size="large"
-                  className="h-12 px-8 rounded-lg text-base font-medium border-2 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  className="h-12 px-4 sm:px-8 rounded-lg text-sm sm:text-base font-medium border-2 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
                   style={{
                     borderColor: "#374151",
                     color: "#374151",
                   }}
                 >
-                  <span className="flex items-center gap-2">
-                    {buttons.secondary.text}
-                    <span className="material-symbols-rounded text-lg">
+                  <span className="flex items-center gap-2 justify-center">
+                    <span className="truncate max-w-[200px] sm:max-w-none">
+                      {buttons.secondary.text}
+                    </span>
+                    <span className="material-symbols-rounded text-lg shrink-0">
                       play_arrow
                     </span>
                   </span>
@@ -169,8 +174,8 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
               </div>
 
               {/* Main Banner Image */}
-              <div className="relative aspect-square max-w-lg mx-auto">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden">
+              <div className="relative aspect-square max-w-lg mx-auto w-full">
+                <div className="relative w-full h-full rounded-2xl overflow-hidden max-h-[600px]">
                   <Image
                     src={bannerImage}
                     alt="Banner"
@@ -178,29 +183,33 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                     className="object-contain"
                     priority
                     sizes="(max-width: 768px) 100vw, 50vw"
+                    style={{ maxWidth: "100%", maxHeight: "100%" }}
                   />
                 </div>
 
                 {/* Feature Card 1 - Top Right */}
                 {featureCards[0] && (
-                  <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-5 flex items-center gap-3 animate-float">
-                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                  <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float max-w-[200px] sm:max-w-[250px]">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                       <Image
                         src={featureCards[0].icon}
                         alt="Icon"
                         width={48}
                         height={48}
                         unoptimized
-                        className="object-contain"
+                        className="object-contain w-full h-full"
                       />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       {featureCards[0].title && (
-                        <h6 className="font-bold text-base text-gray-900">
+                        <h6 className="font-bold text-sm sm:text-base text-gray-900 wrap-break-word line-clamp-2">
                           {featureCards[0].title}
                         </h6>
                       )}
-                      <p className="text-sm" style={{ color: "#ec4899" }}>
+                      <p
+                        className="text-xs sm:text-sm wrap-break-word line-clamp-2"
+                        style={{ color: "#ec4899" }}
+                      >
                         {featureCards[0].subtitle}
                       </p>
                     </div>
@@ -209,46 +218,51 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
 
                 {/* Enrolled Card - Middle Left */}
                 {featureCards[1] && (
-                  <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-5 animate-float-delayed">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                  <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-3 sm:p-5 animate-float-delayed max-w-[200px] sm:max-w-[250px]">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                         <Image
                           src={featureCards[1].icon}
                           alt="Icon"
                           width={48}
                           height={48}
                           unoptimized
-                          className="object-contain"
+                          className="object-contain w-full h-full"
                         />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         {featureCards[1].value && (
-                          <h6 className="font-bold text-xl text-gray-900">
+                          <h6 className="font-bold text-lg sm:text-xl text-gray-900 wrap-break-word line-clamp-1">
                             {featureCards[1].value}
                           </h6>
                         )}
-                        <p className="text-sm" style={{ color: "#22c55e" }}>
+                        <p
+                          className="text-xs sm:text-sm wrap-break-word line-clamp-2"
+                          style={{ color: "#22c55e" }}
+                        >
                           {featureCards[1].subtitle}
                         </p>
                       </div>
                     </div>
                     {/* Profile Avatars */}
                     {featureCards[1].avatars && (
-                      <div className="flex -space-x-2">
-                        {featureCards[1].avatars.map((avatar, i) => (
-                          <div
-                            key={i}
-                            className="w-10 h-10 rounded-full border-2 border-white overflow-hidden relative flex-shrink-0"
-                          >
-                            <Image
-                              src={avatar}
-                              alt={`Student ${i + 1}`}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          </div>
-                        ))}
+                      <div className="flex -space-x-2 flex-wrap">
+                        {featureCards[1].avatars
+                          .slice(0, 5)
+                          .map((avatar, i) => (
+                            <div
+                              key={i}
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white overflow-hidden relative shrink-0"
+                            >
+                              <Image
+                                src={avatar}
+                                alt={`Student ${i + 1}`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -256,24 +270,27 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
 
                 {/* Feature Card 2 - Bottom Right */}
                 {featureCards[2] && (
-                  <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-5 flex items-center gap-3 animate-float-delayed-2">
-                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                  <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float-delayed-2 max-w-[200px] sm:max-w-[250px]">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                       <Image
                         src={featureCards[2].icon}
                         alt="Icon"
                         width={48}
                         height={48}
                         unoptimized
-                        className="object-contain"
+                        className="object-contain w-full h-full"
                       />
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                       {featureCards[2].value && (
-                        <h6 className="font-bold text-xl text-gray-900">
+                        <h6 className="font-bold text-lg sm:text-xl text-gray-900 wrap-break-word line-clamp-1">
                           {featureCards[2].value}
                         </h6>
                       )}
-                      <p className="text-sm" style={{ color: "#22c55e" }}>
+                      <p
+                        className="text-xs sm:text-sm wrap-break-word line-clamp-2"
+                        style={{ color: "#22c55e" }}
+                      >
                         {featureCards[2].subtitle}
                       </p>
                     </div>
@@ -282,7 +299,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
               </div>
               {/* Decorative Shape */}
               <div
-                className="absolute top-1/2 left-1/4 w-24 h-24"
+                className="absolute top-1/2 left-1/4 w-16 h-16 sm:w-24 sm:h-24"
                 style={{
                   filter: "drop-shadow(0 0 10px rgba(217, 74, 86, 0.4))",
                 }}
@@ -306,6 +323,8 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                       filter:
                         "brightness(0) saturate(100%) invert(27%) sepia(92%) saturate(1352%) hue-rotate(326deg) brightness(85%) contrast(85%)",
                       opacity: 0.6,
+                      maxWidth: "100%",
+                      maxHeight: "100%",
                     }}
                   />
                 </div>

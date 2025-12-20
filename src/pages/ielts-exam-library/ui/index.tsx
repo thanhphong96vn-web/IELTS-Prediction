@@ -136,23 +136,31 @@ export const PageIELTSExamLibrary = ({
 
       {/* Hero Banner Section */}
       <div
-        className="relative w-full py-16 md:py-24 flex items-center justify-center"
+        className="relative w-full py-12 sm:py-16 md:py-24 flex items-center justify-center"
         style={{
           background:
             "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
         }}
       >
-        <Container className="flex flex-col items-center justify-center text-center">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-800 mb-4">
+        <Container className="flex flex-col items-center justify-center text-center px-4">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold text-gray-800 mb-4 wrap-break-word max-w-full">
             {heroConfig.title}
           </h1>
           <Breadcrumb
             items={[
               {
-                title: <Link href="/">{heroConfig.breadcrumb.homeLabel}</Link>,
+                title: (
+                  <Link href="/" className="wrap-break-word">
+                    {heroConfig.breadcrumb.homeLabel}
+                  </Link>
+                ),
               },
               {
-                title: heroConfig.breadcrumb.currentLabel,
+                title: (
+                  <span className="wrap-break-word">
+                    {heroConfig.breadcrumb.currentLabel}
+                  </span>
+                ),
               },
             ]}
             className="text-gray-500"

@@ -23,7 +23,7 @@
       "link": "#"
     }
   },
-  "bannerImage": "/img-admin/o-banner-1766077848129.png",
+  "bannerImage": "/img-admin/o-banner-1766216772677.png",
   "decorativeShape": {
     "image": "/img-admin/o-shape-1.png"
   },
@@ -34,12 +34,12 @@
       "subtitle": "Admission Complete"
     },
     {
-      "icon": "/img-admin/LeThanhTho-1766066981816.jpg",
+      "icon": "/img-admin/o-icon-2-1766216901353.png",
       "value": "36k+",
       "subtitle": "Enrolled Students",
       "avatars": [
         "/img-admin/art-stu-2.png",
-        "/img-admin/art-stu-1.png",
+        "C:\\fakepath\\i-team.png",
         "/img-admin/art-stu-3.png",
         "/img-admin/i-team.png"
       ]

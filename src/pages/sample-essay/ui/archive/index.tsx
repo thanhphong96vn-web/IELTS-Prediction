@@ -211,11 +211,11 @@ export const PageArchive = ({
                 background: "#fffef5",
               }}
             >
-              <Container className="relative z-10">
-                <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-6">
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center">
-                    <div>{bannerData.title.line1}</div>
-                    <div className="relative inline-block">
+              <Container className="relative z-10 px-4">
+                <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-4 sm:space-y-6">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center wrap-break-word w-full">
+                    <div className="wrap-break-word">{bannerData.title.line1}</div>
+                    <div className="relative inline-block wrap-break-word">
                       <span className="relative inline-block">
                         {bannerData.title.line2.highlighted}
                         <span
@@ -226,19 +226,19 @@ export const PageArchive = ({
                           }}
                         ></span>
                       </span>{" "}
-                      {bannerData.title.line2.after}
+                      <span className="wrap-break-word">{bannerData.title.line2.after}</span>
                     </div>
                   </h1>
 
-                  <div className="text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1">
+                  <div className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1 w-full">
                     {bannerData.description.map(
                       (line: string, index: number) => (
-                        <div key={index}>{line}</div>
+                        <div key={index} className="wrap-break-word">{line}</div>
                       )
                     )}
                   </div>
 
-                  <Link href={bannerData.button.link}>
+                  <Link href={bannerData.button.link} className="inline-block">
                     <Button
                       type="primary"
                       style={{
@@ -246,9 +246,11 @@ export const PageArchive = ({
                         borderColor: "#d94a56",
                         color: "#ffffff",
                       }}
-                      className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg"
+                      className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-4 sm:px-6 py-2 h-auto text-sm md:text-base font-normal rounded-lg w-full sm:w-auto"
                     >
+                      <span className="truncate max-w-[200px] sm:max-w-none inline-block">
                       {bannerData.button.text}
+                      </span>
                     </Button>
                   </Link>
                 </div>

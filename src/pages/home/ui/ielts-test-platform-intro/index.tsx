@@ -37,7 +37,7 @@ export const IeltsTestPlatformIntro = ({
           {/* Categories Button */}
           <div className="flex justify-center">
             <span
-              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white uppercase"
+              className="inline-block px-4 py-2 rounded-lg text-sm font-semibold text-white uppercase wrap-break-word max-w-full"
               style={{
                 backgroundColor: "rgba(217, 74, 86, 0.15)",
                 color: "#d94a56",
@@ -48,9 +48,11 @@ export const IeltsTestPlatformIntro = ({
           </div>
 
           {/* Main Heading */}
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight block">
-            <div style={{ color: "#374151" }}>{title.line1}</div>
-            <div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight block wrap-break-word">
+            <div style={{ color: "#374151" }} className="wrap-break-word">
+              {title.line1}
+            </div>
+            <div className="wrap-break-word">
               <span style={{ color: "#374151" }}>{title.line2} </span>
               <span style={{ color: "#2563eb" }}>{title.line3} </span>
               <span
@@ -74,24 +76,25 @@ export const IeltsTestPlatformIntro = ({
             <Link
               key={index}
               href={item.href}
-              className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 text-center hover:-translate-y-1"
+              className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 px-8 py-12 text-center hover:-translate-y-1"
             >
               <div className="space-y-4">
                 {/* Icon */}
                 <div className="flex justify-center">
-                  <div className="relative w-20 h-20">
+                  <div className="relative w-20 h-20 max-w-[80px] max-h-[80px] shrink-0">
                     <Image
                       src={item.icon}
                       alt={item.name}
                       fill
                       sizes="80px"
                       className="object-contain rounded-xl"
+                      style={{ maxWidth: "100%", maxHeight: "100%" }}
                     />
                   </div>
                 </div>
 
                 {/* Title */}
-                <h5 className="font-semibold text-lg text-gray-900">
+                <h5 className="font-semibold text-base sm:text-lg text-gray-900 wrap-break-word line-clamp-2 min-h-12 flex items-center justify-center">
                   {item.name}
                 </h5>
               </div>

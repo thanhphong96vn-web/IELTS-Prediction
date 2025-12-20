@@ -28,7 +28,8 @@ export const Footer = () => {
   } = useAppContext();
 
   const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [ctaBannerConfig, setCtaBannerConfig] = useState<FooterCtaBannerConfig | null>(null);
+  const [ctaBannerConfig, setCtaBannerConfig] =
+    useState<FooterCtaBannerConfig | null>(null);
 
   // Fetch CTA Banner config on mount
   useEffect(() => {
@@ -55,23 +56,23 @@ export const Footer = () => {
   }, []);
 
   const socialLinks = [
-      {
+    {
       icon: <FacebookRoundedIcon className="w-6 h-6" />,
-        url: facebook,
-        name: "Facebook",
-      },
+      url: facebook,
+      name: "Facebook",
+    },
     {
       icon: <ZaloIcon className="w-6 h-6" />,
       url: zalo,
       name: "Zalo",
     },
-      {
-        icon: (
+    {
+      icon: (
         <Image src="/mail.webp" alt="mail" width={24} height={24} unoptimized />
-        ),
+      ),
       url: email ? `mailto:${email}` : null,
-        name: "Mail",
-      },
+      name: "Mail",
+    },
   ].filter((item) => Boolean(item.url));
 
   // Chỉ dùng những route thực sự tồn tại trong dự án
@@ -116,48 +117,56 @@ export const Footer = () => {
       {/* CTA Banner Section */}
       <div className="relative bg-gray-50 py-12 overflow-hidden">
         <Container>
-          <div className="relative bg-white rounded-xl shadow-lg p-6 md:p-8 md:py-14 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="relative bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 md:py-14 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
             {/* Left Side - Text Content */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 w-full md:w-auto">
               <h2
-                className="text-2xl md:text-3xl font-bold mb-2"
+                className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 wrap-break-word"
                 style={{ color: "#000" }}
               >
-                {ctaBannerConfig?.title || "Ready to start creating a standard website?"}
+                {ctaBannerConfig?.title ||
+                  "Ready to start creating a standard website?"}
               </h2>
-              <p className="text-gray-600 text-base">
-                {ctaBannerConfig?.description || "Finest choice for your home & office"}
+              <p className="text-gray-600 text-sm sm:text-base wrap-break-word font-bold">
+                {ctaBannerConfig?.description ||
+                  "Finest choice for your home & office"}
               </p>
             </div>
 
             {/* Right Side - Button */}
-            <div>
-              {(ctaBannerConfig?.button.link || buyProLink) ? (
-                <Link href={ctaBannerConfig?.button.link || buyProLink || "#"}>
+            <div className="shrink-0 w-full md:w-auto">
+              {ctaBannerConfig?.button.link || buyProLink ? (
+                <Link
+                  href={ctaBannerConfig?.button.link || buyProLink || "#"}
+                  className="block w-full md:w-auto"
+                >
                   <Button
                     type="primary"
                     size="large"
-                    className="rounded-lg px-8 h-12 text-base font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                    className="rounded-lg px-4 sm:px-8 h-12 text-sm sm:text-base font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full md:w-auto"
                     style={{
                       background: "#d94a56",
                       borderColor: "#d94a56",
                     }}
                   >
-                    {ctaBannerConfig?.button.text || "Purchase Histudy"}
+                    <span className="truncate max-w-[200px] sm:max-w-none inline-block">
+                      {ctaBannerConfig?.button.text || "Purchase Histudy"}
+                    </span>
                   </Button>
                 </Link>
               ) : (
                 <Button
                   type="primary"
                   size="large"
-                  className="rounded-lg px-8 h-12 text-base font-medium"
+                  className="rounded-lg px-4 sm:px-8 h-12 text-sm sm:text-base font-medium w-full md:w-auto"
                   style={{
                     background: "#d94a56",
                     borderColor: "#d94a56",
                   }}
                   disabled
                 >
-                  {ctaBannerConfig?.button.text || `Purchase ${generalSettingsTitle || "Histudy"}`}
+                  {ctaBannerConfig?.button.text ||
+                    `Purchase ${generalSettingsTitle || "Histudy"}`}
                 </Button>
               )}
             </div>
@@ -207,14 +216,14 @@ export const Footer = () => {
               {/* Social Media Icons */}
               <div className="flex gap-3">
                 {socialLinks.map((social, index) => (
-                    <Link
+                  <Link
                     key={index}
                     href={social.url || "#"}
-                      target="_blank"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 hover:bg-gray-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                     title={social.name}
-                    >
+                  >
                     {social.icon}
                   </Link>
                 ))}
@@ -233,8 +242,8 @@ export const Footer = () => {
                     arrow_forward
                   </span>
                 </Button>
-                    </Link>
-                  </div>
+              </Link>
+            </div>
 
             {/* Middle Section - Useful Links */}
             <div>
@@ -265,10 +274,10 @@ export const Footer = () => {
                     >
                       {link.label}
                     </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {/* Right Section - Get Contact & Newsletter */}
             <div className="space-y-6">
@@ -337,9 +346,9 @@ export const Footer = () => {
                   </Link>
                 </div>
               ))}
+            </div>
           </div>
-        </div>
-      </Container>
+        </Container>
       </div>
     </footer>
   );

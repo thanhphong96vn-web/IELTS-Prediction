@@ -242,23 +242,23 @@ export const Header = () => {
         style={{ backgroundColor: "#192335" }}
       >
         <Container className="py-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             {/* Left Side - Contact & Social Stats */}
-            <div className="flex items-center gap-6 whitespace-nowrap">
+            <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
               {facebook && topBarConfig && (
-                <div className="flex items-center gap-2">
-                  <FacebookRoundedIcon className="w-4 h-4" />
-                  <span className="text-xs whitespace-nowrap">
+                <div className="flex items-center gap-2 shrink-0">
+                  <FacebookRoundedIcon className="w-4 h-4 shrink-0" />
+                  <span className="text-xs wrap-break-word line-clamp-1 max-w-[150px]">
                     {topBarConfig.facebookFollowers}
                   </span>
                 </div>
               )}
               {(topBarConfig?.phoneNumber || phoneNumber) && (
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-rounded text-base">
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="material-symbols-rounded text-base shrink-0">
                     phone
                   </span>
-                  <span className="text-xs whitespace-nowrap">
+                  <span className="text-xs wrap-break-word line-clamp-1 max-w-[150px]">
                     {topBarConfig?.phoneNumber || phoneNumber}
                   </span>
                 </div>
@@ -267,17 +267,19 @@ export const Header = () => {
 
             {/* Middle Section - Promotional Banner */}
             {topBarConfig && (
-              <div className="flex items-center gap-2 whitespace-nowrap">
+              <div className="flex items-center gap-2 flex-wrap justify-center min-w-0 flex-1">
                 <Button
-                  className="bg-[#2563eb] border-none text-white rounded-md h-6 px-2 text-xs font-bold whitespace-nowrap"
+                  className="bg-[#2563eb] border-none text-white rounded-md h-6 px-2 text-xs font-bold shrink-0"
                   style={{ backgroundColor: "#2563eb" }}
                 >
+                  <span className="truncate max-w-[80px]">
                   {topBarConfig.promotionalBanner.buttonText}
+                  </span>
                 </Button>
-                <span className="text-xl">
+                <span className="text-xl shrink-0">
                   {topBarConfig.promotionalBanner.emoji}
                 </span>
-                <span className="text-xs whitespace-nowrap">
+                <span className="text-xs wrap-break-word line-clamp-1 min-w-0 flex-1 max-w-[300px]">
                   {topBarConfig.promotionalBanner.text.replace(
                     "{siteName}",
                     generalSettingsTitle || "Histudy"
@@ -357,79 +359,81 @@ export const Header = () => {
                 drag_indicator
               </span>
             </div> */}
-            <div className="h-6 w-[2px] bg-gray-300"></div>
+            <div className="hidden lg:block h-6 w-[2px] bg-gray-300"></div>
             {isSignedIn ? (
-              <Dropdown
-                placement="bottomRight"
-                trigger={["hover", "click"]}
-                dropdownRender={() => (
-                  <div className="bg-white rounded-lg shadow-lg min-w-[220px] py-2">
-                    {/* User Info Section */}
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <Avatar currentUser={currentUser} size={40} />
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">
-                          {currentUser?.name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {currentTime} (GMT+07:00)
-                        </p>
+              <div className="hidden lg:block">
+                <Dropdown
+                  placement="bottomRight"
+                  trigger={["hover", "click"]}
+                  dropdownRender={() => (
+                    <div className="bg-white rounded-lg shadow-lg min-w-[220px] py-2">
+                      {/* User Info Section */}
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        <Avatar currentUser={currentUser} size={40} />
+                        <div>
+                          <p className="font-semibold text-gray-900 text-sm">
+                            {currentUser?.name || "User"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {currentTime} (GMT+07:00)
+                          </p>
+                        </div>
+                      </div>
+                      <Divider className="my-0" />
+                      {/* Menu Items */}
+                      <div className="py-1">
+                        <Link href={ROUTES.ACCOUNT.DASHBOARD}>
+                          <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            My Dashboard
+                          </div>
+                        </Link>
+                        <Link href={ROUTES.ACCOUNT.MY_PROFILE}>
+                          <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            My Profile
+                          </div>
+                        </Link>
+                        <Link href={ROUTES.ACCOUNT.ORDER_HISTORY}>
+                          <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            Payment History
+                          </div>
+                        </Link>
+                        {currentUser?.roles.nodes[0].name === "administrator" && (
+                          <>
+                            <Divider className="my-1" />
+                            <Link href={ROUTES.ADMIN.DASHBOARD}>
+                              <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                                Admin Dashboard
+                              </div>
+                            </Link>
+                          </>
+                        )}
+                        <Divider className="my-1" />
+                        <div
+                          className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer flex items-center gap-2"
+                          onClick={signOut}
+                        >
+                          <span className="material-symbols-rounded text-base">
+                            logout
+                          </span>
+                          <span>Logout</span>
+                        </div>
                       </div>
                     </div>
-                    <Divider className="my-0" />
-                    {/* Menu Items */}
-                    <div className="py-1">
-                      <Link href={ROUTES.ACCOUNT.DASHBOARD}>
-                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
-                          My Dashboard
-                        </div>
-                      </Link>
-                      <Link href={ROUTES.ACCOUNT.MY_PROFILE}>
-                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
-                          My Profile
-                        </div>
-                      </Link>
-                      <Link href={ROUTES.ACCOUNT.ORDER_HISTORY}>
-                        <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
-                          Payment History
-                        </div>
-                      </Link>
-                      {currentUser?.roles.nodes[0].name === "administrator" && (
-                        <>
-                          <Divider className="my-1" />
-                          <Link href={ROUTES.ADMIN.DASHBOARD}>
-                            <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
-                              Admin Dashboard
-                            </div>
-                          </Link>
-                        </>
-                      )}
-                      <Divider className="my-1" />
-                      <div
-                        className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer flex items-center gap-2"
-                        onClick={signOut}
-                      >
-                        <span className="material-symbols-rounded text-base">
-                          logout
-                        </span>
-                        <span>Logout</span>
-                      </div>
-                    </div>
+                  )}
+                >
+                  <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+                    <Avatar currentUser={currentUser} size={32} />
+                    <span className="text-sm font-medium text-gray-700">
+                      {currentUser?.name || "User"}
+                    </span>
+                    <span className="material-symbols-rounded text-lg text-gray-500">
+                      keyboard_arrow_down
+                    </span>
                   </div>
-                )}
-              >
-                <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                  <Avatar currentUser={currentUser} size={32} />
-                  <span className="text-sm font-medium text-gray-700">
-                    {currentUser?.name || "User"}
-                  </span>
-                  <span className="material-symbols-rounded text-lg text-gray-500">
-                    keyboard_arrow_down
-                  </span>
-                </div>
-              </Dropdown>
+                </Dropdown>
+              </div>
             ) : (
-              <div className="flex items-center gap-3">
+              <div className="hidden lg:flex items-center gap-3">
                 <Link
                   href={ROUTES.REGISTER}
                   className="text-sm font-medium text-gray-700 hover:text-[#d94a56] transition-colors"

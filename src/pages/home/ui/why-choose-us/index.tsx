@@ -15,7 +15,7 @@ export const WhyChooseUs = ({ config }: WhyChooseUsProps) => {
           {/* Subtitle */}
           <div className="flex justify-center mb-4">
             <span
-              className="inline-block px-4 py-2 rounded-full text-xs font-semibold uppercase"
+              className="inline-block px-4 py-2 rounded-full text-xs font-semibold uppercase wrap-break-word max-w-full"
               style={{
                 backgroundColor: "rgba(37, 99, 235, 0.1)",
                 color: "#2563eb",
@@ -26,12 +26,12 @@ export const WhyChooseUs = ({ config }: WhyChooseUsProps) => {
           </div>
 
           {/* Title */}
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 text-gray-900">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 text-gray-900 wrap-break-word px-4">
             {title}
           </h2>
 
           {/* Description */}
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto mt-5 mb-0">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto mt-5 mb-0 wrap-break-word px-4">
             {description}
           </p>
         </div>
@@ -67,8 +67,8 @@ export const WhyChooseUs = ({ config }: WhyChooseUsProps) => {
             return (
               <div
                 key={index}
-                className={`bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col items-center justify-start ${
-                  index === 1 || index === 3 ? "mt-6 md:mt-10" : ""
+                className={`bg-white rounded-lg shadow-md px-6 py-10 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col items-center justify-start ${
+                  index === 1 || index === 3 ? "md:mt-10" : ""
                 }`}
               >
                 {/* Icon Circle */}
@@ -88,12 +88,14 @@ export const WhyChooseUs = ({ config }: WhyChooseUsProps) => {
                 </div>
 
                 {/* Number */}
-                <h3 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+                <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-2 wrap-break-word line-clamp-2">
                   {stat.value}
                 </h3>
 
                 {/* Label */}
-                <span className="text-base text-gray-600">{stat.label}</span>
+                <span className="text-sm sm:text-base text-gray-600 wrap-break-word line-clamp-2">
+                  {stat.label}
+                </span>
               </div>
             );
           })}
