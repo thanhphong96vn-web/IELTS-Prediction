@@ -14,6 +14,65 @@ import "plyr-react/plyr.css";
 import { TextSelectionWrapper } from "@/shared/ui/text-selection";
 import { Checkbox as AntCheckbox } from "antd";
 
+// Helper function để đếm số câu hỏi con từ một question (giống logic trong countQuestion)
+const countSubQuestions = (question: any): number => {
+  if (!question) return 1;
+
+  const questionType = question.type?.[0];
+
+  // Checkbox: đếm số đáp án đúng
+  if (questionType === "checkbox") {
+    const correctCount =
+      question.list_of_options?.reduce(
+        (acc: number, option: any) => (option.correct ? acc + 1 : acc),
+        0
+      ) || 0;
+    return correctCount > 0 ? correctCount : 1;
+  }
+
+  // Matching: xử lý các layout khác nhau
+  if (questionType === "matching" && question.matchingQuestion) {
+    const layoutType = String(question.matchingQuestion.layoutType)
+      .trim()
+      .toLowerCase();
+    if (layoutType === "summary") {
+      const summaryText = question.matchingQuestion.summaryText || "";
+      const gapCount = (summaryText.match(/\{(.*?)\}/g) || []).length;
+      return gapCount > 0 ? gapCount : 1;
+    }
+    if (
+      layoutType === "standard" &&
+      question.matchingQuestion.matchingItems?.length > 0
+    ) {
+      return question.matchingQuestion.matchingItems.length;
+    }
+  }
+
+  // Matrix: đếm số items
+  if (questionType === "matrix" && question.matrixQuestion?.matrixItems) {
+    return question.matrixQuestion.matrixItems.length;
+  }
+
+  // Fillup: đếm số gaps trong question text
+  const questionText = question.question || question.instructions || "";
+  if (questionText && /\{(.*?)\}/.test(questionText)) {
+    const gapCount = (questionText.match(/\{(.*?)\}/g) || []).length;
+    if (gapCount > 0) return gapCount;
+  }
+
+  // List of questions
+  if (question.list_of_questions && question.list_of_questions.length > 0) {
+    return question.list_of_questions.length;
+  }
+
+  // Explanations
+  if (question.explanations && question.explanations.length > 1) {
+    return question.explanations.length;
+  }
+
+  return 1;
+};
+
 type AnswerFormValues = {
   answers: (string | number[] | object)[];
 };
@@ -114,8 +173,12 @@ function ReviewExplanation({
     question: any;
     startIndex: number;
   }) => {
-    const userAnswers = (methods.getValues(`answers.${startIndex}`) ||
-      []) as number[];
+    // Lấy đáp án người dùng đã chọn
+    const rawUserAnswer = methods.getValues(`answers.${startIndex}`);
+    const userAnswers = Array.isArray(rawUserAnswer)
+      ? rawUserAnswer.map((val) => Number(val)).filter((val) => !isNaN(val))
+      : [];
+
     const subQuestionCount =
       question.list_of_options?.reduce(
         (acc: number, option: any) => (option.correct ? acc + 1 : acc),
@@ -222,8 +285,11 @@ function ReviewExplanation({
 
   // ▼▼▼ LOGIC newPost ▼▼▼
   const newPost = useMemo(() => {
-    let currentIndex = 0;
     const rawPost = JSON.parse(JSON.stringify(quiz));
+
+    // BƯỚC 1: Tính startIndex cho TẤT CẢ passages TRƯỚC (giống như khi làm bài)
+    // Để đảm bảo index khớp với đáp án đã lưu
+    let currentIndex = 0;
     rawPost.quizFields.passages.forEach(
       (passage: any, passageIndex: number) => {
         if (passage && passage.questions) {
@@ -235,83 +301,21 @@ function ReviewExplanation({
             );
             const questionType = question.type?.[0];
 
-            // 1. Check Matching (Reading)
-            if (questionType === "matching") {
-              const layoutValue = question.matchingQuestion?.layoutType;
-              const layout = Array.isArray(layoutValue)
-                ? layoutValue[0]
-                : String(layoutValue || "")
-                    .trim()
-                    .toLowerCase();
-
-              if (layout === "summary") {
-                const summaryText =
-                  question.matchingQuestion?.summaryText || "";
-                let gapCount = 0;
-                summaryText.replace(/\{(.*?)\}/g, () => {
-                  gapCount++;
-                  return "";
-                });
-                currentIndex += gapCount > 0 ? gapCount : 1;
-              } else if (layout === "heading") {
-                const passageContent = passage.passage_content || "";
-                let gapCount = 0;
-                passageContent.replace(/\{(.*?)\}/g, () => {
-                  gapCount++;
-                  return "";
-                });
-                currentIndex += gapCount > 0 ? gapCount : 1;
-              } else {
-                // 'standard' layout
-                currentIndex +=
-                  question.matchingQuestion?.matchingItems?.length || 1;
-              }
-
-              // 2. Check Matrix (Reading T/F)
-            } else if (questionType === "matrix") {
-              currentIndex += question.matrixQuestion?.matrixItems?.length || 1;
-
-              // 3. Check Gaps (Listening 1-10 & others)
-            } else {
-              const questionText =
-                question.question || question.instructions || "";
-              let gapCount = 0;
-
-              const gapMatches = questionText.match(/\{(.*?)\}/g);
-              if (gapMatches) {
-                gapCount = gapMatches.length;
-              }
-
-              if (gapCount > 0) {
-                currentIndex += gapCount;
-              } else if (
-                question.list_of_questions &&
-                question.list_of_questions.length > 0
-              ) {
-                currentIndex += question.list_of_questions.length;
-              } else if (questionType === "checkbox") {
-                const correctCount =
-                  question.list_of_options?.reduce(
-                    (acc: number, option: any) =>
-                      option.correct ? acc + 1 : acc,
-                    0
-                  ) || 0;
-                currentIndex += correctCount > 0 ? correctCount : 1;
-              } else if (question.explanations?.length > 0) {
-                currentIndex += question.explanations.length;
-              } else {
-                currentIndex += 1;
-              }
-            }
+            // Debug: Log startIndex được gán
+            // Dùng helper function để đảm bảo logic nhất quán với khi làm bài
+            const numberOfSubQuestions = countSubQuestions(question);
+            currentIndex += numberOfSubQuestions;
           });
         }
       }
     );
+
+    // BƯỚC 2: Filter passages SAU KHI tính startIndex (giống như khi làm bài)
     const testParts = JSON.parse(testResult.testResultFields.testPart);
-    const filteredPassages = rawPost.quizFields.passages.filter(
+    rawPost.quizFields.passages = rawPost.quizFields.passages.filter(
       (_: any, index: number) => testParts.includes(index)
     );
-    rawPost.quizFields.passages = filteredPassages;
+
     return rawPost;
   }, [quiz, testResult.testResultFields.testPart]);
   // ▲▲▲ KẾT THÚC newPost ▲▲▲
@@ -488,7 +492,7 @@ function ReviewExplanation({
     const allHtml: string[] = [];
     let hasAnyExplanation = false;
 
-    currentPassage.questions.forEach((q: any) => {
+    currentPassage.questions.forEach((q: any, questionIndex: number) => {
       if (Array.isArray(q.explanations) && q.explanations.length > 0) {
         let subQuestionCount = 1;
         const questionType = q.type?.[0];
@@ -516,6 +520,10 @@ function ReviewExplanation({
               (acc: number, option: any) => (option.correct ? acc + 1 : acc),
               0
             ) || 1;
+          // Với checkbox có nhiều đáp án đúng, mỗi explanation tương ứng với một câu hỏi
+          if (q.explanations.length > 1) {
+            isFillup = true;
+          }
         } else if (q.explanations.length > 1) {
           subQuestionCount = q.explanations.length;
           isFillup = true;
@@ -539,10 +547,20 @@ function ReviewExplanation({
                 "$1"
               );
 
-              if (isFillup) {
-                return `<p><b>Q.${q.startIndex + 1 + index}:</b> ${text}</p>`;
+              let resultHtml = "";
+              // Với checkbox có nhiều đáp án đúng, mỗi explanation tương ứng với một câu hỏi
+              // Tính số câu hỏi dựa trên startIndex và index của explanation
+              if (
+                isFillup ||
+                (questionType === "checkbox" && q.explanations.length > 1)
+              ) {
+                const questionNumber = q.startIndex + 1 + index;
+                resultHtml = `<p><b>Q.${questionNumber}:</b> ${text}</p>`;
+              } else {
+                resultHtml = `<p>${text}</p>`;
               }
-              return `<p>${text}</p>`;
+
+              return resultHtml;
             }
             return null;
           })

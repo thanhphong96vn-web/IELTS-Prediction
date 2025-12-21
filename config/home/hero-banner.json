@@ -34,12 +34,12 @@
       "subtitle": "Admission Complete"
     },
     {
-      "icon": "/img-admin/o-icon-2-1766216901353.png",
+      "icon": "/img-admin/o-icon-2.png",
       "value": "36k+",
       "subtitle": "Enrolled Students",
       "avatars": [
         "/img-admin/art-stu-2.png",
-        "C:\\fakepath\\i-team.png",
+        "/img-admin/art-stu-1.png",
         "/img-admin/art-stu-3.png",
         "/img-admin/i-team.png"
       ]

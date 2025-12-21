@@ -29,7 +29,6 @@ export function ImageUpload({
     try {
       const formData = new FormData();
       formData.append("file", file);
-      
       // Truyền đường dẫn file cũ để xóa (nếu có)
       if (value && value.trim()) {
         formData.append("oldPath", value);
@@ -116,10 +115,10 @@ export function ImageUpload({
               loading={uploading}
             >
               <input {...getInputProps()} />
-              Thay đổi hình
+              Change the image
             </Button>
             <Button danger icon={<DeleteOutlined />} onClick={handleRemove}>
-              Xóa
+              Delete
             </Button>
           </div>
           <div className="mt-2 text-sm text-gray-500">

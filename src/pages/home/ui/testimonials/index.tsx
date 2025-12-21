@@ -111,8 +111,7 @@ export const Testimonials = ({ config }: TestimonialsProps) => {
               <button
                 className="px-4 sm:px-6 py-3 rounded-lg text-sm sm:text-base text-white font-medium transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
                 style={{
-                  background:
-                    "linear-gradient(135deg, #2563eb 0%, #6366f1 50%, #8b5cf6 100%)",
+                  backgroundColor: "#d94a56",
                 }}
               >
                 <span className="flex items-center gap-2 justify-center">

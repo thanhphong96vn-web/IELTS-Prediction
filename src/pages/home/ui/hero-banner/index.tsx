@@ -114,8 +114,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                   size="large"
                   className="h-12 px-4 sm:px-8 rounded-lg text-sm sm:text-base font-medium border-none transition-all duration-300 hover:-translate-y-1 hover:shadow-lg text-white w-full sm:w-auto"
                   style={{
-                    background:
-                      "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%)",
+                    backgroundColor: "#d94a56",
                   }}
                 >
                   <span className="flex items-center gap-2 justify-center">
@@ -133,8 +132,8 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                   size="large"
                   className="h-12 px-4 sm:px-8 rounded-lg text-sm sm:text-base font-medium border-2 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
                   style={{
-                    borderColor: "#374151",
-                    color: "#374151",
+                    borderColor: "#d94a56",
+                    color: "#d94a56",
                   }}
                 >
                   <span className="flex items-center gap-2 justify-center">
