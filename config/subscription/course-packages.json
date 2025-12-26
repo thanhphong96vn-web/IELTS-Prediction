@@ -1,0 +1,86 @@
+{
+  "currencySuffix": "đ",
+  "combo": {
+    "title": "Combo",
+    "ctaText": "Join Course Plan",
+    "basePrice": 250000,
+    "monthlyIncrementPrice": 100000,
+    "plans": [
+      {
+        "name": "Standard Plan",
+        "months": 1,
+        "price": 250000
+      },
+      {
+        "name": "Standard Plan",
+        "months": 2,
+        "price": 400000
+      },
+      {
+        "name": "Standard Plan",
+        "months": 3,
+        "price": 500000,
+        "popular": true,
+        "featuredDeal": true,
+        "dealNote": "Best starter choice"
+      },
+      {
+        "name": "Standard Plan",
+        "months": 5,
+        "price": 500000,
+        "featuredDeal": true,
+        "dealNote": "Same price as 3 months",
+        "samePriceAsMonths": 3
+      },
+      {
+        "name": "Standard Plan",
+        "months": 12,
+        "price": 1800000,
+        "featuredDeal": true
+      },
+      {
+        "name": "Standard Plan",
+        "months": 13,
+        "price": 1800000,
+        "featuredDeal": true,
+        "dealNote": "Same price as 12 months",
+        "samePriceAsMonths": 12
+      }
+    ]
+  },
+  "single": {
+    "title": "Single Pack",
+    "ctaText": "Join Course Plan",
+    "basePrice": 200000,
+    "monthlyIncrementPrice": 100000,
+    "skills": [
+      "listening",
+      "reading"
+    ],
+    "plans": [
+      {
+        "name": "Single Pack",
+        "months": 2,
+        "price": 200000
+      },
+      {
+        "name": "Single Pack",
+        "months": 3,
+        "price": 300000
+      },
+      {
+        "name": "Single Pack",
+        "months": 6,
+        "price": 500000,
+        "popular": true,
+        "featuredDeal": true,
+        "dealNote": "Best value"
+      },
+      {
+        "name": "Single Pack",
+        "months": 12,
+        "price": 900000
+      }
+    ]
+  }
+}
