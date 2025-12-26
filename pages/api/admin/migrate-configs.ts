@@ -62,65 +62,85 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Chỉ cho phép POST
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  // Chỉ chạy trên Vercel production
-  if (process.env.VERCEL !== "1") {
-    return res.status(403).json({ 
-      message: "Migration chỉ có thể chạy trên Vercel production" 
-    });
-  }
-
-  // Kiểm tra KV credentials
-  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-    return res.status(500).json({
-      message: "KV_REST_API_URL hoặc KV_REST_API_TOKEN không được set",
-    });
-  }
-
-  console.log("🚀 Starting migration to Vercel KV...");
-
-  const results: Array<{ config: string; status: "success" | "failed"; error?: string }> = [];
-
-  for (const configName of configs) {
-    try {
-      let config;
-      
-      // Thử đọc từ filesystem
-      try {
-        config = readConfigFromFileSystem(configName);
-      } catch (fsError) {
-        // Nếu file không tồn tại, dùng default config nếu có
-        if (defaultConfigs[configName]) {
-          console.log(`⚠ File not found for ${configName}, using default config`);
-          config = defaultConfigs[configName];
-        } else {
-          throw fsError;
-        }
-      }
-      
-      // Ghi vào KV
-      await Promise.resolve(writeConfig(configName, config));
-      results.push({ config: configName, status: "success" });
-      console.log(`✓ Migrated: ${configName}`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      results.push({ config: configName, status: "failed", error: errorMessage });
-      console.error(`✗ Failed to migrate ${configName}:`, errorMessage);
+  try {
+    // Chỉ cho phép POST
+    if (req.method !== "POST") {
+      return res.status(405).json({ message: "Method not allowed" });
     }
+
+    // Chỉ chạy trên Vercel production
+    if (process.env.VERCEL !== "1") {
+      return res.status(403).json({ 
+        message: "Migration chỉ có thể chạy trên Vercel production",
+        vercel: process.env.VERCEL,
+        nodeEnv: process.env.NODE_ENV,
+      });
+    }
+
+    // Kiểm tra KV credentials
+    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+      return res.status(500).json({
+        message: "KV_REST_API_URL hoặc KV_REST_API_TOKEN không được set",
+        hasUrl: !!process.env.KV_REST_API_URL,
+        hasToken: !!process.env.KV_REST_API_TOKEN,
+      });
+    }
+
+    console.log("🚀 Starting migration to Vercel KV...");
+
+    const results: Array<{ config: string; status: "success" | "failed"; error?: string }> = [];
+
+    for (const configName of configs) {
+      try {
+        let config;
+        
+        // Thử đọc từ filesystem
+        try {
+          config = readConfigFromFileSystem(configName);
+        } catch (fsError: any) {
+          // Nếu file không tồn tại, dùng default config nếu có
+          if (defaultConfigs[configName]) {
+            console.log(`⚠ File not found for ${configName}, using default config`);
+            config = defaultConfigs[configName];
+          } else {
+            throw new Error(`File not found: ${configName}, ${fsError?.message || String(fsError)}`);
+          }
+        }
+        
+        // Ghi vào KV
+        await Promise.resolve(writeConfig(configName, config));
+        results.push({ config: configName, status: "success" });
+        console.log(`✓ Migrated: ${configName}`);
+      } catch (error: any) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : undefined;
+        results.push({ 
+          config: configName, 
+          status: "failed", 
+          error: errorMessage,
+          ...(errorStack && { stack: errorStack })
+        });
+        console.error(`✗ Failed to migrate ${configName}:`, errorMessage);
+      }
+    }
+
+    const successCount = results.filter(r => r.status === "success").length;
+    const failCount = results.filter(r => r.status === "failed").length;
+
+    return res.status(200).json({
+      message: "Migration completed",
+      success: successCount,
+      failed: failCount,
+      total: configs.length,
+      results,
+    });
+  } catch (error: any) {
+    console.error("Migration endpoint error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
   }
-
-  const successCount = results.filter(r => r.status === "success").length;
-  const failCount = results.filter(r => r.status === "failed").length;
-
-  return res.status(200).json({
-    message: "Migration completed",
-    success: successCount,
-    failed: failCount,
-    results,
-  });
 }
 

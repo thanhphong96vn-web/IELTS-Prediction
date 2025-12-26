@@ -23,14 +23,16 @@ function getKVClient() {
 
   if (kvUrl && kvToken) {
     try {
+      // Sử dụng require vì Next.js hỗ trợ cả CommonJS và ESM
       const { createClient } = require("@vercel/kv");
       kvClient = createClient({
         url: kvUrl,
         token: kvToken,
       });
       return kvClient;
-    } catch (error) {
-      console.warn("Failed to initialize Vercel KV:", error);
+    } catch (error: any) {
+      console.warn("Failed to initialize Vercel KV:", error?.message || error);
+      console.warn("Error details:", error);
       kvClient = false;
       return null;
     }
