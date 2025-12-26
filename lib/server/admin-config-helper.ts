@@ -141,12 +141,19 @@ export function readConfig<T>(sectionName: string): T | Promise<T> {
         try {
           const fsConfig = readConfigFromFileSystem<T>(sectionName);
           console.log(`⚠ Config "${sectionName}" not found in KV, using filesystem fallback`);
+          
+          // Tự động migrate config vào KV để lần sau không cần fallback
+          // Chạy async trong background, không block response
+          Promise.resolve(writeConfig(sectionName, fsConfig)).catch((migrateError) => {
+            console.warn(`Failed to auto-migrate "${sectionName}" to KV:`, migrateError);
+          });
+          
           return fsConfig;
         } catch (fsError: any) {
           // Nếu cả hai đều fail, throw error từ KV nhưng với message rõ ràng hơn
           const finalError = new Error(
             `Config "${sectionName}" không tồn tại trong cả KV và filesystem. ` +
-            `Hãy chạy migration script hoặc tạo config trong admin panel.`
+            `Hãy gọi POST /api/admin/migrate-configs để migrate configs hoặc tạo config trong admin panel.`
           );
           console.error(`❌ Failed to read config "${sectionName}" from both KV and filesystem`);
           throw finalError;
