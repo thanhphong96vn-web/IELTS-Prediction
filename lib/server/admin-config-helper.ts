@@ -44,14 +44,16 @@ function getKVClient() {
  * Kiểm tra xem có nên sử dụng Vercel KV không
  */
 function shouldUseKV(): boolean {
-  return !!(
-    process.env.KV_REST_API_URL && 
-    process.env.KV_REST_API_TOKEN &&
-    // Chỉ sử dụng KV trên production (Vercel)
-    (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") &&
-    getKVClient() !== null &&
-    getKVClient() !== false
-  );
+  const hasKVEnv = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+  const isVercel = process.env.VERCEL === "1";
+  const isProduction = process.env.NODE_ENV === "production";
+  const kvClient = getKVClient();
+  
+  // Chỉ sử dụng KV nếu:
+  // 1. Có KV environment variables
+  // 2. Đang ở Vercel hoặc production
+  // 3. KV client đã được khởi tạo thành công
+  return hasKVEnv && (isVercel || isProduction) && kvClient !== null && kvClient !== false;
 }
 
 /**
@@ -91,11 +93,17 @@ async function readConfigFromKV<T>(sectionName: string): Promise<T> {
   try {
     const value = await client.get(key);
     if (value === null) {
-      throw new Error(`Config không tồn tại trong KV: ${sectionName}`);
+      // Config không tồn tại trong KV - đây là lỗi có thể recover được
+      const error = new Error(`Config không tồn tại trong KV: ${sectionName}`);
+      (error as any).isConfigNotFound = true;
+      throw error;
     }
     return typeof value === "string" ? JSON.parse(value) : (value as T);
-  } catch (error) {
-    console.warn(`Failed to read from KV:`, error);
+  } catch (error: any) {
+    // Chỉ log warning nếu không phải lỗi config not found
+    if (!error?.isConfigNotFound) {
+      console.warn(`Failed to read from KV:`, error);
+    }
     throw error;
   }
 }
@@ -126,14 +134,26 @@ export async function readConfig<T>(sectionName: string): Promise<T>;
 export function readConfig<T>(sectionName: string): T | Promise<T> {
   // Nếu có Vercel KV và đang ở production, sử dụng nó (async)
   if (shouldUseKV()) {
-    return readConfigFromKV<T>(sectionName).catch((error) => {
+    return readConfigFromKV<T>(sectionName).catch(async (error: any) => {
       // Nếu không có trong KV, thử fallback về filesystem
-      try {
-        return readConfigFromFileSystem<T>(sectionName);
-      } catch (fsError) {
-        // Nếu cả hai đều fail, throw error từ KV
-        throw error;
+      // Trên Vercel, files trong repo vẫn có thể đọc được (read-only)
+      if (error?.isConfigNotFound || error?.message?.includes('không tồn tại trong KV')) {
+        try {
+          const fsConfig = readConfigFromFileSystem<T>(sectionName);
+          console.log(`⚠ Config "${sectionName}" not found in KV, using filesystem fallback`);
+          return fsConfig;
+        } catch (fsError: any) {
+          // Nếu cả hai đều fail, throw error từ KV nhưng với message rõ ràng hơn
+          const finalError = new Error(
+            `Config "${sectionName}" không tồn tại trong cả KV và filesystem. ` +
+            `Hãy chạy migration script hoặc tạo config trong admin panel.`
+          );
+          console.error(`❌ Failed to read config "${sectionName}" from both KV and filesystem`);
+          throw finalError;
+        }
       }
+      // Nếu là lỗi khác (không phải config not found), throw ngay
+      throw error;
     });
   }
 
