@@ -15,7 +15,11 @@ export default async function handler(
   }
 
   try {
-    const config = readConfig<HeroBannerConfig>("hero-banner");
+    const config = await Promise.resolve(readConfig<HeroBannerConfig>("hero-banner"));
+    // Validate config có đầy đủ properties
+    if (!config || !config.trustpilot || !config.trustpilot.image) {
+      throw new Error("Invalid config structure");
+    }
     return res.status(200).json(config);
   } catch (error) {
     // Trả về config mặc định nếu file không tồn tại

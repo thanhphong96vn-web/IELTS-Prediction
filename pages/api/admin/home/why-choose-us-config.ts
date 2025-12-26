@@ -15,7 +15,11 @@ export default async function handler(
   }
 
   try {
-    const config = readConfig<WhyChooseUsConfig>("why-choose-us");
+    const config = await Promise.resolve(readConfig<WhyChooseUsConfig>("why-choose-us"));
+    // Validate config có đầy đủ properties
+    if (!config || !config.title) {
+      throw new Error("Invalid config structure");
+    }
     return res.status(200).json(config);
   } catch {
     // Trả về config mặc định nếu file không tồn tại

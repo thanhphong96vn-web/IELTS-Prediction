@@ -15,9 +15,13 @@ export default async function handler(
   }
 
   try {
-    const config = readConfig<PracticeLibraryBannerConfig>(
+    const config = await Promise.resolve(readConfig<PracticeLibraryBannerConfig>(
       "ielts-practice-library/banner"
-    );
+    ));
+    // Validate config có đầy đủ properties
+    if (!config || !config.listening || !config.reading) {
+      throw new Error("Invalid config structure");
+    }
     return res.status(200).json(config);
   } catch {
     // Trả về config mặc định nếu file không tồn tại

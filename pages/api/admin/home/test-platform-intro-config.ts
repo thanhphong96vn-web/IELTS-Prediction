@@ -15,7 +15,11 @@ export default async function handler(
   }
 
   try {
-    const config = readConfig<TestPlatformIntroConfig>("test-platform-intro");
+    const config = await Promise.resolve(readConfig<TestPlatformIntroConfig>("test-platform-intro"));
+    // Validate config có đầy đủ properties
+    if (!config || !config.badge || !config.title) {
+      throw new Error("Invalid config structure");
+    }
     return res.status(200).json(config);
   } catch (error) {
     // Trả về config mặc định nếu file không tồn tại
