@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { Button, Modal } from "antd";
 import { useFormContext, useWatch } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
-import "plyr-react/plyr.css";
 
 import { countQuestion } from "@/shared/lib";
 import { AnswerFormValues, useExamContext } from "../../context";
+import AudioPlayer from "../audio-player";
 
 // ▼▼▼ HÀM HELPER (TỪ CHECKBOX.TSX) - GIỮ NGUYÊN ▼▼▼
 const parseMaxOptionsFromText = (text: string | undefined | null): number => {
@@ -20,10 +19,6 @@ const parseMaxOptionsFromText = (text: string | undefined | null): number => {
   return 1;
 };
 // ▲▲▲ KẾT THÚC HÀM HELPER ▲▲▲
-
-const Plyr = dynamic(() => import("plyr-react"), {
-  ssr: false,
-});
 
 function Footer() {
   const [confirmSubmitModal, setConfirmSubmitModal] = useState(false);
@@ -48,8 +43,6 @@ function Footer() {
     control,
   });
 
-  const ref = useRef<HTMLDivElement>(null);
-
   const isReadingTest = useMemo(
     () => post.quizFields.skill[0] === "reading",
     [post.quizFields.skill]
@@ -60,15 +53,6 @@ function Footer() {
       setIsReady(true);
     }
   }, [isReadingTest, setIsReady]);
-
-  useEffect(() => {
-    if (ref.current && isReady && !isReadingTest) {
-      const audioElement = ref.current.querySelector("audio");
-      if (audioElement) {
-        audioElement.play().catch(error => console.error("Audio play failed:", error));
-      }
-    }
-  }, [isReady, isReadingTest]);
 
   const { passagesInfo, answeredMap } = useMemo(() => {
     const localAnsweredMap = new Map<number, boolean>();
@@ -426,35 +410,6 @@ function Footer() {
     [passagesInfo]
   );
 
-  const PlyrComponent = useMemo(() => {
-    if (!post.quizFields.audio) return null;
-    return (
-      <Plyr
-        options={{
-          controls: [
-            'rewind',
-            'play',
-            'fast-forward',
-            'progress',
-            'current-time',
-            'mute',
-            'volume',
-            'settings',
-          ],
-        }}
-        source={{
-          type: "audio",
-          sources: [
-            {
-              src: post.quizFields.audio!.node.mediaItemUrl,
-              type: "audio/mp3",
-            },
-          ],
-        }}
-      />
-    );
-  }, [post]);
-
   const handleNextQuestion = () => {
     const newIndex = activeQuestionIndex + 1;
     if (newIndex >= totalQuestions) return;
@@ -493,7 +448,11 @@ function Footer() {
     <>
       <footer className="fixed bottom-0 left-0 right-0 z-50 bg-white">
         {post.quizFields.skill[0] === "listening" && post.quizFields.audio && (
-          <div ref={ref}>{PlyrComponent}</div>
+          <AudioPlayer 
+            key="listening-audio-player"
+            audioUrl={post.quizFields.audio.node.mediaItemUrl}
+            isReady={isReady}
+          />
         )}
         <div className="flex items-center w-full p-[12px] pr-[0] pt-[0]">
           <div className="flex justify-between items-center h-full flex-grow mr-10">

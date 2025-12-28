@@ -565,130 +565,136 @@ export function PageTakeTheTest() {
   }, [currentPassage]);
 
   return (
-    // 🔥 FIX QUAN TRỌNG: ĐẶT key={part.current} ĐỂ BUỘC UNMOUNT/MOUNT
-    <TextSelectionProvider key={part.current}> 
+    <>
+      {/* Render AudioPlayer outside TextSelectionProvider to prevent unmounting */}
       <form onSubmit={handleSubmit(handleSubmitAnswer)}>
         <div className="flex flex-col h-screen">
           <Header post={post} />
-          <main className="shrink grow overflow-hidden flex flex-col pb-[60px]">
-            <div className="border border-[#d5d5d5] rounded-[4px] flex-shrink-0 m-[16px] bg-[#f1f2ec]">
-              <div className="p-[16px]">
-                <div className="font-bold text-gray-800 text-base md:text-lg leading-tight">
-                  {passageInfo.partLabel} {passageInfo.partNumber}
-                </div>
-                <div className="text-[#000] text-base">
-                  Read the text and answer questions {passageInfo.questionRange}
+          
+          {/* 🔥 FIX QUAN TRỌNG: ĐẶT key={part.current} ĐỂ BUỘC UNMOUNT/MOUNT */}
+          <TextSelectionProvider key={part.current}>
+            <main className="shrink grow overflow-hidden flex flex-col pb-[60px]">
+              <div className="border border-[#d5d5d5] rounded-[4px] flex-shrink-0 m-[16px] bg-[#f1f2ec]">
+                <div className="p-[16px]">
+                  <div className="font-bold text-gray-800 text-base md:text-lg leading-tight">
+                    {passageInfo.partLabel} {passageInfo.partNumber}
+                  </div>
+                  <div className="text-[#000] text-base">
+                    Read the text and answer questions {passageInfo.questionRange}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <ExamContext.Provider value={newContextValue}>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={rectIntersection}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDragEnd={handleDragEnd}
-              >
-                <div className="flex h-full flex-grow min-h-0">
-                  <div
-                    className={twMerge(
-                      "w-full duration-300",
-                      isNotesViewOpen && "w-10/12"
-                    )}
-                  >
-                    <Splitter layout={isMobileView ? "vertical" : undefined}>
-                      {post.quizFields.skill[0] === "reading" && (
-                        <Splitter.Panel min="40%" max="60%">
-                          <div className="prose-sm max-w-none p-[16px] pt-[30px] bg-white h-full overflow-y-auto text-[#000]">
-                            {headingQuestion ? (
-                              <PassageRenderer
-                                passageContent={currentPassage.passage_content}
-                              />
-                            ) : (
-                              <TextSelectionWrapper>
-                                {parse(currentPassage.passage_content)}
-                              </TextSelectionWrapper>
+              <ExamContext.Provider value={newContextValue}>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={rectIntersection}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="flex h-full flex-grow min-h-0">
+                    <div
+                      className={twMerge(
+                        "w-full duration-300",
+                        isNotesViewOpen && "w-10/12"
+                      )}
+                    >
+                      <Splitter layout={isMobileView ? "vertical" : undefined}>
+                        {post.quizFields.skill[0] === "reading" && (
+                          <Splitter.Panel min="40%" max="60%">
+                            <div className="prose-sm max-w-none p-[16px] pt-[30px] bg-white h-full overflow-y-auto text-[#000]">
+                              {headingQuestion ? (
+                                <PassageRenderer
+                                  passageContent={currentPassage.passage_content}
+                                />
+                              ) : (
+                                <TextSelectionWrapper>
+                                  {parse(currentPassage.passage_content)}
+                                </TextSelectionWrapper>
+                              )}
+                            </div>
+                          </Splitter.Panel>
+                        )}
+
+                        {post.quizFields.skill[0] === "listening" && (
+                          <Splitter.Panel className="hidden"></Splitter.Panel>
+                        )}
+
+                        <Splitter.Panel
+                          className={
+                            post.quizFields.skill[0] === "listening"
+                              ? "basis-100"
+                              : ""
+                          }
+                        >
+                          <div
+                            ref={questionPanelRef}
+                            className={twMerge(
+                              "p-6 space-y-6 h-full overflow-y-auto",
+                              post.quizFields.skill[0] === "listening" &&
+                                "mx-auto bg-white listening-board"
+                            )}
+                          >
+                            {(currentPassage?.questions || []).map(
+                              (question, index) => {
+                                const isHeadingQ =
+                                  String(question.matchingQuestion?.layoutType)
+                                    .trim()
+                                    .toLowerCase() === "heading";
+                                const QuestionComponent = (
+                                  <QuestionRender
+                                    question={question}
+                                    // @ts-ignore
+                                    startIndex={question.startIndex}
+                                  />
+                                );
+                                return isHeadingQ ? (
+                                  <div key={index}> {QuestionComponent} </div>
+                                ) : (
+                                  <fieldset key={index} disabled={isFormDisabled}>
+                                    {" "}
+                                    {QuestionComponent}{" "}
+                                  </fieldset>
+                                );
+                              }
                             )}
                           </div>
                         </Splitter.Panel>
+                      </Splitter>
+                    </div>
+                    <div
+                      className={twMerge(
+                        "w-0 overflow-hidden duration-300",
+                        isNotesViewOpen && "w-2/12"
                       )}
+                    >
+                      <Notepad />
+                    </div>
+                  </div>
 
-                      {post.quizFields.skill[0] === "listening" && (
-                        <Splitter.Panel className="hidden"></Splitter.Panel>
-                      )}
-
-                      <Splitter.Panel
-                        className={
-                          post.quizFields.skill[0] === "listening"
-                            ? "basis-100"
-                            : ""
+                  <DragOverlay>
+                    {activeId ? (
+                      <DraggableOption
+                        id={activeId}
+                        // @ts-ignore
+                        content={
+                          answerOptions[parseInt(String(activeId).split("-")[2])]
+                            ?.optionText || ""
                         }
-                      >
-                        <div
-                          ref={questionPanelRef}
-                          className={twMerge(
-                            "p-6 space-y-6 h-full overflow-y-auto",
-                            post.quizFields.skill[0] === "listening" &&
-                              "mx-auto bg-white listening-board"
-                          )}
-                        >
-                          {(currentPassage?.questions || []).map(
-                            (question, index) => {
-                              const isHeadingQ =
-                                String(question.matchingQuestion?.layoutType)
-                                  .trim()
-                                  .toLowerCase() === "heading";
-                              const QuestionComponent = (
-                                <QuestionRender
-                                  question={question}
-                                  // @ts-ignore
-                                  startIndex={question.startIndex}
-                                />
-                              );
-                              return isHeadingQ ? (
-                                <div key={index}> {QuestionComponent} </div>
-                              ) : (
-                                <fieldset key={index} disabled={isFormDisabled}>
-                                  {" "}
-                                  {QuestionComponent}{" "}
-                                </fieldset>
-                              );
-                            }
-                          )}
-                        </div>
-                      </Splitter.Panel>
-                    </Splitter>
-                  </div>
-                  <div
-                    className={twMerge(
-                      "w-0 overflow-hidden duration-300",
-                      isNotesViewOpen && "w-2/12"
-                    )}
-                  >
-                    <Notepad />
-                  </div>
-                </div>
-
-                <DragOverlay>
-                  {activeId ? (
-                    <DraggableOption
-                      id={activeId}
-                      // @ts-ignore
-                      content={
-                        answerOptions[parseInt(String(activeId).split("-")[2])]
-                          ?.optionText || ""
-                      }
-                      isOverlay
-                    />
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </ExamContext.Provider>
-          </main>
+                        isOverlay
+                      />
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
+              </ExamContext.Provider>
+            </main>
+          </TextSelectionProvider>
+          
+          {/* Footer is outside TextSelectionProvider so AudioPlayer won't unmount */}
           <Footer />
         </div>
       </form>
-    </TextSelectionProvider>
+    </>
   );
 }
