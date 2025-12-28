@@ -6,7 +6,6 @@ import {
   IELTSWritingExamIcon,
 } from "@/shared/ui/icons";
 import _ from "lodash";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { twMerge } from "tailwind-merge";
 
@@ -62,7 +61,7 @@ function QuizLibraryNav() {
   return (
     <div className="flex items-center gap-2.5 flex-wrap">
       {navigationItems.map((item, index) => (
-        <Link
+        <a
           key={index}
           href={item.link}
           className="cursor-pointer w-full sm:w-auto"
@@ -78,7 +77,7 @@ function QuizLibraryNav() {
             {item.icon}
             <p className="text-base">{item.label}</p>
           </div>
-        </Link>
+        </a>
       ))}
     </div>
   );

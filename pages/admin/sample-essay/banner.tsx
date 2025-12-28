@@ -9,7 +9,7 @@ import {
   message,
   Divider,
 } from "antd";
-import type { SampleEssayBannerConfig } from "../../../api/admin/sample-essay/banner";
+import type { SampleEssayBannerConfig } from "../../api/admin/sample-essay/banner";
 import AdminLayout from "../_layout";
 
 const { Panel } = Collapse;
@@ -17,6 +17,7 @@ const { Panel } = Collapse;
 function SampleEssayBannerPage() {
   const [config, setConfig] = useState<SampleEssayBannerConfig | null>(null);
   const [saving, setSaving] = useState(false);
+  const [formKey, setFormKey] = useState(Date.now());
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -24,66 +25,17 @@ function SampleEssayBannerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cập nhật form khi config thay đổi
-  useEffect(() => {
-    if (config) {
-      console.log("Setting form values with config:", config);
-      // Set lại giá trị với cấu trúc đầy đủ, không reset để tránh mất giá trị
-      form.setFieldsValue({
-        writing: {
-          title: {
-            line1: config.writing.title.line1,
-            line2: {
-              highlighted: config.writing.title.line2.highlighted,
-              after: config.writing.title.line2.after,
-            },
-          },
-          description: {
-            line1: config.writing.description.line1,
-            line2: config.writing.description.line2,
-          },
-          backgroundColor: config.writing.backgroundColor,
-          button: {
-            text: config.writing.button.text,
-            link: config.writing.button.link,
-          },
-        },
-        speaking: {
-          title: {
-            line1: config.speaking.title.line1,
-            line2: {
-              highlighted: config.speaking.title.line2.highlighted,
-              after: config.speaking.title.line2.after,
-            },
-          },
-          description: {
-            line1: config.speaking.description.line1,
-            line2: config.speaking.description.line2,
-          },
-          backgroundColor: config.speaking.backgroundColor,
-          button: {
-            text: config.speaking.button.text,
-            link: config.speaking.button.link,
-          },
-        },
-      });
-      // Kiểm tra xem giá trị đã được set chưa
-      const currentValues = form.getFieldsValue();
-      console.log("Form values after setFieldsValue:", currentValues);
-      console.log(
-        "Writing title line2 highlighted:",
-        currentValues?.writing?.title?.line2?.highlighted
-      );
-    }
-  }, [config, form]);
-
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/sample-essay/banner");
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       console.log("Fetched config data:", data);
+      console.log("Writing title:", data.writing.title);
+      console.log("Writing line2Highlighted:", data.writing.title.line2Highlighted);
+      console.log("Speaking line2Highlighted:", data.speaking.title.line2Highlighted);
       setConfig(data);
+      setFormKey(Date.now()); // Force form remount với data mới
     } catch (error) {
       console.error("Error fetching config:", error);
       message.error("Error loading config");
@@ -138,7 +90,12 @@ function SampleEssayBannerPage() {
           </div>
         }
       >
-        <Form form={form} layout="vertical">
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={config}
+          key={formKey}
+        >
           <Collapse defaultActiveKey={["writing", "speaking"]}>
             {/* Writing Banner */}
             <Panel header="Writing Banner" key="writing">
@@ -152,7 +109,7 @@ function SampleEssayBannerPage() {
                 <Input placeholder="DOL IELTS Writing" />
               </Form.Item>
               <Form.Item
-                name={["writing", "title", "line2", "highlighted"]}
+                name={["writing", "title", "line2Highlighted"]}
                 label="Title Line 2 - Highlighted Text"
                 rules={[
                   {
@@ -162,12 +119,12 @@ function SampleEssayBannerPage() {
                 ]}
               >
                 <Input placeholder="Task 1 Academic" />
-                <p className="text-xs text-gray-500 mt-1">
-                  This text will be underlined with yellow color
-                </p>
               </Form.Item>
+              <p className="text-xs text-gray-500 mt-[-16px] mb-4">
+                This text will be underlined with yellow color
+              </p>
               <Form.Item
-                name={["writing", "title", "line2", "after"]}
+                name={["writing", "title", "line2After"]}
                 label="Title Line 2 - Text After Highlighted"
                 rules={[
                   {
@@ -251,7 +208,7 @@ function SampleEssayBannerPage() {
                 <Input placeholder="DOL IELTS Speaking" />
               </Form.Item>
               <Form.Item
-                name={["speaking", "title", "line2", "highlighted"]}
+                name={["speaking", "title", "line2Highlighted"]}
                 label="Title Line 2 - Highlighted Text"
                 rules={[
                   {
@@ -261,12 +218,12 @@ function SampleEssayBannerPage() {
                 ]}
               >
                 <Input placeholder="Task 1 Academic" />
-                <p className="text-xs text-gray-500 mt-1">
-                  This text will be underlined with yellow color
-                </p>
               </Form.Item>
+              <p className="text-xs text-gray-500 mt-[-16px] mb-4">
+                This text will be underlined with yellow color
+              </p>
               <Form.Item
-                name={["speaking", "title", "line2", "after"]}
+                name={["speaking", "title", "line2After"]}
                 label="Title Line 2 - Text After Highlighted"
                 rules={[
                   {

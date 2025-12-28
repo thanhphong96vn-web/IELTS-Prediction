@@ -29,10 +29,8 @@ export default async function handler(
       writing: {
         title: {
           line1: "DOL IELTS Writing",
-          line2: {
-            highlighted: "Task 1 Academic",
-            after: "Sample",
-          },
+          line2Highlighted: "Task 1 Academic",
+          line2After: "Sample",
         },
         description: {
           line1:
@@ -48,10 +46,8 @@ export default async function handler(
       speaking: {
         title: {
           line1: "DOL IELTS Speaking",
-          line2: {
-            highlighted: "Task 1 Academic",
-            after: "Sample",
-          },
+          line2Highlighted: "Task 1 Academic",
+          line2After: "Sample",
         },
         description: {
           line1:

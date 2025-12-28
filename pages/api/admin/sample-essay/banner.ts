@@ -5,10 +5,8 @@ export interface SampleEssayBannerConfig {
   writing: {
     title: {
       line1: string;
-      line2: {
-        highlighted: string;
-        after: string;
-      };
+      line2Highlighted: string;
+      line2After: string;
     };
     description: {
       line1: string;
@@ -23,10 +21,8 @@ export interface SampleEssayBannerConfig {
   speaking: {
     title: {
       line1: string;
-      line2: {
-        highlighted: string;
-        after: string;
-      };
+      line2Highlighted: string;
+      line2After: string;
     };
     description: {
       line1: string;

@@ -221,7 +221,7 @@ export const PageArchive = ({
                     </div>
                     <div className="relative inline-block wrap-break-word">
                       <span className="relative inline-block">
-                        {bannerData.title.line2.highlighted}
+                        {bannerData.title.line2Highlighted}
                         <span
                           className="absolute bottom-0 left-0 right-0 h-3 opacity-30"
                           style={{
@@ -231,7 +231,7 @@ export const PageArchive = ({
                         ></span>
                       </span>{" "}
                       <span className="wrap-break-word">
-                        {bannerData.title.line2.after}
+                        {bannerData.title.line2After}
                       </span>
                     </div>
                   </h1>
