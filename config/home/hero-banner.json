@@ -17,12 +17,9 @@
     "primary": {
       "text": "Get Started",
       "link": "/account/register"
-    },
-    "secondary": {
-      "text": "Watch Video",
-      "link": "#"
     }
   },
+  "backgroundImage": "/img-admin/z7372912583445-37c4a42ee79600ddb61e719a1b72e48d-1766891122411.jpg",
   "bannerImage": "/img-admin/o-banner-1766077848129-1766498390339.png",
   "decorativeShape": {
     "image": "/img-admin/o-shape-1.png"

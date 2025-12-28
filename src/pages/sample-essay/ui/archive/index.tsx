@@ -208,13 +208,17 @@ export const PageArchive = ({
             <div
               className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
               style={{
-                background: "linear-gradient(180deg, #EEDEFD 0%, #FFFFFF 100%) !important",
+                background:
+                  bannerData.backgroundColor ||
+                  "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
               }}
             >
               <Container className="relative z-10 px-4">
                 <div className="flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-4 sm:space-y-6">
                   <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 flex flex-col items-center wrap-break-word w-full">
-                    <div className="wrap-break-word">{bannerData.title.line1}</div>
+                    <div className="wrap-break-word">
+                      {bannerData.title.line1}
+                    </div>
                     <div className="relative inline-block wrap-break-word">
                       <span className="relative inline-block">
                         {bannerData.title.line2.highlighted}
@@ -226,15 +230,22 @@ export const PageArchive = ({
                           }}
                         ></span>
                       </span>{" "}
-                      <span className="wrap-break-word">{bannerData.title.line2.after}</span>
+                      <span className="wrap-break-word">
+                        {bannerData.title.line2.after}
+                      </span>
                     </div>
                   </h1>
 
                   <div className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1 w-full">
-                    {bannerData.description.map(
-                      (line: string, index: number) => (
-                        <div key={index} className="wrap-break-word">{line}</div>
-                      )
+                    {bannerData.description.line1 && (
+                      <div className="wrap-break-word">
+                        {bannerData.description.line1}
+                      </div>
+                    )}
+                    {bannerData.description.line2 && (
+                      <div className="wrap-break-word">
+                        {bannerData.description.line2}
+                      </div>
                     )}
                   </div>
 
@@ -249,7 +260,7 @@ export const PageArchive = ({
                       className="hover:bg-[#c0394a]! hover:border-[#c0394a]! px-4 sm:px-6 py-2 h-[48px] text-sm md:text-base font-normal rounded-lg w-full sm:w-auto"
                     >
                       <span className="truncate max-w-[200px] sm:max-w-none inline-block">
-                      {bannerData.button.text}
+                        {bannerData.button.text}
                       </span>
                     </Button>
                   </Link>

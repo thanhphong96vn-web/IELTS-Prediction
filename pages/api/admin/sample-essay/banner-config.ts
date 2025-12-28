@@ -15,7 +15,9 @@ export default async function handler(
   }
 
   try {
-    const config = await Promise.resolve(readConfig<SampleEssayBannerConfig>("sample-essay/banner"));
+    const config = await Promise.resolve(
+      readConfig<SampleEssayBannerConfig>("sample-essay/banner")
+    );
     // Validate config có đầy đủ properties
     if (!config || !config.writing || !config.speaking) {
       throw new Error("Invalid config structure");
@@ -32,10 +34,12 @@ export default async function handler(
             after: "Sample",
           },
         },
-        description: [
-          "Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn cách làm bài,",
-          "từ vựng chi tiết theo chủ đề.",
-        ],
+        description: {
+          line1:
+            "Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn cách làm bài,",
+          line2: "từ vựng chi tiết theo chủ đề.",
+        },
+        backgroundColor: "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
         button: {
           text: "Tìm hiểu khóa học",
           link: "#",
@@ -49,10 +53,12 @@ export default async function handler(
             after: "Sample",
           },
         },
-        description: [
-          "Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn cách làm bài,",
-          "từ vựng chi tiết theo chủ đề.",
-        ],
+        description: {
+          line1:
+            "Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn cách làm bài,",
+          line2: "từ vựng chi tiết theo chủ đề.",
+        },
+        backgroundColor: "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
         button: {
           text: "Tìm hiểu khóa học",
           link: "#",
@@ -62,4 +68,3 @@ export default async function handler(
     return res.status(200).json(defaultConfig);
   }
 }
-

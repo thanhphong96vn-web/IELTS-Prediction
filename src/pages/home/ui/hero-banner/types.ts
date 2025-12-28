@@ -18,11 +18,12 @@ export interface HeroBannerConfig {
       text: string;
       link: string;
     };
-    secondary: {
+    secondary?: {
       text: string;
       link: string;
     };
   };
+  backgroundImage: string;
   bannerImage: string;
   featureCards: Array<{
     icon: string;

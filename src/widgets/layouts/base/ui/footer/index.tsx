@@ -45,6 +45,8 @@ export const Footer = () => {
         setCtaBannerConfig({
           title: "Ready to start creating a standard website?",
           description: "Finest choice for your home & office",
+          backgroundGradient:
+            "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
           button: {
             text: "Purchase Histudy",
             link: "#",
@@ -115,7 +117,14 @@ export const Footer = () => {
   return (
     <footer className="bg-gray-100">
       {/* CTA Banner Section */}
-      <div className="relative bg-gray-50 py-15 overflow-hidden">
+      <div
+        className="relative py-15 overflow-hidden"
+        style={{
+          background:
+            ctaBannerConfig?.backgroundGradient ||
+            "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
+        }}
+      >
         <Container>
           <div className="relative bg-white rounded-xl shadow-lg p-4 sm:p-6 md:p-8 md:py-14 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
             {/* Left Side - Text Content */}
@@ -208,7 +217,7 @@ export const Footer = () => {
 
               {/* Tagline */}
               <p className="text-gray-700 text-sm leading-relaxed">
-                IELTS PREDICTION  Test (IPT) specializes in providing highly
+                IELTS PREDICTION Test (IPT) specializes in providing highly
                 accuratte test simulations and forecast sets that closely
                 reflect the real IELTS exam.
               </p>
@@ -305,7 +314,6 @@ export const Footer = () => {
                 <form onSubmit={handleNewsletterSubmit}>
                   {/* Container chính tạo hình viên thuốc và viền bao quanh */}
                   <div className="flex items-center justify-between p-1 pl-1 bg-white border border-gray-200 rounded-full shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                    
                     {/* Input: Loại bỏ viền mặc định, set background trong suốt */}
                     <Input
                       placeholder="Your Email"
@@ -321,7 +329,8 @@ export const Footer = () => {
                       htmlType="submit"
                       className="rounded-full border-none h-12 px-8 font-medium transition-all duration-300 hover:opacity-90 hover:shadow-md"
                       style={{
-                        background: "linear-gradient(90deg, #d01414ff 0%, #ff4848ff 100%)", // Gradient từ Xanh sang Tím/Hồng
+                        background:
+                          "linear-gradient(90deg, #d01414ff 0%, #ff4848ff 100%)", // Gradient từ Xanh sang Tím/Hồng
                       }}
                     >
                       Subscribe

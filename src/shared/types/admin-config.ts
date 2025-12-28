@@ -3,6 +3,7 @@ export interface TestPlatformIntroConfig {
   badge: {
     text: string;
   };
+  backgroundGradient: string;
   title: {
     line1: string;
     line2: string;
@@ -36,11 +37,12 @@ export interface HeroBannerConfig {
       text: string;
       link: string;
     };
-    secondary: {
+    secondary?: {
       text: string;
       link: string;
     };
   };
+  backgroundImage: string;
   bannerImage: string;
   featureCards: Array<{
     icon: string;
@@ -70,6 +72,7 @@ export interface WhyChooseUsConfig {
 export interface FooterCtaBannerConfig {
   title: string;
   description: string;
+  backgroundGradient: string;
   button: {
     text: string;
     link: string;
@@ -95,7 +98,12 @@ export interface TestimonialsConfig {
 export interface PracticeLibraryBannerConfig {
   listening: {
     title: string;
-    description: string[];
+    description: {
+      line1: string;
+      line2: string;
+      line3: string;
+    };
+    backgroundColor: string;
     button: {
       text: string;
       link: string;
@@ -103,7 +111,12 @@ export interface PracticeLibraryBannerConfig {
   };
   reading: {
     title: string;
-    description: string[];
+    description: {
+      line1: string;
+      line2: string;
+      line3: string;
+    };
+    backgroundColor: string;
     button: {
       text: string;
       link: string;
@@ -113,6 +126,7 @@ export interface PracticeLibraryBannerConfig {
 
 export interface ExamLibraryHeroConfig {
   title: string;
+  backgroundColor: string;
   breadcrumb: {
     homeLabel: string;
     currentLabel: string;
@@ -133,6 +147,22 @@ export interface CoursePackageItem {
 
 export interface CoursePackagesConfig {
   currencySuffix: string;
+  popularBadgeText: string;
+  priceSuffix: string;
+  monthText: {
+    singular: string;
+    plural: string;
+  };
+  accessText: string;
+  dealNoteTemplate: string;
+  features: {
+    included: string[];
+    excluded: string[];
+  };
+  skillLabels: {
+    listening: string;
+    reading: string;
+  };
   combo: {
     title: string;
     ctaText: string;
@@ -194,6 +224,27 @@ export interface PrivacyPolicyConfig {
       content: string;
     }>;
   };
+}
+
+export interface PracticeSectionConfig {
+  backgroundGradient: string;
+}
+
+export interface LoginPageConfig {
+  backgroundColor: string;
+}
+
+export interface RegisterPageConfig {
+  backgroundColor: string;
+}
+
+export interface SubscriptionBannerConfig {
+  backgroundImage: string;
+  subtitle: {
+    text: string;
+  };
+  title: string;
+  description: string;
 }
 
 // Re-export TopBarConfig từ header types

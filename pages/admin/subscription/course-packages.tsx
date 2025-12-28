@@ -75,35 +75,186 @@ export default function CoursePackagesPage() {
     <AdminLayout>
       <Card
         title={
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold m-0">Manage Course Packages</h1>
-            <Space>
-              <Button onClick={fetchConfig}>Reload</Button>
-              <Button type="primary" loading={saving} onClick={handleSave}>
-                Save
-              </Button>
-            </Space>
-          </div>
+          <h1 className="text-2xl font-bold m-0">Manage Course Packages</h1>
         }
       >
         <Form form={form} layout="vertical" initialValues={config}>
-          <Collapse defaultActiveKey={["general", "combo", "single"]}>
+          <Collapse defaultActiveKey={["general", "texts", "combo", "single"]}>
             <Panel header="General" key="general">
               <Form.Item
                 name="currencySuffix"
                 label="Currency Suffix"
                 tooltip="Shown after the numeric price (e.g., đ)"
-                rules={[{ required: true, message: "Please enter a currency suffix" }]}
+                rules={[
+                  { required: true, message: "Please enter a currency suffix" },
+                ]}
               >
                 <Input placeholder="đ" />
               </Form.Item>
+            </Panel>
+
+            <Panel header="Texts & Labels" key="texts">
+              <Form.Item
+                name="popularBadgeText"
+                label="Popular Badge Text"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter popular badge text",
+                  },
+                ]}
+              >
+                <Input placeholder="POPULAR" />
+              </Form.Item>
+
+              <Form.Item
+                name="priceSuffix"
+                label="Price Suffix"
+                rules={[
+                  { required: true, message: "Please enter price suffix" },
+                ]}
+              >
+                <Input placeholder="/Monthly" />
+              </Form.Item>
+
+              <Divider orientation="left">Month Text</Divider>
+              <Space align="start" className="w-full" wrap>
+                <Form.Item
+                  name={["monthText", "singular"]}
+                  label="Singular (Month)"
+                  rules={[
+                    { required: true, message: "Please enter singular form" },
+                  ]}
+                >
+                  <Input placeholder="Month" />
+                </Form.Item>
+                <Form.Item
+                  name={["monthText", "plural"]}
+                  label="Plural (Months)"
+                  rules={[
+                    { required: true, message: "Please enter plural form" },
+                  ]}
+                >
+                  <Input placeholder="Months" />
+                </Form.Item>
+              </Space>
+
+              <Form.Item
+                name="accessText"
+                label="Access Text"
+                rules={[
+                  { required: true, message: "Please enter access text" },
+                ]}
+              >
+                <Input placeholder="Access" />
+              </Form.Item>
+
+              <Form.Item
+                name="dealNoteTemplate"
+                label="Deal Note Template"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter deal note template",
+                  },
+                ]}
+              >
+                <Input placeholder="SAME PRICE AS THE SHORTER PLAN" />
+              </Form.Item>
+
+              <Divider orientation="left">Features</Divider>
+              <Form.List name={["features", "included"]}>
+                {(fields, { add, remove }) => (
+                  <Space direction="vertical" className="w-full">
+                    <div className="font-semibold text-gray-700">
+                      Included Features
+                    </div>
+                    {fields.map((field) => (
+                      <Space key={field.key} align="center" className="w-full">
+                        <Form.Item
+                          {...field}
+                          name={field.name}
+                          fieldKey={field.fieldKey}
+                          rules={[
+                            { required: true, message: "Enter feature text" },
+                          ]}
+                          className="flex-1 mb-0"
+                        >
+                          <Input placeholder="Unlimited Access Courses" />
+                        </Form.Item>
+                        <Button danger onClick={() => remove(field.name)}>
+                          Remove
+                        </Button>
+                      </Space>
+                    ))}
+                    <Button type="dashed" onClick={() => add()} block>
+                      Add Included Feature
+                    </Button>
+                  </Space>
+                )}
+              </Form.List>
+
+              <Form.List name={["features", "excluded"]}>
+                {(fields, { add, remove }) => (
+                  <Space direction="vertical" className="w-full mt-3">
+                    <div className="font-semibold text-gray-700">
+                      Excluded Features
+                    </div>
+                    {fields.map((field) => (
+                      <Space key={field.key} align="center" className="w-full">
+                        <Form.Item
+                          {...field}
+                          name={field.name}
+                          fieldKey={field.fieldKey}
+                          rules={[
+                            { required: true, message: "Enter feature text" },
+                          ]}
+                          className="flex-1 mb-0"
+                        >
+                          <Input placeholder="24/7 Dedicated Support" />
+                        </Form.Item>
+                        <Button danger onClick={() => remove(field.name)}>
+                          Remove
+                        </Button>
+                      </Space>
+                    ))}
+                    <Button type="dashed" onClick={() => add()} block>
+                      Add Excluded Feature
+                    </Button>
+                  </Space>
+                )}
+              </Form.List>
+
+              <Divider orientation="left">Skill Labels</Divider>
+              <Space align="start" className="w-full" wrap>
+                <Form.Item
+                  name={["skillLabels", "listening"]}
+                  label="Listening Label"
+                  rules={[
+                    { required: true, message: "Please enter listening label" },
+                  ]}
+                >
+                  <Input placeholder="LISTENING" />
+                </Form.Item>
+                <Form.Item
+                  name={["skillLabels", "reading"]}
+                  label="Reading Label"
+                  rules={[
+                    { required: true, message: "Please enter reading label" },
+                  ]}
+                >
+                  <Input placeholder="READING" />
+                </Form.Item>
+              </Space>
             </Panel>
 
             <Panel header="Combo Packages" key="combo">
               <Form.Item
                 name={["combo", "title"]}
                 label="Section Title"
-                rules={[{ required: true, message: "Please enter section title" }]}
+                rules={[
+                  { required: true, message: "Please enter section title" },
+                ]}
               >
                 <Input placeholder="Combo" />
               </Form.Item>
@@ -122,14 +273,14 @@ export default function CoursePackagesPage() {
                   label="Base Price (Tháng đầu tiên)"
                   tooltip="Giá cơ bản cho tháng đầu tiên. Giá sẽ tính: basePrice + (months - 1) * monthlyIncrementPrice"
                 >
-                  <InputNumber min={0} step={50000} style={{ width: '100%' }} />
+                  <InputNumber min={0} step={50000} style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
                   name={["combo", "monthlyIncrementPrice"]}
                   label="Monthly Increment Price"
                   tooltip="Giá tăng thêm mỗi tháng (mặc định: 100,000đ)"
                 >
-                  <InputNumber min={0} step={10000} style={{ width: '100%' }} />
+                  <InputNumber min={0} step={10000} style={{ width: "100%" }} />
                 </Form.Item>
               </Space>
 
@@ -155,7 +306,9 @@ export default function CoursePackagesPage() {
                             name={[field.name, "name"]}
                             fieldKey={[field.fieldKey, "name"]}
                             label="Name"
-                            rules={[{ required: true, message: "Enter plan name" }]}
+                            rules={[
+                              { required: true, message: "Enter plan name" },
+                            ]}
                           >
                             <Input placeholder="Standard Plan" />
                           </Form.Item>
@@ -164,7 +317,12 @@ export default function CoursePackagesPage() {
                             name={[field.name, "months"]}
                             fieldKey={[field.fieldKey, "months"]}
                             label="Months"
-                            rules={[{ required: true, message: "Enter duration (months)" }]}
+                            rules={[
+                              {
+                                required: true,
+                                message: "Enter duration (months)",
+                              },
+                            ]}
                           >
                             <InputNumber min={1} />
                           </Form.Item>
@@ -226,7 +384,9 @@ export default function CoursePackagesPage() {
               <Form.Item
                 name={["single", "title"]}
                 label="Section Title"
-                rules={[{ required: true, message: "Please enter section title" }]}
+                rules={[
+                  { required: true, message: "Please enter section title" },
+                ]}
               >
                 <Input placeholder="Single Pack" />
               </Form.Item>
@@ -245,14 +405,14 @@ export default function CoursePackagesPage() {
                   label="Base Price (Tháng đầu tiên)"
                   tooltip="Giá cơ bản cho tháng đầu tiên. Giá sẽ tính: basePrice + (months - 1) * monthlyIncrementPrice"
                 >
-                  <InputNumber min={0} step={50000} style={{ width: '100%' }} />
+                  <InputNumber min={0} step={50000} style={{ width: "100%" }} />
                 </Form.Item>
                 <Form.Item
                   name={["single", "monthlyIncrementPrice"]}
                   label="Monthly Increment Price"
                   tooltip="Giá tăng thêm mỗi tháng (mặc định: 100,000đ)"
                 >
-                  <InputNumber min={0} step={10000} style={{ width: '100%' }} />
+                  <InputNumber min={0} step={10000} style={{ width: "100%" }} />
                 </Form.Item>
               </Space>
 
@@ -267,7 +427,9 @@ export default function CoursePackagesPage() {
                           name={field.name}
                           fieldKey={field.fieldKey}
                           label={`Skill #${field.name + 1}`}
-                          rules={[{ required: true, message: "Enter skill name" }]}
+                          rules={[
+                            { required: true, message: "Enter skill name" },
+                          ]}
                         >
                           <Input placeholder="listening" />
                         </Form.Item>
@@ -305,7 +467,9 @@ export default function CoursePackagesPage() {
                             name={[field.name, "name"]}
                             fieldKey={[field.fieldKey, "name"]}
                             label="Name"
-                            rules={[{ required: true, message: "Enter plan name" }]}
+                            rules={[
+                              { required: true, message: "Enter plan name" },
+                            ]}
                           >
                             <Input placeholder="Single Pack" />
                           </Form.Item>
@@ -314,7 +478,12 @@ export default function CoursePackagesPage() {
                             name={[field.name, "months"]}
                             fieldKey={[field.fieldKey, "months"]}
                             label="Months"
-                            rules={[{ required: true, message: "Enter duration (months)" }]}
+                            rules={[
+                              {
+                                required: true,
+                                message: "Enter duration (months)",
+                              },
+                            ]}
                           >
                             <InputNumber min={1} />
                           </Form.Item>
@@ -372,9 +541,20 @@ export default function CoursePackagesPage() {
               </Form.List>
             </Panel>
           </Collapse>
+
+          <Space className="mt-6 w-full justify-end">
+            <Button onClick={fetchConfig}>Reload</Button>
+            <Button
+              type="primary"
+              onClick={handleSave}
+              loading={saving}
+              size="large"
+            >
+              Save changes
+            </Button>
+          </Space>
         </Form>
       </Card>
     </AdminLayout>
   );
 }
-

@@ -10,6 +10,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useState } from "react";
 import { GoogleIcon } from "@/shared/ui/icons";
 import { Breadcrumb } from "antd";
+import type { LoginPageConfig } from "@/shared/types/admin-config";
 
 type FormData = {
   email: string;
@@ -17,7 +18,11 @@ type FormData = {
   rememberMe: boolean;
 };
 
-export function PageLogin() {
+interface PageLoginProps {
+  loginConfig?: LoginPageConfig;
+}
+
+export function PageLogin({ loginConfig }: PageLoginProps) {
   const router = useRouter();
   const { signIn } = useAuth();
   const {
@@ -87,6 +92,7 @@ export function PageLogin() {
         className="py-10 md:py-12"
         style={{
           background:
+            loginConfig?.backgroundColor ||
             "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
         }}
       >
@@ -135,9 +141,9 @@ export function PageLogin() {
                       <>
                         <label
                           htmlFor="email"
-                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out ${
+                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   emailFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"
@@ -193,9 +199,9 @@ export function PageLogin() {
                       <>
                         <label
                           htmlFor="password"
-                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out ${
+                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   passwordFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"

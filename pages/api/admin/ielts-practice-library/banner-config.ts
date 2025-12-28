@@ -15,9 +15,9 @@ export default async function handler(
   }
 
   try {
-    const config = await Promise.resolve(readConfig<PracticeLibraryBannerConfig>(
-      "ielts-practice-library/banner"
-    ));
+    const config = await Promise.resolve(
+      readConfig<PracticeLibraryBannerConfig>("ielts-practice-library/banner")
+    );
     // Validate config có đầy đủ properties
     if (!config || !config.listening || !config.reading) {
       throw new Error("Invalid config structure");
@@ -28,11 +28,14 @@ export default async function handler(
     const defaultConfig: PracticeLibraryBannerConfig = {
       listening: {
         title: "IELTS Listening Practice Tests",
-        description: [
+        description: {
+          line1:
           "IELTS Listening Practice Tests Online miễn phí tại DOL Academy với đề",
+          line2:
           "thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và",
-          "trải nghiệm làm bài thi thử như trên máy.",
-        ],
+          line3: "trải nghiệm làm bài thi thử như trên máy.",
+        },
+        backgroundColor: "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
         button: {
           text: "Tìm hiểu khóa học",
           link: "#",
@@ -40,11 +43,14 @@ export default async function handler(
       },
       reading: {
         title: "IELTS Reading Practice Tests",
-        description: [
+        description: {
+          line1:
           "IELTS Reading Practice Tests Online miễn phí tại DOL Academy với đề",
+          line2:
           "thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và",
-          "trải nghiệm làm bài thi thử như trên máy.",
-        ],
+          line3: "trải nghiệm làm bài thi thử như trên máy.",
+        },
+        backgroundColor: "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
         button: {
           text: "Tìm hiểu khóa học",
           link: "#",
@@ -54,4 +60,3 @@ export default async function handler(
     return res.status(200).json(defaultConfig);
   }
 }
-

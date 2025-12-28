@@ -282,7 +282,9 @@ export const PageIELTSPracticeLibrary = ({
             <div
               className="relative w-full py-12 md:py-16 flex items-center justify-center overflow-hidden"
               style={{
-                background: "linear-gradient(180deg, #EEDEFD 0%, #FFFFFF 100%) !important",
+                background:
+                  bannerData.backgroundColor ||
+                  "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)",
               }}
             >
               <Container className="relative z-10 px-4">
@@ -291,12 +293,20 @@ export const PageIELTSPracticeLibrary = ({
                     {bannerData.title}
                   </h1>
                   <div className="text-sm sm:text-base md:text-lg text-gray-700 leading-relaxed max-w-3xl space-y-1 w-full px-4">
-                    {bannerData.description.map(
-                      (line: string, index: number) => (
-                        <div key={index} className="wrap-break-word">
-                          {line}
-                        </div>
-                      )
+                    {bannerData.description.line1 && (
+                      <div className="wrap-break-word">
+                        {bannerData.description.line1}
+                      </div>
+                    )}
+                    {bannerData.description.line2 && (
+                      <div className="wrap-break-word">
+                        {bannerData.description.line2}
+                      </div>
+                    )}
+                    {bannerData.description.line3 && (
+                      <div className="wrap-break-word">
+                        {bannerData.description.line3}
+                      </div>
                     )}
                   </div>
                   <Link href={bannerData.button.link} className="inline-block">

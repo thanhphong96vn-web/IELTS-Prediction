@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
-import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
+import {
+  Button,
+  Input,
+  Form,
+  Card,
+  Space,
+  Collapse,
+  message,
+  Divider,
+} from "antd";
 import type { SampleEssayBannerConfig } from "../../../api/admin/sample-essay/banner";
 import AdminLayout from "../_layout";
 
 const { Panel } = Collapse;
-const { TextArea } = Input;
 
 function SampleEssayBannerPage() {
   const [config, setConfig] = useState<SampleEssayBannerConfig | null>(null);
@@ -16,26 +24,68 @@ function SampleEssayBannerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Cập nhật form khi config thay đổi
+  useEffect(() => {
+    if (config) {
+      console.log("Setting form values with config:", config);
+      // Set lại giá trị với cấu trúc đầy đủ, không reset để tránh mất giá trị
+      form.setFieldsValue({
+        writing: {
+          title: {
+            line1: config.writing.title.line1,
+            line2: {
+              highlighted: config.writing.title.line2.highlighted,
+              after: config.writing.title.line2.after,
+            },
+          },
+          description: {
+            line1: config.writing.description.line1,
+            line2: config.writing.description.line2,
+          },
+          backgroundColor: config.writing.backgroundColor,
+          button: {
+            text: config.writing.button.text,
+            link: config.writing.button.link,
+          },
+        },
+        speaking: {
+          title: {
+            line1: config.speaking.title.line1,
+            line2: {
+              highlighted: config.speaking.title.line2.highlighted,
+              after: config.speaking.title.line2.after,
+            },
+          },
+          description: {
+            line1: config.speaking.description.line1,
+            line2: config.speaking.description.line2,
+          },
+          backgroundColor: config.speaking.backgroundColor,
+          button: {
+            text: config.speaking.button.text,
+            link: config.speaking.button.link,
+          },
+        },
+      });
+      // Kiểm tra xem giá trị đã được set chưa
+      const currentValues = form.getFieldsValue();
+      console.log("Form values after setFieldsValue:", currentValues);
+      console.log(
+        "Writing title line2 highlighted:",
+        currentValues?.writing?.title?.line2?.highlighted
+      );
+    }
+  }, [config, form]);
+
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/sample-essay/banner");
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
+      console.log("Fetched config data:", data);
       setConfig(data);
-      // Convert description array to string for TextArea
-      const formData = {
-        ...data,
-        writing: {
-          ...data.writing,
-          description: data.writing.description.join("\n"),
-        },
-        speaking: {
-          ...data.speaking,
-          description: data.speaking.description.join("\n"),
-        },
-      };
-      form.setFieldsValue(formData);
-    } catch {
+    } catch (error) {
+      console.error("Error fetching config:", error);
       message.error("Error loading config");
     }
   };
@@ -45,28 +95,9 @@ function SampleEssayBannerPage() {
       const values = await form.validateFields();
       setSaving(true);
 
-      // Convert description string back to array
       const configData: SampleEssayBannerConfig = {
-        writing: {
-          ...values.writing,
-          description:
-            typeof values.writing.description === "string"
-              ? values.writing.description
-                  .split("\n")
-                  .map((line: string) => line.trim())
-                  .filter((line: string) => line.length > 0)
-              : values.writing.description,
-        },
-        speaking: {
-          ...values.speaking,
-          description:
-            typeof values.speaking.description === "string"
-              ? values.speaking.description
-                  .split("\n")
-                  .map((line: string) => line.trim())
-                  .filter((line: string) => line.length > 0)
-              : values.speaking.description,
-        },
+        writing: values.writing,
+        speaking: values.speaking,
       };
 
       const res = await fetch("/api/admin/sample-essay/banner", {
@@ -78,18 +109,7 @@ function SampleEssayBannerPage() {
       if (!res.ok) throw new Error("Save failed");
 
       message.success("Config saved successfully");
-      setConfig(configData);
-      // Update form với description dạng string
-      form.setFieldsValue({
-        writing: {
-          ...configData.writing,
-          description: configData.writing.description.join("\n"),
-        },
-        speaking: {
-          ...configData.speaking,
-          description: configData.speaking.description.join("\n"),
-        },
-      });
+      await fetchConfig();
     } catch {
       message.error("Error saving config");
     } finally {
@@ -118,7 +138,7 @@ function SampleEssayBannerPage() {
           </div>
         }
       >
-        <Form form={form} layout="vertical" initialValues={config}>
+        <Form form={form} layout="vertical">
           <Collapse defaultActiveKey={["writing", "speaking"]}>
             {/* Writing Banner */}
             <Panel header="Writing Banner" key="writing">
@@ -158,24 +178,40 @@ function SampleEssayBannerPage() {
               >
                 <Input placeholder="Sample" />
               </Form.Item>
+              <Divider orientation="left">Description</Divider>
               <Form.Item
-                name={["writing", "description"]}
-                label="Description (each line is an array element)"
+                name={["writing", "description", "line1"]}
+                label="Line 1"
                 rules={[
                   {
                     required: true,
-                    message: "Please enter description",
+                    message: "Please enter line 1",
                   },
                 ]}
               >
-                <TextArea
-                  rows={2}
-                  placeholder={`Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn cách làm bài,
-từ vựng chi tiết theo chủ đề.`}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Each line will be an element in the description array
-                </p>
+                <Input placeholder="Tổng hợp bài mẫu IELTS Exam Writing Task 1 và hướng dẫn cách làm bài," />
+              </Form.Item>
+              <Form.Item
+                name={["writing", "description", "line2"]}
+                label="Line 2"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter line 2",
+                  },
+                ]}
+              >
+                <Input placeholder="từ vựng chi tiết theo chủ đề." />
+              </Form.Item>
+              <Form.Item
+                name={["writing", "backgroundColor"]}
+                label="Background Color/Gradient"
+                rules={[
+                  { required: true, message: "Please enter background color" },
+                ]}
+                extra="Ví dụ: linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%) hoặc #ffffff"
+              >
+                <Input placeholder="linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)" />
               </Form.Item>
               <Form.Item
                 name={["writing", "button", "text"]}
@@ -241,24 +277,40 @@ từ vựng chi tiết theo chủ đề.`}
               >
                 <Input placeholder="Sample" />
               </Form.Item>
+              <Divider orientation="left">Description</Divider>
               <Form.Item
-                name={["speaking", "description"]}
-                label="Description (each line is an array element)"
+                name={["speaking", "description", "line1"]}
+                label="Line 1"
                 rules={[
                   {
                     required: true,
-                    message: "Please enter description",
+                    message: "Please enter line 1",
                   },
                 ]}
               >
-                <TextArea
-                  rows={2}
-                  placeholder={`Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn cách làm bài,
-từ vựng chi tiết theo chủ đề.`}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Each line will be an element in the description array
-                </p>
+                <Input placeholder="Tổng hợp bài mẫu IELTS Exam Speaking Task 1 và hướng dẫn cách làm bài," />
+              </Form.Item>
+              <Form.Item
+                name={["speaking", "description", "line2"]}
+                label="Line 2"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter line 2",
+                  },
+                ]}
+              >
+                <Input placeholder="từ vựng chi tiết theo chủ đề." />
+              </Form.Item>
+              <Form.Item
+                name={["speaking", "backgroundColor"]}
+                label="Background Color/Gradient"
+                rules={[
+                  { required: true, message: "Please enter background color" },
+                ]}
+                extra="Ví dụ: linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%) hoặc #ffffff"
+              >
+                <Input placeholder="linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)" />
               </Form.Item>
               <Form.Item
                 name={["speaking", "button", "text"]}
@@ -304,4 +356,3 @@ từ vựng chi tiết theo chủ đề.`}
 }
 
 export default SampleEssayBannerPage;
-

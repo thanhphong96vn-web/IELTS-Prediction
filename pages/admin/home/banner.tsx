@@ -159,54 +159,40 @@ function HeroBannerPage() {
 
             {/* Buttons Section */}
             <Panel header="Buttons" key="buttons">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card size="small" title="Primary Button">
-                  <Form.Item
-                    name={["buttons", "primary", "text"]}
-                    label="Text"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please enter button text",
-                      },
-                    ]}
-                  >
-                    <Input placeholder="Get Started" />
-                  </Form.Item>
-                  <Form.Item
-                    name={["buttons", "primary", "link"]}
-                    label="Link"
-                    rules={[{ required: true, message: "Please enter link" }]}
-                  >
-                    <Input placeholder="/account/register" />
-                  </Form.Item>
-                </Card>
-                <Card size="small" title="Secondary Button">
-                  <Form.Item
-                    name={["buttons", "secondary", "text"]}
-                    label="Text"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please enter button text",
-                      },
-                    ]}
-                  >
-                    <Input placeholder="Watch Video" />
-                  </Form.Item>
-                  <Form.Item
-                    name={["buttons", "secondary", "link"]}
-                    label="Link"
-                    rules={[{ required: true, message: "Please enter link" }]}
-                  >
-                    <Input placeholder="#" />
-                  </Form.Item>
-                </Card>
-              </div>
+              <Card size="small" title="Primary Button">
+                <Form.Item
+                  name={["buttons", "primary", "text"]}
+                  label="Text"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please enter button text",
+                    },
+                  ]}
+                >
+                  <Input placeholder="Get Started" />
+                </Form.Item>
+                <Form.Item
+                  name={["buttons", "primary", "link"]}
+                  label="Link"
+                  rules={[{ required: true, message: "Please enter link" }]}
+                >
+                  <Input placeholder="/account/register" />
+                </Form.Item>
+              </Card>
             </Panel>
 
             {/* Banner Image Section */}
             <Panel header="Banner Image" key="banner">
+              <Form.Item
+                name="backgroundImage"
+                label="Background Image"
+                rules={[
+                  { required: true, message: "Please upload background image" },
+                ]}
+              >
+                <ImageUpload />
+              </Form.Item>
               <Form.Item
                 name="bannerImage"
                 label="Banner Image"

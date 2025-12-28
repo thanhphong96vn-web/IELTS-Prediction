@@ -11,12 +11,14 @@ import type { HeroBannerConfig } from "./hero-banner/types";
 import type { TestPlatformIntroConfig } from "./ielts-test-platform-intro/types";
 import type { WhyChooseUsConfig } from "./why-choose-us/types";
 import type { TestimonialsConfig } from "./testimonials/types";
+import type { PracticeSectionConfig } from "@/shared/types/admin-config";
 
 interface PageHomeProps {
   heroBannerConfig: HeroBannerConfig;
   testPlatformIntroConfig: TestPlatformIntroConfig;
   whyChooseUsConfig: WhyChooseUsConfig;
   testimonialsConfig: TestimonialsConfig;
+  practiceSectionConfig: PracticeSectionConfig;
 }
 
 export const PageHome = ({
@@ -24,6 +26,7 @@ export const PageHome = ({
   testPlatformIntroConfig,
   whyChooseUsConfig,
   testimonialsConfig,
+  practiceSectionConfig,
 }: PageHomeProps) => {
   const { isSignedIn } = useAuth();
   return (
@@ -45,6 +48,16 @@ export const PageHome = ({
               </section>
             </>
           )}
+        </Container>
+      </div>
+      {/* Section với background gradient đỏ và cam */}
+      <div
+        className="w-full py-10"
+        style={{
+          background: practiceSectionConfig.backgroundGradient,
+        }}
+      >
+        <Container className="space-y-16">
           <PracticeTest
             skill="listening"
             title="IELTS Listening Practice"

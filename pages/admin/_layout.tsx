@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Layout, Menu } from "antd";
 import { useRouter } from "next/router";
 import {
@@ -10,6 +9,7 @@ import {
   MenuOutlined,
   GlobalOutlined,
   DollarOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 
@@ -38,6 +38,10 @@ const menuItems: MenuItem[] = [
       {
         key: "/admin/home/testimonials",
         label: "Testimonials",
+      },
+      {
+        key: "/admin/home/practice-section",
+        label: "Practice Section",
       },
     ],
   },
@@ -68,6 +72,10 @@ const menuItems: MenuItem[] = [
     icon: <CreditCardOutlined />,
     label: "Subscription",
     children: [
+      {
+        key: "/admin/subscription/banner",
+        label: "Banner",
+      },
       {
         key: "/admin/subscription/course-packages",
         label: "Course Packages",
@@ -108,6 +116,21 @@ const menuItems: MenuItem[] = [
       {
         key: "/admin/footer/cta-banner",
         label: "CTA Banner",
+      },
+    ],
+  },
+  {
+    key: "account",
+    icon: <UserOutlined />,
+    label: "Account Pages",
+    children: [
+      {
+        key: "/admin/account/login",
+        label: "Login Page",
+      },
+      {
+        key: "/admin/account/register",
+        label: "Register Page",
       },
     ],
   },
@@ -217,11 +240,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <span style={{ letterSpacing: "0.5px" }}>Admin Panel</span>
         </div>
         <div
+          className="admin-sidebar-menu-container"
           style={{
             flex: 1,
             overflowY: "auto",
             overflowX: "hidden",
             paddingBottom: 16,
+            minHeight: 0,
+            maxHeight: "calc(100vh - 88px)",
+            height: "calc(100vh - 88px)",
           }}
         >
           <Menu
@@ -309,11 +336,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           transition: all 0.3s !important;
         }
 
-        .ant-menu-submenu-open > .ant-menu-submenu-title .ant-menu-submenu-arrow {
+        .ant-menu-submenu-open
+          > .ant-menu-submenu-title
+          .ant-menu-submenu-arrow {
           color: #1890ff !important;
         }
 
-        .ant-menu-submenu-inline .ant-menu-submenu-title .ant-menu-submenu-arrow {
+        .ant-menu-submenu-inline
+          .ant-menu-submenu-title
+          .ant-menu-submenu-arrow {
           right: 16px !important;
         }
 
@@ -344,22 +375,29 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         }
 
         /* Custom scrollbar for menu container */
-        .ant-layout-sider > div:nth-child(2)::-webkit-scrollbar {
-          width: 6px;
+        .admin-sidebar-menu-container::-webkit-scrollbar {
+          width: 8px;
         }
 
-        .ant-layout-sider > div:nth-child(2)::-webkit-scrollbar-track {
+        .admin-sidebar-menu-container::-webkit-scrollbar-track {
           background: #f1f1f1;
-          border-radius: 3px;
+          border-radius: 4px;
+          margin: 8px 0;
         }
 
-        .ant-layout-sider > div:nth-child(2)::-webkit-scrollbar-thumb {
+        .admin-sidebar-menu-container::-webkit-scrollbar-thumb {
           background: #c1c1c1;
-          border-radius: 3px;
+          border-radius: 4px;
         }
 
-        .ant-layout-sider > div:nth-child(2)::-webkit-scrollbar-thumb:hover {
+        .admin-sidebar-menu-container::-webkit-scrollbar-thumb:hover {
           background: #a8a8a8;
+        }
+
+        /* Firefox scrollbar */
+        .admin-sidebar-menu-container {
+          scrollbar-width: thin;
+          scrollbar-color: #c1c1c1 #f1f1f1;
         }
 
         /* Ensure menu items are clickable */

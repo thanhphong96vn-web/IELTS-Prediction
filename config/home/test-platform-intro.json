@@ -2,6 +2,7 @@
   "badge": {
     "text": "CATEGORIES"
   },
+  "backgroundGradient": "linear-gradient(180deg, orange 0%, red 100%)",
   "title": {
     "line1": "Explore Top Courses Caterories",
     "line2": "That",

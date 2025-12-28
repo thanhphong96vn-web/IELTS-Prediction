@@ -10,7 +10,7 @@ interface IeltsTestPlatformIntroProps {
 export const IeltsTestPlatformIntro = ({
   config,
 }: IeltsTestPlatformIntroProps) => {
-  const { badge, title, categories } = config;
+  const { badge, backgroundGradient, title, categories } = config;
   return (
     <div className="relative pt-16 md:py-16 overflow-hidden">
       {/* Gradient Shape Background - Half top with color, half bottom white */}
@@ -25,7 +25,7 @@ export const IeltsTestPlatformIntro = ({
             height: "254px",
             right: "26%",
             top: "294px",
-            background: "linear-gradient(180deg, #FB64AD 0%, #C586EE 100%)",
+            background: backgroundGradient,
             filter: "blur(200px)",
             transform: "rotate(-45deg)",
           }}
@@ -76,7 +76,8 @@ export const IeltsTestPlatformIntro = ({
             <Link
               key={index}
               href={item.href}
-              className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 px-8 py-12 text-center hover:-translate-y-1">
+              className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 px-8 py-12 text-center hover:-translate-y-1"
+            >
               <div className="space-y-4">
                 {/* Icon */}
                 <div className="flex justify-center">
@@ -97,11 +98,20 @@ export const IeltsTestPlatformIntro = ({
                   {item.name}
                 </h5>
 
-                <div title="View more" className="flex justify-center items-center group text-[15px]" >
-                  <span className="font-semibold group-hover:underline hidden md:block">View More</span>
-                  <span className="material-symbols-rounded hidden! md:block!  text-[22px]!">chevron_right</span>
+                <div
+                  title="View more"
+                  className="flex justify-center items-center group text-[15px]"
+                >
+                  <span className="font-semibold group-hover:underline hidden md:block">
+                    View More
+                  </span>
+                  <span className="material-symbols-rounded hidden! md:block!  text-[22px]!">
+                    chevron_right
+                  </span>
                   <div className="md:hidden p-2 bg-gray-200 rounded-full text-[12px]!">
-                    <span className="material-symbols-rounded block!">arrow_forward</span>
+                    <span className="material-symbols-rounded block!">
+                      arrow_forward
+                    </span>
                   </div>
                 </div>
               </div>

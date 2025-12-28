@@ -2,6 +2,7 @@ export interface TestPlatformIntroConfig {
   badge: {
     text: string;
   };
+  backgroundGradient: string;
   title: {
     line1: string;
     line2: string;

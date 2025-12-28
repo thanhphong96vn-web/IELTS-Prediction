@@ -27,6 +27,7 @@ export default async function handler(
       badge: {
         text: "CATEGORIES",
       },
+      backgroundGradient: "linear-gradient(180deg, #FB64AD 0%, #C586EE 100%)",
       title: {
         line1: "Explore Top Courses Caterories",
         line2: "That",

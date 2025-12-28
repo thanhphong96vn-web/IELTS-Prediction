@@ -71,7 +71,7 @@ function ExamLibraryHeroBannerPage() {
         }
       >
         <Form form={form} layout="vertical" initialValues={config}>
-          <Collapse defaultActiveKey={["hero"]}>
+          <Collapse defaultActiveKey={["hero", "background"]}>
             <Panel header="Hero Banner" key="hero">
               <Form.Item
                 name="title"
@@ -100,6 +100,18 @@ function ExamLibraryHeroBannerPage() {
                 ]}
               >
                 <Input placeholder="IELTS Exam Library" />
+              </Form.Item>
+            </Panel>
+            <Panel header="Background" key="background">
+              <Form.Item
+                name="backgroundColor"
+                label="Background Color/Gradient"
+                rules={[
+                  { required: true, message: "Please enter background color" },
+                ]}
+                extra="Ví dụ: linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%) hoặc #ffffff"
+              >
+                <Input placeholder="linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)" />
               </Form.Item>
             </Panel>
           </Collapse>

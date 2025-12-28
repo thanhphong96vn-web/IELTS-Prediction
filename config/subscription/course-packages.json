@@ -1,5 +1,26 @@
 {
   "currencySuffix": "đ",
+  "popularBadgeText": "POPULAR",
+  "priceSuffix": "/Monthly",
+  "monthText": {
+    "singular": "Month",
+    "plural": "Months"
+  },
+  "accessText": "Access",
+  "dealNoteTemplate": "SAME PRICE AS THE SHORTER PLAN",
+  "features": {
+    "included": [
+      "Unlimited Access Courses",
+      "Certificate After Completion"
+    ],
+    "excluded": [
+      "24/7 Dedicated Support"
+    ]
+  },
+  "skillLabels": {
+    "listening": "LISTENING",
+    "reading": "READING"
+  },
   "combo": {
     "title": "Combo",
     "ctaText": "Join Course Plan",

@@ -69,7 +69,7 @@ function FooterCtaBannerPage() {
         }
       >
         <Form form={form} layout="vertical" initialValues={config}>
-          <Collapse defaultActiveKey={["cta"]}>
+          <Collapse defaultActiveKey={["cta", "background"]}>
             {/* CTA Banner Section */}
             <Panel header="CTA Banner" key="cta">
               <Form.Item
@@ -105,6 +105,23 @@ function FooterCtaBannerPage() {
                 ]}
               >
                 <Input placeholder="#" />
+              </Form.Item>
+            </Panel>
+
+            {/* Background Section */}
+            <Panel header="Background" key="background">
+              <Form.Item
+                name="backgroundGradient"
+                label="Background Gradient"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter background gradient",
+                  },
+                ]}
+                extra="Ví dụ: linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)"
+              >
+                <Input placeholder="linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)" />
               </Form.Item>
             </Panel>
           </Collapse>

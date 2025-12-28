@@ -80,12 +80,22 @@ export const HeaderNavMain = () => {
     if (!masterData?.menuData["main-menu"]) return [];
     const menuData = masterData.menuData;
 
-    const cmsMenuItems = menuData["main-menu"].map((item) => ({
-      ...item,
-      children: createModifiedMenuData(item.children, (item) => (
-        <Link href={item.uri || "#"}>{item.label}</Link>
-      )),
-    }));
+    const cmsMenuItems = menuData["main-menu"].map((item) => {
+      // Đảm bảo item "Home" luôn trỏ về trang chủ
+      const labelStr =
+        typeof item.label === "string" ? item.label.toLowerCase() : "";
+      const isHome =
+        labelStr === "home" || item.uri === "/" || item.uri === ROUTES.HOME;
+      const uri = isHome ? ROUTES.HOME : item.uri || "#";
+
+      return {
+        ...item,
+        uri,
+        children: createModifiedMenuData(item.children, (item) => (
+          <Link href={item.uri || "#"}>{item.label}</Link>
+        )),
+      };
+    });
 
     // Add subscription link to the menu
     const subscriptionMenuItem = {

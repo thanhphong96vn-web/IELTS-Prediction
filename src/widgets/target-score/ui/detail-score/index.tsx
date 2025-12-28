@@ -28,7 +28,7 @@ export const DetailScore = () => {
   }, [targetScore]);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm">
+    <div className="bg-white rounded-lg shadow-sm md:min-h-[200px]">
       <SetTargetScoreModal
         open={isSetTargetScoreDialogOpen}
         onCancel={() => setIsSetTargetScoreDialogOpen(false)}
@@ -68,13 +68,13 @@ export const DetailScore = () => {
 
       {/* Content */}
       <div className="p-4">
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2">
           {/* Overall Score Card */}
-          <div className="w-full md:w-[calc(25%-0.75rem)]">
+          <div className="w-full md:w-[calc(20%-0.4rem)]">
             <button
               type="button"
               onClick={() => setIsSetTargetScoreDialogOpen(true)}
-              className="w-full bg-red-50 rounded-lg p-4 flex flex-col space-y-2 hover:bg-red-100 transition-colors cursor-pointer text-left"
+              className="w-full bg-red-50 rounded-lg p-4 flex flex-col space-y-2 hover:bg-red-100 transition-colors cursor-pointer text-left whitespace-nowrap"
               style={{
                 backgroundColor: "rgba(217, 74, 86, 0.1)",
               }}
@@ -94,7 +94,7 @@ export const DetailScore = () => {
           {/* Section Cards */}
           {["Listening", "Reading", "speaking", "Writing"].map(
             (item, index) => (
-              <div key={index} className="w-full md:w-[calc(25%-0.75rem)]">
+              <div key={index} className="w-full md:w-[calc(20%-0.4rem)]">
                 <button
                   onClick={() => setIsSetTargetScoreDialogOpen(true)}
                   className="w-full bg-white rounded-lg border border-gray-200 p-4 flex flex-col space-y-2 hover:border-gray-300 transition-colors cursor-pointer text-left"

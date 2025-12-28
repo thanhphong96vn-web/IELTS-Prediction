@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { useState } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { GoogleIcon } from "@/shared/ui/icons";
+import type { RegisterPageConfig } from "@/shared/types/admin-config";
 
 type FormData = {
   name: string;
@@ -21,7 +22,11 @@ type FormData = {
   avatar: File | null;
 };
 
-export function PageRegister() {
+interface PageRegisterProps {
+  registerConfig?: RegisterPageConfig;
+}
+
+export function PageRegister({ registerConfig }: PageRegisterProps) {
   const { masterData } = useAppContext();
   const router = useRouter();
   const { signUp, signIn } = useAuth();
@@ -88,6 +93,7 @@ export function PageRegister() {
         className="py-10 md:py-12"
         style={{
           background:
+            registerConfig?.backgroundColor ||
             "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
         }}
       >
@@ -132,9 +138,9 @@ export function PageRegister() {
                       <>
                         <label
                           htmlFor="name"
-                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out ${
+                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   nameFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"
@@ -196,9 +202,9 @@ export function PageRegister() {
                       <>
                         <label
                           htmlFor="email"
-                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out ${
+                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   emailFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"
@@ -254,9 +260,9 @@ export function PageRegister() {
                       <>
                         <label
                           htmlFor="password"
-                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out ${
+                          className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   passwordFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"
@@ -310,6 +316,15 @@ export function PageRegister() {
                       value: true,
                       message: "Date of birth is required",
                     },
+                    validate: (value) => {
+                      if (!value) {
+                        return "Date of birth is required";
+                      }
+                      if (!dayjs.isDayjs(value)) {
+                        return "Please select a valid date";
+                      }
+                      return true;
+                    },
                   }}
                   render={({ field }) => {
                     const isFloating =
@@ -322,7 +337,7 @@ export function PageRegister() {
                           htmlFor="date_of_birth"
                           className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   dateOfBirthFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"
@@ -330,11 +345,11 @@ export function PageRegister() {
                               : "top-0 text-sm text-gray-900"
                           }`}
                         >
-                          Date of birth *
+                          Date of birth
                         </label>
                         <div className="pt-6">
                           <DatePicker
-                            {...field}
+                            value={field.value}
                             format={"DD/MM/YYYY"}
                             className={`w-full !border-b-2 !border-x-0 !border-t-0 !rounded-none !shadow-none !bg-transparent transition-colors ${
                               dateOfBirthFocused
@@ -353,7 +368,10 @@ export function PageRegister() {
                             }}
                             maxDate={dayjs()}
                             onFocus={() => setDateOfBirthFocused(true)}
-                            onBlur={() => setDateOfBirthFocused(false)}
+                            onBlur={() => {
+                              setDateOfBirthFocused(false);
+                              field.onBlur();
+                            }}
                             onChange={(date) => {
                               field.onChange(date);
                               if (date) {
@@ -378,9 +396,14 @@ export function PageRegister() {
                 <Controller
                   control={control}
                   name="gender"
-                  defaultValue="male"
                   rules={{
                     required: { value: true, message: "Gender is required" },
+                    validate: (value) => {
+                      if (!value || value === "") {
+                        return "Gender is required";
+                      }
+                      return true;
+                    },
                   }}
                   render={({ field }) => {
                     const isFloating = genderFocused || field.value;
@@ -390,7 +413,7 @@ export function PageRegister() {
                           htmlFor="gender"
                           className={`absolute left-0 pointer-events-none transition-all duration-200 ease-in-out z-10 ${
                             isFloating
-                              ? `top-0 text-xs -translate-y-1 ${
+                              ? `top-0 text-xs -translate-y-1 px-1 bg-white ${
                                   genderFocused
                                     ? "text-[#d94a56]"
                                     : "text-gray-700"
@@ -398,12 +421,13 @@ export function PageRegister() {
                               : "top-3 text-sm text-gray-900"
                           }`}
                         >
-                          Gender *
+                          Gender
                         </label>
                         <div className="pt-6">
                           <Select
-                            {...field}
+                            value={field.value}
                             id="gender"
+                            placeholder=""
                             className={`w-full !border-b-2 !border-x-0 !border-t-0 !rounded-none !shadow-none transition-colors [&_.ant-select-selector]:!flex [&_.ant-select-selector]:!items-center [&_.ant-select-selection-item]:!flex [&_.ant-select-selection-item]:!items-center [&_.ant-select-selection-item]:!leading-normal ${
                               genderFocused
                                 ? "!border-b-[#d94a56]"
@@ -434,7 +458,10 @@ export function PageRegister() {
                               },
                             ]}
                             onFocus={() => setGenderFocused(true)}
-                            onBlur={() => setGenderFocused(false)}
+                            onBlur={() => {
+                              setGenderFocused(false);
+                              field.onBlur();
+                            }}
                             onChange={(value) => {
                               field.onChange(value);
                               setGenderFocused(false);

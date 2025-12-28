@@ -2,6 +2,7 @@ import { withMasterData, withMultipleWrapper } from "@/shared/hoc";
 import { GetServerSideProps } from "next";
 import type { HeroBannerConfig } from "./ui/hero-banner/types";
 import type { TestPlatformIntroConfig } from "./ui/ielts-test-platform-intro/types";
+import type { PracticeSectionConfig } from "@/shared/types/admin-config";
 
 export { PageHome } from "./ui";
 
@@ -82,11 +83,8 @@ const withHeroBannerConfig = async (
           text: "Get Started",
           link: "/account/register",
         },
-        secondary: {
-          text: "Watch Video",
-          link: "#",
-        },
       },
+      backgroundImage: "/img-admin/banner-bg.png",
       bannerImage: "/img-admin/o-banner.png",
       featureCards: [],
       decorativeShape: {
@@ -134,6 +132,7 @@ const withTestPlatformIntroConfig = async (
       badge: {
         text: "CATEGORIES",
       },
+      backgroundGradient: "linear-gradient(180deg, #FB64AD 0%, #C586EE 100%)",
       title: {
         line1: "Explore Top Courses Caterories",
         line2: "That",
@@ -350,10 +349,51 @@ const withTestimonialsConfig = async (
   };
 };
 
+// Wrapper function để đọc practice section config
+const withPracticeSectionConfig = async (
+  context: Parameters<GetServerSideProps>[0]
+) => {
+  let practiceSectionConfig: PracticeSectionConfig;
+
+  try {
+    // Gọi API route nội bộ để đọc config
+    const protocol = context.req.headers["x-forwarded-proto"] || "http";
+    const host = context.req.headers.host || "localhost:3000";
+    const baseUrl = `${protocol}://${host}`;
+
+    const res = await fetch(
+      `${baseUrl}/api/admin/home/practice-section-config`,
+      {
+        headers: {
+          cookie: context.req.headers.cookie || "",
+        },
+      }
+    );
+
+    if (res.ok) {
+      practiceSectionConfig = await res.json();
+    } else {
+      throw new Error("Failed to fetch config");
+    }
+  } catch {
+    // Nếu API route fail, dùng config mặc định
+    practiceSectionConfig = {
+      backgroundGradient: "linear-gradient(180deg, #FF6B6B 0%, #FF8C42 100%)",
+    };
+  }
+
+  return {
+    props: {
+      practiceSectionConfig,
+    },
+  };
+};
+
 export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
   withMasterData,
   withHeroBannerConfig,
   withTestPlatformIntroConfig,
   withWhyChooseUsConfig,
-  withTestimonialsConfig
+  withTestimonialsConfig,
+  withPracticeSectionConfig
 );

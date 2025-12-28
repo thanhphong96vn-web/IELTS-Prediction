@@ -14,12 +14,15 @@ const AffiliateTracker = dynamic(
   { ssr: false }
 );
 
+import type { SubscriptionBannerConfig } from "@/shared/types/admin-config";
+
 interface PageSubscriptionProps {
   testimonialsConfig: TestimonialsConfig;
   faqConfig: FAQConfig;
+  bannerConfig: SubscriptionBannerConfig;
 }
 
-export const PageSubscription = ({ testimonialsConfig, faqConfig }: PageSubscriptionProps) => {
+export const PageSubscription = ({ testimonialsConfig, faqConfig, bannerConfig }: PageSubscriptionProps) => {
   const appContext = useAppContext();
 
   const buyProLink = useMemo(() => {
@@ -38,7 +41,7 @@ export const PageSubscription = ({ testimonialsConfig, faqConfig }: PageSubscrip
       <div
         className="relative min-h-[500px] flex items-center justify-center bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/img-admin/bg-image-11.jpg')",
+          backgroundImage: `url('${bannerConfig.backgroundImage}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -62,19 +65,18 @@ export const PageSubscription = ({ testimonialsConfig, faqConfig }: PageSubscrip
                   backgroundColor: "rgba(255, 127, 80, 0.8)",
                 }}
               >
-                Choose Your Plan
+                {bannerConfig.subtitle.text}
               </span>
             </div>
 
             {/* Main Title */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              Upgrade to Pro Account
+              {bannerConfig.title}
             </h1>
 
             {/* Description */}
             <p className="text-lg text-white/90 max-w-2xl mx-auto mb-10">
-              Unlock premium features and access to exclusive IELTS practice
-              materials. Get the most out of your IELTS preparation journey.
+              {bannerConfig.description}
             </p>
           </div>
         </Container>

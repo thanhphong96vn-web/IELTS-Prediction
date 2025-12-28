@@ -72,7 +72,7 @@ function TestPlatformIntroPage() {
         }
       >
         <Form form={form} layout="vertical" initialValues={config}>
-          <Collapse defaultActiveKey={["badge", "title", "categories"]}>
+          <Collapse defaultActiveKey={["badge", "background", "title", "categories"]}>
             {/* Badge Section */}
             <Panel header="Badge" key="badge">
               <Form.Item
@@ -83,6 +83,20 @@ function TestPlatformIntroPage() {
                 ]}
               >
                 <Input placeholder="CATEGORIES" />
+              </Form.Item>
+            </Panel>
+
+            {/* Background Section */}
+            <Panel header="Background" key="background">
+              <Form.Item
+                name="backgroundGradient"
+                label="Background Gradient"
+                rules={[
+                  { required: true, message: "Please enter background gradient" },
+                ]}
+                extra="Ví dụ: linear-gradient(180deg, #FB64AD 0%, #C586EE 100%)"
+              >
+                <Input placeholder="linear-gradient(180deg, #FB64AD 0%, #C586EE 100%)" />
               </Form.Item>
             </Panel>
 

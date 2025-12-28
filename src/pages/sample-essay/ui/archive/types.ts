@@ -7,7 +7,11 @@ export interface SampleEssayBannerConfig {
         after: string;
       };
     };
-    description: string[];
+    description: {
+      line1: string;
+      line2: string;
+    };
+    backgroundColor: string;
     button: {
       text: string;
       link: string;
@@ -21,7 +25,11 @@ export interface SampleEssayBannerConfig {
         after: string;
       };
     };
-    description: string[];
+    description: {
+      line1: string;
+      line2: string;
+    };
+    backgroundColor: string;
     button: {
       text: string;
       link: string;

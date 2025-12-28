@@ -1,6 +1,6 @@
 import { withMasterData, withMultipleWrapper } from "@/shared/hoc";
 import { GetServerSideProps } from "next";
-import type { FAQConfig } from "@/shared/types/admin-config";
+import type { FAQConfig, SubscriptionBannerConfig } from "@/shared/types/admin-config";
 
 export { PageSubscription } from "./ui";
 
@@ -194,9 +194,51 @@ const withFAQConfig = async (
   };
 };
 
+// Wrapper function để đọc subscription banner config
+const withSubscriptionBannerConfig = async (
+  context: Parameters<GetServerSideProps>[0]
+) => {
+  let bannerConfig: SubscriptionBannerConfig;
+
+  try {
+    const protocol = context.req.headers["x-forwarded-proto"] || "http";
+    const host = context.req.headers.host || "localhost:3000";
+    const baseUrl = `${protocol}://${host}`;
+
+    const res = await fetch(`${baseUrl}/api/admin/subscription/banner-config`, {
+      headers: {
+        cookie: context.req.headers.cookie || "",
+      },
+    });
+
+    if (res.ok) {
+      bannerConfig = await res.json();
+    } else {
+      throw new Error("Failed to fetch config");
+    }
+  } catch {
+    bannerConfig = {
+      backgroundImage: "/img-admin/bg-image-11.jpg",
+      subtitle: {
+        text: "Choose Your Plan",
+      },
+      title: "Upgrade to Pro Account",
+      description:
+        "Unlock premium features and access to exclusive IELTS practice materials. Get the most out of your IELTS preparation journey.",
+    };
+  }
+
+  return {
+    props: {
+      bannerConfig,
+    },
+  };
+};
+
 export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
   withMasterData,
   withTestimonialsConfig,
-  withFAQConfig
+  withFAQConfig,
+  withSubscriptionBannerConfig
 );
 

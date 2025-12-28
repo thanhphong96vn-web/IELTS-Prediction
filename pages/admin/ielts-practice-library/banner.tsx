@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
-import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
+import {
+  Button,
+  Input,
+  Form,
+  Card,
+  Space,
+  Collapse,
+  message,
+  Divider,
+} from "antd";
 import type { PracticeLibraryBannerConfig } from "@/shared/types/admin-config";
 import AdminLayout from "../_layout";
 
 const { Panel } = Collapse;
-const { TextArea } = Input;
 
 function PracticeLibraryBannerPage() {
   const [config, setConfig] = useState<PracticeLibraryBannerConfig | null>(
@@ -24,19 +32,7 @@ function PracticeLibraryBannerPage() {
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
-      // Convert description array to string for TextArea
-      const formData = {
-        ...data,
-        listening: {
-          ...data.listening,
-          description: data.listening.description.join("\n"),
-        },
-        reading: {
-          ...data.reading,
-          description: data.reading.description.join("\n"),
-        },
-      };
-      form.setFieldsValue(formData);
+      form.setFieldsValue(data);
     } catch {
       message.error("Error loading config");
     }
@@ -47,28 +43,9 @@ function PracticeLibraryBannerPage() {
       const values = await form.validateFields();
       setSaving(true);
 
-      // Convert description string back to array
       const configData: PracticeLibraryBannerConfig = {
-        listening: {
-          ...values.listening,
-          description:
-            typeof values.listening.description === "string"
-              ? values.listening.description
-                  .split("\n")
-                  .map((line: string) => line.trim())
-                  .filter((line: string) => line.length > 0)
-              : values.listening.description,
-        },
-        reading: {
-          ...values.reading,
-          description:
-            typeof values.reading.description === "string"
-              ? values.reading.description
-                  .split("\n")
-                  .map((line: string) => line.trim())
-                  .filter((line: string) => line.length > 0)
-              : values.reading.description,
-        },
+        listening: values.listening,
+        reading: values.reading,
       };
 
       const res = await fetch("/api/admin/ielts-practice-library/banner", {
@@ -77,23 +54,21 @@ function PracticeLibraryBannerPage() {
         body: JSON.stringify(configData),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Save failed");
+      }
 
-      message.success("Config saved successfully");
-      setConfig(configData);
-      // Update form với description dạng string
-      form.setFieldsValue({
-        listening: {
-          ...configData.listening,
-          description: configData.listening.description.join("\n"),
-        },
-        reading: {
-          ...configData.reading,
-          description: configData.reading.description.join("\n"),
-        },
-      });
-    } catch {
-      message.error("Error saving config");
+      const result = await res.json();
+      message.success(result.message || "Config saved successfully");
+
+      // Reload config từ server để đảm bảo đồng bộ
+      await fetchConfig();
+    } catch (error) {
+      console.error("Error saving config:", error);
+      message.error(
+        error instanceof Error ? error.message : "Error saving config"
+      );
     } finally {
       setSaving(false);
     }
@@ -121,7 +96,9 @@ function PracticeLibraryBannerPage() {
         }
       >
         <Form form={form} layout="vertical" initialValues={config}>
-          <Collapse defaultActiveKey={["listening", "reading"]}>
+          <Collapse
+            defaultActiveKey={["listening", "reading"]}
+          >
             {/* Listening Banner */}
             <Panel header="Listening Banner" key="listening">
               <Form.Item
@@ -131,25 +108,52 @@ function PracticeLibraryBannerPage() {
               >
                 <Input placeholder="IELTS Listening Practice Tests" />
               </Form.Item>
+              <Divider orientation="left">Description</Divider>
               <Form.Item
-                name={["listening", "description"]}
-                label="Description (each line is an array element)"
+                name={["listening", "description", "line1"]}
+                label="Line 1"
                 rules={[
                   {
                     required: true,
-                    message: "Please enter description",
+                    message: "Please enter line 1",
                   },
                 ]}
               >
-                <TextArea
-                  rows={3}
-                  placeholder={`IELTS Listening Practice Tests Online miễn phí tại DOL Academy với đề
-thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và
-trải nghiệm làm bài thi thử như trên máy.`}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Each line will be an element in the description array
-                </p>
+                <Input placeholder="IELTS Listening Practice Tests Online miễn phí tại DOL Academy với đề" />
+              </Form.Item>
+              <Form.Item
+                name={["listening", "description", "line2"]}
+                label="Line 2"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter line 2",
+                  },
+                ]}
+              >
+                <Input placeholder="thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và" />
+              </Form.Item>
+              <Form.Item
+                name={["listening", "description", "line3"]}
+                label="Line 3"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter line 3",
+                  },
+                ]}
+              >
+                <Input placeholder="trải nghiệm làm bài thi thử như trên máy." />
+              </Form.Item>
+              <Form.Item
+                name={["listening", "backgroundColor"]}
+                label="Background Color/Gradient"
+                rules={[
+                  { required: true, message: "Please enter background color" },
+                ]}
+                extra="Ví dụ: linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%) hoặc #ffffff"
+              >
+                <Input placeholder="linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)" />
               </Form.Item>
               <Form.Item
                 name={["listening", "button", "text"]}
@@ -186,25 +190,52 @@ trải nghiệm làm bài thi thử như trên máy.`}
               >
                 <Input placeholder="IELTS Reading Practice Tests" />
               </Form.Item>
+              <Divider orientation="left">Description</Divider>
               <Form.Item
-                name={["reading", "description"]}
-                label="Description (each line is an array element)"
+                name={["reading", "description", "line1"]}
+                label="Line 1"
                 rules={[
                   {
                     required: true,
-                    message: "Please enter description",
+                    message: "Please enter line 1",
                   },
                 ]}
               >
-                <TextArea
-                  rows={3}
-                  placeholder={`IELTS Reading Practice Tests Online miễn phí tại DOL Academy với đề
-thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và
-trải nghiệm làm bài thi thử như trên máy.`}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Each line will be an element in the description array
-                </p>
+                <Input placeholder="IELTS Reading Practice Tests Online miễn phí tại DOL Academy với đề" />
+              </Form.Item>
+              <Form.Item
+                name={["reading", "description", "line2"]}
+                label="Line 2"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter line 2",
+                  },
+                ]}
+              >
+                <Input placeholder="thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và" />
+              </Form.Item>
+              <Form.Item
+                name={["reading", "description", "line3"]}
+                label="Line 3"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please enter line 3",
+                  },
+                ]}
+              >
+                <Input placeholder="trải nghiệm làm bài thi thử như trên máy." />
+              </Form.Item>
+              <Form.Item
+                name={["reading", "backgroundColor"]}
+                label="Background Color/Gradient"
+                rules={[
+                  { required: true, message: "Please enter background color" },
+                ]}
+                extra="Ví dụ: linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%) hoặc #ffffff"
+              >
+                <Input placeholder="linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%)" />
               </Form.Item>
               <Form.Item
                 name={["reading", "button", "text"]}

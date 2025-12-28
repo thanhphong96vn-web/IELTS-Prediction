@@ -139,6 +139,7 @@ export const PageIELTSExamLibrary = ({
         className="relative w-full py-12 sm:py-16 md:py-24 flex items-center justify-center"
         style={{
           background:
+            heroConfig.backgroundColor ||
             "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
         }}
       >

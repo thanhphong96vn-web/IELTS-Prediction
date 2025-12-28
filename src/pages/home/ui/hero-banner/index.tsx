@@ -14,6 +14,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
     headline,
     description,
     buttons,
+    backgroundImage,
     bannerImage,
     featureCards,
     decorativeShape,
@@ -22,7 +23,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
     <div
       className="relative overflow-hidden py-12 md:py-35"
       style={{
-        background: "url('/img-admin/banner-bg.png') no-repeat center center",
+        background: `url('${backgroundImage}') no-repeat center center`,
         backgroundSize: "cover",
       }}
     >
@@ -123,25 +124,6 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                     </span>
                     <span className="material-symbols-rounded shrink-0">
                       arrow_forward
-                    </span>
-                  </span>
-                </Button>
-              </Link>
-              <Link href={buttons.secondary.link} className="shrink-0">
-                <Button
-                  size="large"
-                  className="h-12 px-4 sm:px-8 rounded-lg text-sm sm:text-base font-medium border-2 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full sm:w-auto"
-                  style={{
-                    borderColor: "#d94a56",
-                    color: "#d94a56",
-                  }}
-                >
-                  <span className="flex items-center gap-2 justify-center">
-                    <span className="truncate max-w-[200px] sm:max-w-none">
-                      {buttons.secondary.text}
-                    </span>
-                    <span className="material-symbols-rounded text-lg shrink-0">
-                      play_arrow
                     </span>
                   </span>
                 </Button>

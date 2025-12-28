@@ -3,5 +3,6 @@
   "breadcrumb": {
     "homeLabel": "Home",
     "currentLabel": "IELTS Exam Library"
-  }
+  },
+  "backgroundColor": "linear-gradient(180deg, #FFF3F3 0%, #FFF8F0 100%);"
 }
