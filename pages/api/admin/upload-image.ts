@@ -88,38 +88,64 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
   const fileBuffer = fs.readFileSync(file.filepath);
   const base64 = fileBuffer.toString("base64");
   
-  // Upload lên ImgBB sử dụng URLSearchParams
-  const params = new URLSearchParams();
-  params.append("key", imgbbApiKey);
-  params.append("image", base64);
+  // ImgBB yêu cầu base64 string (không cần data URL prefix)
+  // Upload lên ImgBB sử dụng form data
+  const formData = new URLSearchParams();
+  formData.append("key", imgbbApiKey);
+  formData.append("image", base64);
   
   try {
-    console.log("Calling ImgBB API...");
+    console.log("Calling ImgBB API...", {
+      apiKeyLength: imgbbApiKey.length,
+      apiKeyPrefix: imgbbApiKey.substring(0, 8),
+      fileSize: fileBuffer.length,
+      base64Length: base64.length,
+      mimetype: file.mimetype,
+    });
+    
     const response = await fetch("https://api.imgbb.com/1/upload", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: params.toString(),
+      body: formData.toString(),
     });
     
     console.log("ImgBB API response status:", response.status);
+    console.log("ImgBB API response headers:", Object.fromEntries(response.headers.entries()));
+    
+    const responseText = await response.text();
+    console.log("ImgBB API raw response:", responseText.substring(0, 500)); // Log first 500 chars
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("ImgBB API error response:", errorText);
-      throw new Error(`ImgBB upload failed: ${response.status} ${response.statusText} - ${errorText}`);
+      console.error("ImgBB API error response:", responseText);
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.error?.message || errorData.error?.code || errorMessage;
+      } catch {
+        // If not JSON, use text as is
+      }
+      throw new Error(`ImgBB upload failed: ${errorMessage}`);
     }
     
-    const data = await response.json();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Failed to parse ImgBB response as JSON:", responseText);
+      throw new Error(`ImgBB returned invalid JSON: ${responseText.substring(0, 200)}`);
+    }
+    
     console.log("ImgBB API response data:", JSON.stringify(data, null, 2));
     
     if (!data.success) {
-      const errorMsg = data.error?.message || data.error?.code || "Unknown error";
+      const errorMsg = data.error?.message || data.error?.code || JSON.stringify(data.error) || "Unknown error";
       throw new Error(`ImgBB upload failed: ${errorMsg}`);
     }
     
     if (!data.data || !data.data.url) {
+      console.error("ImgBB response missing URL:", JSON.stringify(data, null, 2));
       throw new Error("ImgBB upload failed: Invalid response - missing URL");
     }
     
