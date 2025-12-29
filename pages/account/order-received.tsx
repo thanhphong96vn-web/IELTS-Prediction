@@ -116,7 +116,7 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
 
             {/* Footer Instructions */}
             <div className="border-t border-gray-200 pt-6 space-y-4">
-              <p className="text-center text-gray-600 text-sm leading-relaxed">
+              <p className="text-center text-gray-600 text-sm leading-relaxed mx-auto max-w-[450px]">
                 Sau khi hoàn tất chuyển khoản, vui lòng <span className="font-semibold">không tắt trình duyệt</span> cho đến khi nhận được
                 kết quả giao dịch trên website. Xin cảm ơn!
               </p>
@@ -126,10 +126,10 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
               </div>
               <div className="flex justify-center pt-2">
                 <a
-                  href="tel:0964879926"
+                  href="tel:0927090848"
                   className="px-6 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition text-sm"
                 >
-                  📞 Báo cáo sự cố: 0964879926
+                  📞 Báo cáo sự cố: 0927090848
                 </a>
               </div>
             </div>

@@ -30,7 +30,7 @@ export default async function handler(
         title: "IELTS Listening Practice Tests",
         description: {
           line1:
-          "IELTS Listening Practice Tests Online miễn phí tại DOL Academy với đề",
+          "IELTS Listening Practice Tests Online miễn phí tại IELTS PREDICTION với đề",
           line2:
           "thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và",
           line3: "trải nghiệm làm bài thi thử như trên máy.",
