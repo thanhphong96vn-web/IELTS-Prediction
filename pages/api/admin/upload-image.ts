@@ -110,13 +110,32 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
     formData.append("image", base64);
     
     console.log("Sending request to ImgBB API...");
-    const response = await axios.post("https://api.imgbb.com/1/upload", formData.toString(), {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      maxRedirects: 0,
-      validateStatus: (status) => status < 500, // Don't throw on 4xx errors
-    });
+    
+    let response;
+    try {
+      response = await axios.post("https://api.imgbb.com/1/upload", formData.toString(), {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        maxRedirects: 0,
+        validateStatus: () => true, // Don't throw on any status code
+        timeout: 30000, // 30 seconds timeout
+      });
+    } catch (axiosError: any) {
+      console.error("Axios error:", axiosError);
+      if (axiosError.response) {
+        // Server responded with error status
+        const errorData = axiosError.response.data;
+        const errorMsg = errorData?.error?.message || errorData?.error?.code || `HTTP ${axiosError.response.status}`;
+        throw new Error(`ImgBB API error: ${errorMsg}`);
+      } else if (axiosError.request) {
+        // Request made but no response
+        throw new Error(`ImgBB API không phản hồi: ${axiosError.message || "Network error"}`);
+      } else {
+        // Error setting up request
+        throw new Error(`Lỗi khi gọi ImgBB API: ${axiosError.message || String(axiosError)}`);
+      }
+    }
     
     console.log("ImgBB API response status:", response.status);
     console.log("ImgBB API response data:", JSON.stringify(response.data, null, 2));
@@ -124,11 +143,13 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
     const data = response.data;
     
     if (response.status !== 200) {
-      const errorMessage = data?.error?.message || data?.error?.code || `HTTP ${response.status}: ${response.statusText}`;
+      const errorMessage = data?.error?.message || data?.error?.code || `HTTP ${response.status}: ${response.statusText || "Unknown error"}`;
       throw new Error(`ImgBB upload failed: ${errorMessage}`);
     }
     
-    console.log("ImgBB API response data:", JSON.stringify(data, null, 2));
+    if (!data || typeof data !== "object") {
+      throw new Error(`ImgBB returned invalid response: ${JSON.stringify(data).substring(0, 200)}`);
+    }
     
     if (!data.success) {
       const errorMsg = data.error?.message || data.error?.code || JSON.stringify(data.error) || "Unknown error";
@@ -144,8 +165,11 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
     return data.data.url;
   } catch (error) {
     console.error("ImgBB upload error:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Không thể upload lên ImgBB: ${errorMessage}`);
+    if (error instanceof Error) {
+      console.error("Error stack:", error.stack);
+      throw error; // Re-throw để handler bên ngoài có thể xử lý
+    }
+    throw new Error(`Không thể upload lên ImgBB: ${String(error)}`);
   }
 }
 
