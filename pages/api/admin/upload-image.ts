@@ -94,6 +94,7 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
   params.append("image", base64);
   
   try {
+    console.log("Calling ImgBB API...");
     const response = await fetch("https://api.imgbb.com/1/upload", {
       method: "POST",
       headers: {
@@ -102,22 +103,32 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
       body: params.toString(),
     });
     
+    console.log("ImgBB API response status:", response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("ImgBB API error response:", errorText);
       throw new Error(`ImgBB upload failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
     const data = await response.json();
+    console.log("ImgBB API response data:", JSON.stringify(data, null, 2));
     
-    if (!data.success || !data.data || !data.data.url) {
-      throw new Error(`ImgBB upload failed: ${data.error?.message || "Invalid response"}`);
+    if (!data.success) {
+      const errorMsg = data.error?.message || data.error?.code || "Unknown error";
+      throw new Error(`ImgBB upload failed: ${errorMsg}`);
+    }
+    
+    if (!data.data || !data.data.url) {
+      throw new Error("ImgBB upload failed: Invalid response - missing URL");
     }
     
     console.log("ImgBB upload successful:", data.data.url);
     return data.data.url;
   } catch (error) {
     console.error("ImgBB upload error:", error);
-    throw new Error(`Không thể upload lên ImgBB: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Không thể upload lên ImgBB: ${errorMessage}`);
   }
 }
 
@@ -186,17 +197,23 @@ export default async function handler(
     const useBlob = shouldUseBlob();
     const isVercel = process.env.VERCEL === "1";
     
+    const hasImgBBKey = !!process.env.IMGBB_API_KEY;
+    
     console.log("Upload request:", {
       useBlob,
       isVercel,
       hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+      hasImgBBKey,
       nodeEnv: process.env.NODE_ENV,
     });
 
-    // Cảnh báo nếu đang trên Vercel nhưng không có Blob token
-    if (isVercel && !useBlob) {
-      console.warn("⚠️ Running on Vercel without BLOB_READ_WRITE_TOKEN. Upload to filesystem will fail.");
-      // Không chặn ngay, để thử upload và trả về lỗi cụ thể nếu fail
+    // Kiểm tra nếu đang trên Vercel nhưng không có cả Blob token và ImgBB key
+    if (isVercel && !useBlob && !hasImgBBKey) {
+      return res.status(500).json({
+        message: "Không thể upload file. Vui lòng cấu hình BLOB_READ_WRITE_TOKEN hoặc IMGBB_API_KEY",
+        error: "Cả BLOB_READ_WRITE_TOKEN và IMGBB_API_KEY đều chưa được cấu hình",
+        hint: "Cách 1: Tạo Blob Store trong Vercel Dashboard và thêm BLOB_READ_WRITE_TOKEN vào Environment Variables. Xem VERCEL_BLOB_SETUP.md\nCách 2: Lấy API key miễn phí từ https://api.imgbb.com và thêm IMGBB_API_KEY vào Environment Variables. Xem IMGBB_SETUP.md",
+      });
     }
 
     const form = formidable({
@@ -240,26 +257,48 @@ export default async function handler(
         console.log("Uploading to Vercel Blob Storage...");
         relativePath = await uploadToBlob(file, oldPath as string);
         console.log("Upload successful, path:", relativePath);
-      } else if (isVercel) {
+      } else if (isVercel && hasImgBBKey) {
         // Trên Vercel nhưng không có Blob token, sử dụng ImgBB làm fallback
         console.log("Uploading to ImgBB (fallback)...");
         relativePath = await uploadToImgBB(file);
         console.log("Upload successful to ImgBB, URL:", relativePath);
-      } else {
+      } else if (!isVercel) {
         // Local development, upload vào filesystem
         console.log("Uploading to filesystem...");
         relativePath = uploadToFileSystem(file, oldPath as string);
         console.log("Upload successful, path:", relativePath);
+      } else {
+        // Trên Vercel nhưng không có cả Blob token và ImgBB key
+        throw new Error("Không có phương thức upload nào được cấu hình");
       }
     } catch (uploadError) {
       console.error("Upload failed:", uploadError);
       
-      // Nếu lỗi do thiếu Blob token trên Vercel và ImgBB cũng fail
-      if (isVercel && !useBlob && uploadError instanceof Error) {
+      // Log chi tiết để debug
+      console.error("Upload error details:", {
+        error: uploadError instanceof Error ? uploadError.message : String(uploadError),
+        stack: uploadError instanceof Error ? uploadError.stack : undefined,
+        useBlob,
+        isVercel,
+        hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+        hasImgBBKey: !!process.env.IMGBB_API_KEY,
+      });
+      
+      // Nếu lỗi do thiếu config trên Vercel
+      if (isVercel && !useBlob && !hasImgBBKey && uploadError instanceof Error) {
         return res.status(500).json({
           message: "Không thể upload file. Vui lòng cấu hình BLOB_READ_WRITE_TOKEN hoặc IMGBB_API_KEY",
           error: uploadError.message,
-          hint: "Cách 1: Tạo Blob Store trong Vercel Dashboard và thêm BLOB_READ_WRITE_TOKEN vào Environment Variables. Xem VERCEL_BLOB_SETUP.md để biết chi tiết.\nCách 2: Lấy API key miễn phí từ https://api.imgbb.com và thêm IMGBB_API_KEY vào Environment Variables.",
+          hint: "Cách 1: Tạo Blob Store trong Vercel Dashboard và thêm BLOB_READ_WRITE_TOKEN vào Environment Variables. Xem VERCEL_BLOB_SETUP.md\nCách 2: Lấy API key miễn phí từ https://api.imgbb.com và thêm IMGBB_API_KEY vào Environment Variables. Xem IMGBB_SETUP.md",
+        });
+      }
+      
+      // Nếu lỗi từ ImgBB upload
+      if (isVercel && !useBlob && hasImgBBKey && uploadError instanceof Error) {
+        return res.status(500).json({
+          message: "Lỗi khi upload lên ImgBB",
+          error: uploadError.message,
+          hint: "Kiểm tra IMGBB_API_KEY có đúng không. Xem IMGBB_SETUP.md để biết cách lấy API key mới.",
         });
       }
       
