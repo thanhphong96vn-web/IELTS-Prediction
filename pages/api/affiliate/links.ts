@@ -79,7 +79,7 @@ function generateAffiliateLink(affiliateId: string, customLink?: string): string
   return `${baseUrl}/subscription?ref=${affiliateCode}`;
 }
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
