@@ -71,7 +71,13 @@ function TestPlatformIntroPage() {
           </div>
         }
       >
-        <Form form={form} layout="vertical" initialValues={config}>
+        <Form 
+          form={form} 
+          layout="vertical" 
+          preserve={true}
+          validateTrigger="onBlur"
+          initialValues={config}
+        >
           <Collapse defaultActiveKey={["badge", "background", "title", "categories"]}>
             {/* Badge Section */}
             <Panel header="Badge" key="badge">
@@ -105,6 +111,8 @@ function TestPlatformIntroPage() {
               <Form.Item
                 name={["title", "line1"]}
                 label="Line 1"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 1" }]}
               >
                 <Input placeholder="Explore Top Courses Caterories" />
@@ -112,6 +120,8 @@ function TestPlatformIntroPage() {
               <Form.Item
                 name={["title", "line2"]}
                 label="Line 2"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 2" }]}
               >
                 <Input placeholder="That" />

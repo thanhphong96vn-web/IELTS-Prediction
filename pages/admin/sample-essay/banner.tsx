@@ -93,6 +93,8 @@ function SampleEssayBannerPage() {
         <Form
           form={form}
           layout="vertical"
+          preserve={true}
+          validateTrigger="onBlur"
           initialValues={config}
           key={formKey}
         >
@@ -139,6 +141,8 @@ function SampleEssayBannerPage() {
               <Form.Item
                 name={["writing", "description", "line1"]}
                 label="Line 1"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -151,6 +155,8 @@ function SampleEssayBannerPage() {
               <Form.Item
                 name={["writing", "description", "line2"]}
                 label="Line 2"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -238,6 +244,8 @@ function SampleEssayBannerPage() {
               <Form.Item
                 name={["speaking", "description", "line1"]}
                 label="Line 1"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -250,6 +258,8 @@ function SampleEssayBannerPage() {
               <Form.Item
                 name={["speaking", "description", "line2"]}
                 label="Line 2"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,

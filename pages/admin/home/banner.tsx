@@ -69,7 +69,13 @@ function HeroBannerPage() {
           </div>
         }
       >
-        <Form form={form} layout="vertical" initialValues={config}>
+        <Form 
+          form={form} 
+          layout="vertical" 
+          preserve={true}
+          validateTrigger="onBlur"
+          initialValues={config}
+        >
           <Collapse
             defaultActiveKey={[
               "trustpilot",
@@ -105,6 +111,8 @@ function HeroBannerPage() {
               <Form.Item
                 name={["headline", "line1"]}
                 label="Line 1"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 1" }]}
               >
                 <Input placeholder="Education Is The Best" />
@@ -112,6 +120,8 @@ function HeroBannerPage() {
               <Form.Item
                 name={["headline", "line2"]}
                 label="Line 2"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 2" }]}
               >
                 <Input placeholder="Key" />
@@ -119,6 +129,8 @@ function HeroBannerPage() {
               <Form.Item
                 name={["headline", "line3"]}
                 label="Line 3"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 3" }]}
               >
                 <Input placeholder="Success" />
@@ -126,6 +138,8 @@ function HeroBannerPage() {
               <Form.Item
                 name={["headline", "line4"]}
                 label="Line 4"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 4" }]}
               >
                 <Input placeholder="In Life" />

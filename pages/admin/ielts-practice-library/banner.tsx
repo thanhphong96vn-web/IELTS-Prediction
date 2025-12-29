@@ -140,15 +140,6 @@ function PracticeLibraryBannerPage() {
           layout="vertical" 
           preserve={true}
           validateTrigger="onBlur"
-          onValuesChange={(changedValues, allValues) => {
-            // Debug: log khi values thay đổi để kiểm tra
-            console.log('Form values changed:', { 
-              changedValues, 
-              allValues,
-              listeningDescription: allValues.listening?.description,
-              readingDescription: allValues.reading?.description,
-            });
-          }}
         >
           <Collapse
             defaultActiveKey={["listening", "reading"]}
@@ -167,6 +158,7 @@ function PracticeLibraryBannerPage() {
                 name={["listening", "description", "line1"]}
                 label="Line 1"
                 preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -174,18 +166,13 @@ function PracticeLibraryBannerPage() {
                   },
                 ]}
               >
-                <Input 
-                  placeholder="IELTS Listening Practice Tests Online miễn phí tại IELTS PREDICTION với đề"
-                  onChange={(e) => {
-                    // Force update form value để tránh mất dữ liệu
-                    form.setFieldValue(["listening", "description", "line1"], e.target.value);
-                  }}
-                />
+                <Input placeholder="IELTS Listening Practice Tests Online miễn phí tại IELTS PREDICTION với đề" />
               </Form.Item>
               <Form.Item
                 name={["listening", "description", "line2"]}
                 label="Line 2"
                 preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -193,18 +180,13 @@ function PracticeLibraryBannerPage() {
                   },
                 ]}
               >
-                <Input 
-                  placeholder="thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và"
-                  onChange={(e) => {
-                    // Force update form value để tránh mất dữ liệu
-                    form.setFieldValue(["listening", "description", "line2"], e.target.value);
-                  }}
-                />
+                <Input placeholder="thi, audio, transcript, answer key, giải thích chi tiết từ vựng đi kèm và" />
               </Form.Item>
               <Form.Item
                 name={["listening", "description", "line3"]}
                 label="Line 3"
                 preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -212,13 +194,7 @@ function PracticeLibraryBannerPage() {
                   },
                 ]}
               >
-                <Input 
-                  placeholder="trải nghiệm làm bài thi thử như trên máy."
-                  onChange={(e) => {
-                    // Force update form value để tránh mất dữ liệu
-                    form.setFieldValue(["listening", "description", "line3"], e.target.value);
-                  }}
-                />
+                <Input placeholder="trải nghiệm làm bài thi thử như trên máy." />
               </Form.Item>
               <Form.Item
                 name={["listening", "backgroundColor"]}
@@ -270,6 +246,7 @@ function PracticeLibraryBannerPage() {
                 name={["reading", "description", "line1"]}
                 label="Line 1"
                 preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -277,17 +254,13 @@ function PracticeLibraryBannerPage() {
                   },
                 ]}
               >
-                <Input 
-                  placeholder="IELTS Reading Practice Tests Online miễn phí tại DOL Academy với đề"
-                  onChange={(e) => {
-                    form.setFieldValue(["reading", "description", "line1"], e.target.value);
-                  }}
-                />
+                <Input placeholder="IELTS Reading Practice Tests Online miễn phí tại DOL Academy với đề" />
               </Form.Item>
               <Form.Item
                 name={["reading", "description", "line2"]}
                 label="Line 2"
                 preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -295,17 +268,13 @@ function PracticeLibraryBannerPage() {
                   },
                 ]}
               >
-                <Input 
-                  placeholder="thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và"
-                  onChange={(e) => {
-                    form.setFieldValue(["reading", "description", "line2"], e.target.value);
-                  }}
-                />
+                <Input placeholder="thi, transcript, answer key, giải thích chi tiết từ vựng đi kèm và" />
               </Form.Item>
               <Form.Item
                 name={["reading", "description", "line3"]}
                 label="Line 3"
                 preserve={true}
+                validateTrigger="onBlur"
                 rules={[
                   {
                     required: true,
@@ -313,12 +282,7 @@ function PracticeLibraryBannerPage() {
                   },
                 ]}
               >
-                <Input 
-                  placeholder="trải nghiệm làm bài thi thử như trên máy."
-                  onChange={(e) => {
-                    form.setFieldValue(["reading", "description", "line3"], e.target.value);
-                  }}
-                />
+                <Input placeholder="trải nghiệm làm bài thi thử như trên máy." />
               </Form.Item>
               <Form.Item
                 name={["reading", "backgroundColor"]}
