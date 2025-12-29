@@ -12,8 +12,9 @@ let kvClient: any = null;
 
 /**
  * Khởi tạo Vercel KV client
+ * Export để có thể dùng trong debug endpoint
  */
-function getKVClient() {
+export function getKVClient() {
   if (kvClient !== null) {
     return kvClient;
   }
