@@ -10,6 +10,7 @@ function TestPlatformIntroPage() {
   const [config, setConfig] = useState<TestPlatformIntroConfig | null>(null);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -22,7 +23,12 @@ function TestPlatformIntroPage() {
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
-      form.setFieldsValue(data);
+      
+      // Chỉ set form values lần đầu tiên khi load
+      if (!isFormInitialized) {
+        form.setFieldsValue(data);
+        setIsFormInitialized(true);
+      }
     } catch {
       message.error("Error loading config");
     }
@@ -76,7 +82,6 @@ function TestPlatformIntroPage() {
           layout="vertical" 
           preserve={true}
           validateTrigger="onBlur"
-          initialValues={config}
         >
           <Collapse defaultActiveKey={["badge", "background", "title", "categories"]}>
             {/* Badge Section */}

@@ -17,8 +17,8 @@ const { Panel } = Collapse;
 function SampleEssayBannerPage() {
   const [config, setConfig] = useState<SampleEssayBannerConfig | null>(null);
   const [saving, setSaving] = useState(false);
-  const [formKey, setFormKey] = useState(Date.now());
   const [form] = Form.useForm();
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -30,12 +30,50 @@ function SampleEssayBannerPage() {
       const res = await fetch("/api/admin/sample-essay/banner");
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
-      console.log("Fetched config data:", data);
-      console.log("Writing title:", data.writing.title);
-      console.log("Writing line2Highlighted:", data.writing.title.line2Highlighted);
-      console.log("Speaking line2Highlighted:", data.speaking.title.line2Highlighted);
-      setConfig(data);
-      setFormKey(Date.now()); // Force form remount với data mới
+      
+      // Đảm bảo structure đầy đủ để tránh form reset
+      const normalizedData: SampleEssayBannerConfig = {
+        writing: {
+          title: {
+            line1: data.writing?.title?.line1 || "",
+            line2Highlighted: data.writing?.title?.line2Highlighted || "",
+            line2After: data.writing?.title?.line2After || "",
+          },
+          description: {
+            line1: data.writing?.description?.line1 || "",
+            line2: data.writing?.description?.line2 || "",
+          },
+          backgroundColor: data.writing?.backgroundColor || "",
+          button: {
+            text: data.writing?.button?.text || "",
+            link: data.writing?.button?.link || "",
+          },
+        },
+        speaking: {
+          title: {
+            line1: data.speaking?.title?.line1 || "",
+            line2Highlighted: data.speaking?.title?.line2Highlighted || "",
+            line2After: data.speaking?.title?.line2After || "",
+          },
+          description: {
+            line1: data.speaking?.description?.line1 || "",
+            line2: data.speaking?.description?.line2 || "",
+          },
+          backgroundColor: data.speaking?.backgroundColor || "",
+          button: {
+            text: data.speaking?.button?.text || "",
+            link: data.speaking?.button?.link || "",
+          },
+        },
+      };
+      
+      setConfig(normalizedData);
+      
+      // Chỉ set form values lần đầu tiên khi load
+      if (!isFormInitialized) {
+        form.setFieldsValue(normalizedData);
+        setIsFormInitialized(true);
+      }
     } catch (error) {
       console.error("Error fetching config:", error);
       message.error("Error loading config");
@@ -58,12 +96,24 @@ function SampleEssayBannerPage() {
         body: JSON.stringify(configData),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Save failed");
+      }
 
-      message.success("Config saved successfully");
-      await fetchConfig();
-    } catch {
-      message.error("Error saving config");
+      const result = await res.json();
+      message.success(result.message || "Config saved successfully");
+
+      // Update config state với giá trị đã save để đồng bộ
+      setConfig(configData);
+      
+      // KHÔNG reload form để tránh reset các field user đang nhập
+      // Form values đã được update khi user save, không cần reset
+    } catch (error) {
+      console.error("Error saving config:", error);
+      message.error(
+        error instanceof Error ? error.message : "Error saving config"
+      );
     } finally {
       setSaving(false);
     }
@@ -95,8 +145,6 @@ function SampleEssayBannerPage() {
           layout="vertical"
           preserve={true}
           validateTrigger="onBlur"
-          initialValues={config}
-          key={formKey}
         >
           <Collapse defaultActiveKey={["writing", "speaking"]}>
             {/* Writing Banner */}
