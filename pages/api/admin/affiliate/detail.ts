@@ -8,36 +8,44 @@ const VISITS_FILE = "affiliate-visits.json";
 
 async function getAffiliates(): Promise<any[]> {
   try {
-    const data = await Promise.resolve(readData<any[]>(AFFILIATES_FILE));
+    const result = readData<any[]>(AFFILIATES_FILE);
+    const data = result instanceof Promise ? await result : result;
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (error) {
+    console.error("Error getting affiliates:", error);
     return [];
   }
 }
 
 async function getLinks(): Promise<any[]> {
   try {
-    const data = await Promise.resolve(readData<any[]>(LINKS_FILE));
+    const result = readData<any[]>(LINKS_FILE);
+    const data = result instanceof Promise ? await result : result;
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (error) {
+    console.error("Error getting links:", error);
     return [];
   }
 }
 
 async function getCommissions(): Promise<any[]> {
   try {
-    const data = await Promise.resolve(readData<any[]>(COMMISSIONS_FILE));
+    const result = readData<any[]>(COMMISSIONS_FILE);
+    const data = result instanceof Promise ? await result : result;
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (error) {
+    console.error("Error getting commissions:", error);
     return [];
   }
 }
 
 async function getVisits(): Promise<any[]> {
   try {
-    const data = await Promise.resolve(readData<any[]>(VISITS_FILE));
+    const result = readData<any[]>(VISITS_FILE);
+    const data = result instanceof Promise ? await result : result;
     return Array.isArray(data) ? data : [];
-  } catch {
+  } catch (error) {
+    console.error("Error getting visits:", error);
     return [];
   }
 }
@@ -54,20 +62,47 @@ export default async function handler(
     const { affiliateId } = req.query;
 
     if (!affiliateId || typeof affiliateId !== "string") {
-      return res.status(400).json({ error: "Affiliate ID is required" });
+      return res.status(400).json({ 
+        success: false,
+        error: "Affiliate ID is required" 
+      });
     }
 
     const affiliates = await getAffiliates();
     const affiliate = affiliates.find((a: any) => a.id === affiliateId);
 
     if (!affiliate) {
-      return res.status(404).json({ error: "Affiliate not found" });
+      return res.status(404).json({ 
+        success: false,
+        error: "Affiliate not found" 
+      });
     }
 
     // Get all related data
-    const links = (await getLinks()).filter((l: any) => l.affiliateId === affiliateId);
-    const commissions = (await getCommissions()).filter((c: any) => c.affiliateId === affiliateId);
-    const visits = (await getVisits()).filter((v: any) => v.affiliateId === affiliateId);
+    let links: any[] = [];
+    let commissions: any[] = [];
+    let visits: any[] = [];
+
+    try {
+      links = (await getLinks()).filter((l: any) => l.affiliateId === affiliateId);
+    } catch (error) {
+      console.error("Error fetching links:", error);
+      links = [];
+    }
+
+    try {
+      commissions = (await getCommissions()).filter((c: any) => c.affiliateId === affiliateId);
+    } catch (error) {
+      console.error("Error fetching commissions:", error);
+      commissions = [];
+    }
+
+    try {
+      visits = (await getVisits()).filter((v: any) => v.affiliateId === affiliateId);
+    } catch (error) {
+      console.error("Error fetching visits:", error);
+      visits = [];
+    }
 
     // Calculate stats
     const totalCommissions = commissions.reduce(
@@ -105,9 +140,16 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Error fetching affiliate detail:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error details:", {
+      affiliateId: req.query.affiliateId,
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return res.status(500).json({
+      success: false,
       error: "Failed to fetch affiliate detail",
-      message: error instanceof Error ? error.message : String(error),
+      message: errorMessage,
     });
   }
 }

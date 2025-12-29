@@ -127,6 +127,12 @@ export default function AffiliateUsersPage() {
       const res = await fetch(`/api/admin/affiliate/detail?affiliateId=${affiliateId}`);
       const data = await res.json();
 
+      if (!res.ok) {
+        console.error("API Error:", data);
+        message.error(data.message || data.error || "Không thể tải thông tin chi tiết");
+        return;
+      }
+
       if (data.success && data.affiliate) {
         setAffiliateDetail({
           affiliate: data.affiliate,
@@ -136,11 +142,12 @@ export default function AffiliateUsersPage() {
         });
         setDetailModalVisible(true);
       } else {
-        message.error("Không thể tải thông tin chi tiết");
+        console.error("Invalid response format:", data);
+        message.error(data.message || data.error || "Không thể tải thông tin chi tiết");
       }
     } catch (error) {
       console.error("Error fetching affiliate detail:", error);
-      message.error("Có lỗi xảy ra");
+      message.error("Có lỗi xảy ra khi tải thông tin chi tiết");
     }
   };
 
