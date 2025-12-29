@@ -17,7 +17,13 @@ export const config = {
 function shouldUseBlob(): boolean {
   const hasBlobToken = !!process.env.BLOB_READ_WRITE_TOKEN;
   const isVercel = process.env.VERCEL === "1";
-  return hasBlobToken && isVercel;
+  const result = hasBlobToken && isVercel;
+  
+  if (isVercel && !hasBlobToken) {
+    console.warn("⚠️ Running on Vercel but BLOB_READ_WRITE_TOKEN is not configured. File upload will fail.");
+  }
+  
+  return result;
 }
 
 /**
@@ -130,10 +136,29 @@ export default async function handler(
     // TODO: Thêm authentication check ở đây
     // if (!isAdmin(req)) return res.status(401).json({ message: "Unauthorized" });
 
+    const useBlob = shouldUseBlob();
+    const isVercel = process.env.VERCEL === "1";
+    
+    console.log("Upload request:", {
+      useBlob,
+      isVercel,
+      hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+      nodeEnv: process.env.NODE_ENV,
+    });
+
+    // Kiểm tra nếu đang trên Vercel nhưng không có Blob token
+    if (isVercel && !useBlob) {
+      return res.status(500).json({
+        message: "Lỗi cấu hình: BLOB_READ_WRITE_TOKEN chưa được cấu hình trên Vercel",
+        error: "Vui lòng cấu hình BLOB_READ_WRITE_TOKEN trong Vercel Environment Variables",
+        hint: "Tạo Blob Store trong Vercel Dashboard và thêm token vào Environment Variables",
+      });
+    }
+
     const form = formidable({
       maxFileSize: 5 * 1024 * 1024, // 5MB
       keepExtensions: true,
-      uploadDir: shouldUseBlob() 
+      uploadDir: useBlob 
         ? require("os").tmpdir() // Dùng temp dir trên Vercel
         : path.join(process.cwd(), "public", "img-admin"),
     });
@@ -157,12 +182,28 @@ export default async function handler(
       return res.status(400).json({ message: "File không hợp lệ" });
     }
 
+    console.log("Processing file:", {
+      filename: file.originalFilename,
+      mimetype: file.mimetype,
+      size: file.size,
+      useBlob,
+    });
+
     // Upload file
     let relativePath: string;
-    if (shouldUseBlob()) {
-      relativePath = await uploadToBlob(file, oldPath as string);
-    } else {
-      relativePath = uploadToFileSystem(file, oldPath as string);
+    try {
+      if (useBlob) {
+        console.log("Uploading to Vercel Blob Storage...");
+        relativePath = await uploadToBlob(file, oldPath as string);
+        console.log("Upload successful, path:", relativePath);
+      } else {
+        console.log("Uploading to filesystem...");
+        relativePath = uploadToFileSystem(file, oldPath as string);
+        console.log("Upload successful, path:", relativePath);
+      }
+    } catch (uploadError) {
+      console.error("Upload failed:", uploadError);
+      throw uploadError;
     }
 
     return res.status(200).json({
@@ -171,9 +212,20 @@ export default async function handler(
     });
   } catch (error) {
     console.error("Upload error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    console.error("Error details:", {
+      message: errorMessage,
+      stack: errorStack,
+      isVercel: process.env.VERCEL === "1",
+      hasBlobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
+    });
+
     return res.status(500).json({
       message: "Lỗi khi upload file",
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
+      ...(process.env.NODE_ENV === "development" && { stack: errorStack }),
     });
   }
 }
