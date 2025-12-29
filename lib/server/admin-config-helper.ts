@@ -55,7 +55,13 @@ function shouldUseKV(): boolean {
   // 1. Có KV environment variables
   // 2. Đang ở Vercel hoặc production
   // 3. KV client đã được khởi tạo thành công
-  return hasKVEnv && (isVercel || isProduction) && kvClient !== null && kvClient !== false;
+  const shouldUse = hasKVEnv && (isVercel || isProduction) && kvClient !== null && kvClient !== false;
+  
+  if (isVercel && !shouldUse) {
+    console.warn(`⚠ KV không được sử dụng. hasKVEnv: ${hasKVEnv}, isVercel: ${isVercel}, isProduction: ${isProduction}, kvClient: ${kvClient !== null && kvClient !== false}`);
+  }
+  
+  return shouldUse;
 }
 
 /**
@@ -115,15 +121,34 @@ async function readConfigFromKV<T>(sectionName: string): Promise<T> {
  */
 async function writeConfigToKV<T>(sectionName: string, data: T): Promise<void> {
   const client = getKVClient();
+  
+  if (!client) {
+    const error = new Error(
+      `KV client không được khởi tạo. Kiểm tra KV_REST_API_URL và KV_REST_API_TOKEN environment variables.`
+    );
+    console.error(`Failed to write to KV: ${sectionName}`, error);
+    throw error;
+  }
+  
   const key = getKVKey(sectionName);
   const value = JSON.stringify(data, null, 2);
 
   try {
     await client.set(key, value);
-    console.log(`Config saved to KV: ${sectionName}`);
-  } catch (error) {
-    console.error(`Failed to write to KV:`, error);
-    throw error;
+    console.log(`✓ Config saved to KV: ${sectionName}`);
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error);
+    const errorDetails = {
+      sectionName,
+      key,
+      error: errorMessage,
+      hasKVUrl: !!process.env.KV_REST_API_URL,
+      hasKVToken: !!process.env.KV_REST_API_TOKEN,
+      isVercel: process.env.VERCEL === "1",
+      nodeEnv: process.env.NODE_ENV,
+    };
+    console.error(`❌ Failed to write to KV:`, errorDetails);
+    throw new Error(`Không thể ghi vào KV: ${errorMessage}`);
   }
 }
 
