@@ -2,14 +2,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { createServerApolloClient } from "@/shared/graphql";
 import { gql } from "@apollo/client";
 import { GetServerSidePropsContext } from "next";
-import fs from "fs";
-import path from "path";
+import { readData, writeData } from "../../../lib/server/affiliate-data-helper";
 
 const AFFILIATE_COOKIE_NAME = "affiliate_ref";
-const COMMISSIONS_FILE = path.join(process.cwd(), "data", "affiliate-commissions.json");
-const VISITS_FILE = path.join(process.cwd(), "data", "affiliate-visits.json");
-const AFFILIATES_FILE = path.join(process.cwd(), "data", "affiliates.json");
-const LINKS_FILE = path.join(process.cwd(), "data", "affiliate-links.json");
+const COMMISSIONS_FILE = "affiliate-commissions.json";
+const VISITS_FILE = "affiliate-visits.json";
+const AFFILIATES_FILE = "affiliates.json";
+const LINKS_FILE = "affiliate-links.json";
 
 const CREATE_ORDER_MUTATION = gql`
   mutation CREATE_ORDER($input: CreateOrderInput!) {
@@ -32,7 +31,7 @@ const CREATE_ORDER_MUTATION = gql`
   }
 `;
 
-const ORDERS_FILE = path.join(process.cwd(), "data", "orders.json");
+const ORDERS_FILE = "orders.json";
 
 interface Order {
   id: string;
@@ -59,81 +58,66 @@ function generateTransferContent(orderId: string): string {
   return orderId;
 }
 
-function ensureOrdersFile() {
-  const dir = path.dirname(ORDERS_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(ORDERS_FILE)) {
-    fs.writeFileSync(ORDERS_FILE, JSON.stringify([], null, 2));
-  }
-}
-
-function getOrders(): Order[] {
-  ensureOrdersFile();
+async function getOrders(): Promise<Order[]> {
   try {
-    const data = fs.readFileSync(ORDERS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<Order[]>(ORDERS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function saveOrder(order: Order): void {
-  const orders = getOrders();
+async function saveOrder(order: Order): Promise<void> {
+  const orders = await getOrders();
   orders.push(order);
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
+  await Promise.resolve(writeData<Order[]>(ORDERS_FILE, orders));
 }
 
-function getOrderById(orderId: string): Order | null {
-  const orders = getOrders();
+async function getOrderById(orderId: string): Promise<Order | null> {
+  const orders = await getOrders();
   return orders.find((o) => o.orderId === orderId) || null;
 }
 
 // Helper functions for affiliate
-function getAffiliates(): any[] {
+async function getAffiliates(): Promise<any[]> {
   try {
-    if (!fs.existsSync(AFFILIATES_FILE)) return [];
-    const data = fs.readFileSync(AFFILIATES_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(AFFILIATES_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getLinks(): any[] {
+async function getLinks(): Promise<any[]> {
   try {
-    if (!fs.existsSync(LINKS_FILE)) return [];
-    const data = fs.readFileSync(LINKS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(LINKS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getCommissions(): any[] {
+async function getCommissions(): Promise<any[]> {
   try {
-    if (!fs.existsSync(COMMISSIONS_FILE)) return [];
-    const data = fs.readFileSync(COMMISSIONS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(COMMISSIONS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getVisits(): any[] {
+async function getVisits(): Promise<any[]> {
   try {
-    if (!fs.existsSync(VISITS_FILE)) return [];
-    const data = fs.readFileSync(VISITS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(VISITS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function resolveAffiliateCode(code: string): { affiliateId: string; linkId: string } | null {
-  const affiliates = getAffiliates();
-  const links = getLinks();
+async function resolveAffiliateCode(code: string): Promise<{ affiliateId: string; linkId: string } | null> {
+  const affiliates = await getAffiliates();
+  const links = await getLinks();
 
   let affiliate = affiliates.find(
     (a: any) => a.customLink === code || a.id.substring(0, 8) === code
@@ -161,7 +145,7 @@ function resolveAffiliateCode(code: string): { affiliateId: string; linkId: stri
       createdAt: new Date().toISOString(),
     };
     links.push(defaultLink);
-    fs.writeFileSync(LINKS_FILE, JSON.stringify(links, null, 2));
+    await Promise.resolve(writeData<any[]>(LINKS_FILE, links));
     link = defaultLink;
   }
 
@@ -183,7 +167,7 @@ async function handleAffiliateCommission(
       return;
     }
 
-    const resolved = resolveAffiliateCode(affiliateCode);
+    const resolved = await resolveAffiliateCode(affiliateCode);
     if (!resolved) {
       return;
     }
@@ -191,7 +175,7 @@ async function handleAffiliateCommission(
     const { affiliateId, linkId } = resolved;
 
     // Check if commission already exists
-    const commissions = getCommissions();
+    const commissions = await getCommissions();
     const existing = commissions.find(
       (c: any) => c.orderId === orderId && c.affiliateId === affiliateId
     );
@@ -216,10 +200,10 @@ async function handleAffiliateCommission(
     };
 
     commissions.push(commission);
-    fs.writeFileSync(COMMISSIONS_FILE, JSON.stringify(commissions, null, 2));
+    await Promise.resolve(writeData<any[]>(COMMISSIONS_FILE, commissions));
 
     // Update visit to converted
-    const visits = getVisits();
+    const visits = await getVisits();
     const visitIndex = visits.findIndex(
       (v: any) => v.affiliateId === affiliateId && v.linkId === linkId && !v.converted
     );
@@ -227,7 +211,7 @@ async function handleAffiliateCommission(
     if (visitIndex >= 0) {
       visits[visitIndex].converted = true;
       visits[visitIndex].orderId = orderId;
-      fs.writeFileSync(VISITS_FILE, JSON.stringify(visits, null, 2));
+      await Promise.resolve(writeData<any[]>(VISITS_FILE, visits));
     }
   } catch (error) {
     console.error("Error handling affiliate commission:", error);
@@ -316,7 +300,7 @@ export default async function handler(
     }
 
     // Fallback to file storage
-    saveOrder(order);
+    await saveOrder(order);
 
     // KHÔNG tính hoa hồng affiliate ở đây
     // Hoa hồng chỉ được tính khi order status = "completed" (sau khi thanh toán thành công)
