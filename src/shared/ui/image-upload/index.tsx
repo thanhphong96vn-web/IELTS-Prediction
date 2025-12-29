@@ -101,12 +101,27 @@ export function ImageUpload({
       {preview ? (
         <div className="relative border border-gray-300 rounded-lg p-4 bg-gray-50">
           <div className="relative w-full h-48">
-            <Image
-              src={preview}
-              alt="Preview"
-              fill
-              className="object-contain rounded"
-            />
+            {preview.startsWith('http://') || preview.startsWith('https://') ? (
+              // External URL (ImgBB) - use regular img tag
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-full object-contain rounded"
+                onError={(e) => {
+                  console.error("Failed to load image:", preview);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              // Local/relative URL - use Next.js Image
+              <Image
+                src={preview}
+                alt="Preview"
+                fill
+                className="object-contain rounded"
+                unoptimized={preview.startsWith('/img-admin/')}
+              />
+            )}
           </div>
           <div className="mt-4 flex gap-2">
             <Button

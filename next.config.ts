@@ -14,7 +14,15 @@ const nextConfig: NextConfig = {
       },
       {
         hostname: 'placehold.co',
-      }
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.ibb.co',
+      },
     ],
   },
   webpack: (config, { isServer, webpack }) => {
