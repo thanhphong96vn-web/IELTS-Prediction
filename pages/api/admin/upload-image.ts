@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import formidable from "formidable";
 import fs from "fs";
 import path from "path";
+import { put, del } from "@vercel/blob";
 
 // Disable body parser để xử lý file upload
 export const config = {
@@ -9,6 +10,113 @@ export const config = {
     bodyParser: false,
   },
 };
+
+/**
+ * Kiểm tra xem có nên sử dụng Vercel Blob Storage không
+ */
+function shouldUseBlob(): boolean {
+  const hasBlobToken = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const isVercel = process.env.VERCEL === "1";
+  return hasBlobToken && isVercel;
+}
+
+/**
+ * Upload file lên Vercel Blob Storage
+ */
+async function uploadToBlob(
+  file: formidable.File,
+  oldPath?: string
+): Promise<string> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error("BLOB_READ_WRITE_TOKEN không được cấu hình");
+  }
+
+  // Đọc file buffer
+  const fileBuffer = fs.readFileSync(file.filepath);
+  
+  // Tạo tên file unique
+  const timestamp = Date.now();
+  const originalName = file.originalFilename || "image";
+  const ext = path.extname(originalName);
+  const baseName = path
+    .basename(originalName, ext)
+    .replace(/[^a-z0-9]/gi, "-");
+  const fileName = `img-admin/${baseName}-${timestamp}${ext}`;
+
+  // Xóa file cũ nếu có
+  if (oldPath && typeof oldPath === "string" && oldPath.trim()) {
+    try {
+      // Extract blob key từ oldPath (format: /img-admin/filename.jpg)
+      const blobKey = oldPath.startsWith("/") ? oldPath.substring(1) : oldPath;
+      if (blobKey.startsWith("img-admin/")) {
+        await del(blobKey, { token });
+        console.log(`Đã xóa file cũ từ Blob: ${blobKey}`);
+      }
+    } catch (deleteError) {
+      console.warn("Không thể xóa file cũ từ Blob:", deleteError);
+    }
+  }
+
+  // Upload file mới
+  const blob = await put(fileName, fileBuffer, {
+    access: "public",
+    token,
+    contentType: file.mimetype || "image/jpeg",
+  });
+
+  return `/${blob.pathname}`;
+}
+
+/**
+ * Upload file vào filesystem (local development)
+ */
+function uploadToFileSystem(
+  file: formidable.File,
+  oldPath?: string
+): string {
+  // Tạo tên file unique
+  const timestamp = Date.now();
+  const originalName = file.originalFilename || "image";
+  const ext = path.extname(originalName);
+  const baseName = path
+    .basename(originalName, ext)
+    .replace(/[^a-z0-9]/gi, "-");
+  const newFileName = `${baseName}-${timestamp}${ext}`;
+  const newFilePath = path.join(
+    process.cwd(),
+    "public",
+    "img-admin",
+    newFileName
+  );
+
+  // Đảm bảo thư mục tồn tại
+  const uploadDir = path.join(process.cwd(), "public", "img-admin");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  // Xóa file cũ nếu có
+  if (oldPath && typeof oldPath === "string" && oldPath.trim()) {
+    try {
+      const oldFilePath = path.join(process.cwd(), "public", oldPath);
+      if (
+        oldFilePath.startsWith(path.join(process.cwd(), "public", "img-admin")) &&
+        fs.existsSync(oldFilePath)
+      ) {
+        fs.unlinkSync(oldFilePath);
+        console.log(`Đã xóa file cũ: ${oldFilePath}`);
+      }
+    } catch (deleteError) {
+      console.warn("Không thể xóa file cũ:", deleteError);
+    }
+  }
+
+  // Đổi tên file
+  fs.renameSync(file.filepath, newFilePath);
+
+  return `/img-admin/${newFileName}`;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -25,7 +133,9 @@ export default async function handler(
     const form = formidable({
       maxFileSize: 5 * 1024 * 1024, // 5MB
       keepExtensions: true,
-      uploadDir: path.join(process.cwd(), "public", "img-admin"),
+      uploadDir: shouldUseBlob() 
+        ? require("os").tmpdir() // Dùng temp dir trên Vercel
+        : path.join(process.cwd(), "public", "img-admin"),
     });
 
     const [fields, files] = await form.parse(req);
@@ -47,52 +157,13 @@ export default async function handler(
       return res.status(400).json({ message: "File không hợp lệ" });
     }
 
-    // Tạo tên file unique
-    const timestamp = Date.now();
-    const originalName = file.originalFilename || "image";
-    const ext = path.extname(originalName);
-    const baseName = path
-      .basename(originalName, ext)
-      .replace(/[^a-z0-9]/gi, "-");
-    const newFileName = `${baseName}-${timestamp}${ext}`;
-    const newFilePath = path.join(
-      process.cwd(),
-      "public",
-      "img-admin",
-      newFileName
-    );
-
-    // Đảm bảo thư mục tồn tại
-    const uploadDir = path.join(process.cwd(), "public", "img-admin");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    // Upload file
+    let relativePath: string;
+    if (shouldUseBlob()) {
+      relativePath = await uploadToBlob(file, oldPath as string);
+    } else {
+      relativePath = uploadToFileSystem(file, oldPath as string);
     }
-
-    // Xóa file cũ nếu có
-    if (oldPath && typeof oldPath === "string" && oldPath.trim()) {
-      try {
-        // Chỉ xóa file trong thư mục img-admin để đảm bảo an toàn
-        const oldFilePath = path.join(process.cwd(), "public", oldPath);
-        
-        // Kiểm tra file cũ có trong thư mục img-admin không
-        if (
-          oldFilePath.startsWith(path.join(process.cwd(), "public", "img-admin")) &&
-          fs.existsSync(oldFilePath)
-        ) {
-          fs.unlinkSync(oldFilePath);
-          console.log(`Đã xóa file cũ: ${oldFilePath}`);
-        }
-      } catch (deleteError) {
-        // Log lỗi nhưng không fail upload nếu xóa file cũ thất bại
-        console.warn("Không thể xóa file cũ:", deleteError);
-      }
-    }
-
-    // Đổi tên file
-    fs.renameSync(file.filepath, newFilePath);
-
-    // Trả về đường dẫn relative
-    const relativePath = `/img-admin/${newFileName}`;
 
     return res.status(200).json({
       message: "Upload thành công",

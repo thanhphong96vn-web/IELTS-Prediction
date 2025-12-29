@@ -22,6 +22,7 @@
     "@splidejs/react-splide": "https://github.com/sahilm310/react-splide.git",
     "@tailwindcss/typography": "^0.5.16",
     "@types/formidable": "^3.4.6",
+    "@vercel/blob": "^2.0.0",
     "@vercel/kv": "^3.0.0",
     "antd": "^5.24.6",
     "antd-style": "^3.7.1",
