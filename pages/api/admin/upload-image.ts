@@ -3,6 +3,7 @@ import formidable from "formidable";
 import fs from "fs";
 import path from "path";
 import { put, del } from "@vercel/blob";
+import FormData from "form-data";
 
 // Disable body parser để xử lý file upload
 export const config = {
@@ -93,12 +94,6 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
   const fileBuffer = fs.readFileSync(file.filepath);
   const base64 = fileBuffer.toString("base64");
   
-  // ImgBB yêu cầu base64 string (không cần data URL prefix)
-  // Upload lên ImgBB sử dụng form data
-  const formData = new URLSearchParams();
-  formData.append("key", imgbbApiKey);
-  formData.append("image", base64);
-  
   try {
     console.log("Calling ImgBB API...", {
       apiKeyLength: imgbbApiKey.length,
@@ -108,12 +103,18 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
       mimetype: file.mimetype,
     });
     
+    // ImgBB API yêu cầu form-urlencoded với key và image (base64)
+    // Sử dụng URLSearchParams với application/x-www-form-urlencoded
+    const urlParams = new URLSearchParams();
+    urlParams.append("key", imgbbApiKey);
+    urlParams.append("image", base64);
+    
     const response = await fetch("https://api.imgbb.com/1/upload", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: formData.toString(),
+      body: urlParams.toString(),
     });
     
     console.log("ImgBB API response status:", response.status);
