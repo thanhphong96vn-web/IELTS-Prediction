@@ -3,7 +3,7 @@ import formidable from "formidable";
 import fs from "fs";
 import path from "path";
 import { put, del } from "@vercel/blob";
-import FormData from "form-data";
+import axios from "axios";
 
 // Disable body parser để xử lý file upload
 export const config = {
@@ -104,43 +104,28 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
     });
     
     // ImgBB API yêu cầu form-urlencoded với key và image (base64)
-    // Sử dụng URLSearchParams với application/x-www-form-urlencoded
-    const urlParams = new URLSearchParams();
-    urlParams.append("key", imgbbApiKey);
-    urlParams.append("image", base64);
+    // Sử dụng axios để đảm bảo encoding đúng
+    const formData = new URLSearchParams();
+    formData.append("key", imgbbApiKey);
+    formData.append("image", base64);
     
-    const response = await fetch("https://api.imgbb.com/1/upload", {
-      method: "POST",
+    console.log("Sending request to ImgBB API...");
+    const response = await axios.post("https://api.imgbb.com/1/upload", formData.toString(), {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: urlParams.toString(),
+      maxRedirects: 0,
+      validateStatus: (status) => status < 500, // Don't throw on 4xx errors
     });
     
     console.log("ImgBB API response status:", response.status);
-    console.log("ImgBB API response headers:", Object.fromEntries(response.headers.entries()));
+    console.log("ImgBB API response data:", JSON.stringify(response.data, null, 2));
     
-    const responseText = await response.text();
-    console.log("ImgBB API raw response:", responseText.substring(0, 500)); // Log first 500 chars
+    const data = response.data;
     
-    if (!response.ok) {
-      console.error("ImgBB API error response:", responseText);
-      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      try {
-        const errorData = JSON.parse(responseText);
-        errorMessage = errorData.error?.message || errorData.error?.code || errorMessage;
-      } catch {
-        // If not JSON, use text as is
-      }
+    if (response.status !== 200) {
+      const errorMessage = data?.error?.message || data?.error?.code || `HTTP ${response.status}: ${response.statusText}`;
       throw new Error(`ImgBB upload failed: ${errorMessage}`);
-    }
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error("Failed to parse ImgBB response as JSON:", responseText);
-      throw new Error(`ImgBB returned invalid JSON: ${responseText.substring(0, 200)}`);
     }
     
     console.log("ImgBB API response data:", JSON.stringify(data, null, 2));
