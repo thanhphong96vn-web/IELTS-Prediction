@@ -72,6 +72,7 @@ export default async function handler(
     const affiliate = affiliates.find((a: any) => a.id === affiliateId);
 
     if (!affiliate) {
+      console.error("Affiliate not found. Requested ID:", affiliateId);
       return res.status(404).json({ 
         success: false,
         error: "Affiliate not found" 

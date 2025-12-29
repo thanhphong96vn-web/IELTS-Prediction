@@ -1,8 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import fs from "fs";
-import path from "path";
+import { readData, writeData } from "../../../../lib/server/affiliate-data-helper";
 
-const AFFILIATES_FILE = path.join(process.cwd(), "data", "affiliates.json");
+const AFFILIATES_FILE = "affiliates.json";
+const LINKS_FILE = "affiliate-links.json";
+const COMMISSIONS_FILE = "affiliate-commissions.json";
+const VISITS_FILE = "affiliate-visits.json";
 
 interface AffiliateUser {
   id: string;
@@ -15,77 +17,64 @@ interface AffiliateUser {
   emailNotifications: boolean;
 }
 
-function ensureFile() {
-  const dir = path.dirname(AFFILIATES_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(AFFILIATES_FILE)) {
-    fs.writeFileSync(AFFILIATES_FILE, JSON.stringify([], null, 2));
+async function getAffiliates(): Promise<AffiliateUser[]> {
+  try {
+    const result = readData<AffiliateUser[]>(AFFILIATES_FILE);
+    const data = result instanceof Promise ? await result : result;
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error getting affiliates:", error);
+    return [];
   }
 }
 
-function getAffiliates(): AffiliateUser[] {
-  ensureFile();
+async function saveAffiliates(affiliates: AffiliateUser[]): Promise<void> {
+  const result = writeData<AffiliateUser[]>(AFFILIATES_FILE, affiliates);
+  if (result instanceof Promise) {
+    await result;
+  }
+}
+
+async function getLinks(): Promise<any[]> {
   try {
-    const data = fs.readFileSync(AFFILIATES_FILE, "utf-8");
-    return JSON.parse(data);
+    const result = readData<any[]>(LINKS_FILE);
+    const data = result instanceof Promise ? await result : result;
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function saveAffiliates(affiliates: AffiliateUser[]): void {
-  ensureFile();
-  fs.writeFileSync(AFFILIATES_FILE, JSON.stringify(affiliates, null, 2));
+async function getCommissions(): Promise<any[]> {
+  try {
+    const result = readData<any[]>(COMMISSIONS_FILE);
+    const data = result instanceof Promise ? await result : result;
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
-export default function handler(
+async function getVisits(): Promise<any[]> {
+  try {
+    const result = readData<any[]>(VISITS_FILE);
+    const data = result instanceof Promise ? await result : result;
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
     try {
-      const affiliates = getAffiliates();
-      
-      // Get stats for each affiliate
-      const LINKS_FILE = path.join(process.cwd(), "data", "affiliate-links.json");
-      const COMMISSIONS_FILE = path.join(process.cwd(), "data", "affiliate-commissions.json");
-      const VISITS_FILE = path.join(process.cwd(), "data", "affiliate-visits.json");
-
-      function getLinks(): any[] {
-        try {
-          if (!fs.existsSync(LINKS_FILE)) return [];
-          const data = fs.readFileSync(LINKS_FILE, "utf-8");
-          return JSON.parse(data);
-        } catch {
-          return [];
-        }
-      }
-
-      function getCommissions(): any[] {
-        try {
-          if (!fs.existsSync(COMMISSIONS_FILE)) return [];
-          const data = fs.readFileSync(COMMISSIONS_FILE, "utf-8");
-          return JSON.parse(data);
-        } catch {
-          return [];
-        }
-      }
-
-      function getVisits(): any[] {
-        try {
-          if (!fs.existsSync(VISITS_FILE)) return [];
-          const data = fs.readFileSync(VISITS_FILE, "utf-8");
-          return JSON.parse(data);
-        } catch {
-          return [];
-        }
-      }
-
-      const allLinks = getLinks();
-      const allCommissions = getCommissions();
-      const allVisits = getVisits();
+      const affiliates = await getAffiliates();
+      const allLinks = await getLinks();
+      const allCommissions = await getCommissions();
+      const allVisits = await getVisits();
 
       // Enrich affiliates with stats
       const affiliatesWithStats = affiliates.map((affiliate: AffiliateUser) => {
@@ -136,7 +125,7 @@ export default function handler(
         return res.status(400).json({ error: "Action and affiliate ID are required" });
       }
 
-      const affiliates = getAffiliates();
+      const affiliates = await getAffiliates();
       const affiliateIndex = affiliates.findIndex((a) => a.id === affiliateId);
 
       if (affiliateIndex === -1) {
@@ -160,7 +149,7 @@ export default function handler(
       }
 
       affiliates[affiliateIndex] = affiliate;
-      saveAffiliates(affiliates);
+      await saveAffiliates(affiliates);
 
       return res.status(200).json({
         success: true,
