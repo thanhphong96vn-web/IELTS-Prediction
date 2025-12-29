@@ -1,0 +1,260 @@
+import { IPracticeSingle } from "@/pages/ielts-practice-single/api";
+import { useFormContext, Controller } from "react-hook-form";
+import parse from "html-react-parser";
+import { Collapse } from "antd";
+import { twMerge } from "tailwind-merge";
+import { useExamContext } from "@/pages/take-the-test/context";
+import { TextSelectionWrapper } from "@/shared/ui/text-selection";
+import { useMemo } from "react";
+import { countQuestion } from "@/shared/lib";
+
+type IMatrixCategory = {
+  categoryLetter: string;
+  categoryText: string;
+};
+type IMatrixItem = {
+  itemText: string;
+  correctCategoryLetter: string;
+};
+type IQuestion =
+  IPracticeSingle["quizFields"]["passages"][number]["questions"][number] & {
+    matrixQuestion?: {
+      matrixCategories: IMatrixCategory[];
+      matrixItems: IMatrixItem[];
+    };
+  };
+
+const normalizeString = (str: string | undefined | null) => {
+  if (!str) return "";
+  return str.toLowerCase().replace(/[^a-z0-9]/g, "");
+};
+
+export const MatrixQuestion = ({
+  question,
+  startIndex: propStartIndex = 0,
+  readOnly = false,
+}: {
+  question: IQuestion;
+  startIndex?: number;
+  readOnly?: boolean;
+}) => {
+  const { control, getValues } = useFormContext();
+  const { activeQuestionIndex, setActiveQuestionIndex, post } = useExamContext();
+
+  const realStartIndex = useMemo(() => {
+    if (!post?.quizFields?.passages) return propStartIndex;
+    const targetTitle = normalizeString(question.title);
+    const targetFirstItem = normalizeString(question.matrixQuestion?.matrixItems?.[0]?.itemText);
+    let currentCount = 0;
+    for (const passage of post.quizFields.passages) {
+      for (const q of passage.questions) {
+        const currentTitle = normalizeString(q.title);
+        const currentFirstItem = normalizeString(q.matrixQuestion?.matrixItems?.[0]?.itemText);
+        const isTitleMatch = targetTitle && currentTitle && targetTitle === currentTitle;
+        const isItemMatch = targetFirstItem && currentFirstItem && targetFirstItem === currentFirstItem;
+        if (isTitleMatch || isItemMatch) return currentCount;
+        
+        let qCount = 1;
+        const qType = q.type?.[0];
+        if (qType === 'matching' && String(q.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+            let gapCount = 0;
+            (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+            qCount = gapCount > 0 ? gapCount : 1;
+        } else if (qType === 'checkbox') {
+             // @ts-ignore
+             qCount = Number(q.optionChoose) || 1;
+        } else {
+             qCount = countQuestion({ questions: [q] });
+        }
+        if (isNaN(qCount) || qCount < 1) qCount = 1;
+        currentCount += qCount;
+      }
+    }
+    return propStartIndex;
+  }, [post, question, propStartIndex]);
+
+  const matrixData = question.matrixQuestion;
+
+  if (!matrixData || !matrixData.matrixItems?.length || !matrixData.matrixCategories?.length) {
+    return <div className="p-4 border border-red-200 bg-red-50 rounded-md">Dữ liệu không hợp lệ.</div>;
+  }
+
+  const { matrixItems, matrixCategories } = matrixData;
+  const userAnswers = getValues(`answers.${realStartIndex}`) as { [key: number]: string } | undefined;
+
+  const CategoryListJSX = (
+    <div className="max-w-xs border border-black text-base text-black">
+      <div className="p-2 font-bold border-b border-black">
+        <TextSelectionWrapper>First invented or used by</TextSelectionWrapper>
+      </div>
+      <div>
+        {matrixCategories.map((category) => (
+          <div key={category.categoryLetter} className="flex border-b border-black last:border-b-0">
+            <span className="w-16 p-2 text-center font-bold border-r border-black">{category.categoryLetter}</span>
+            <span className="p-2 flex-1"><TextSelectionWrapper>{parse(category.categoryText)}</TextSelectionWrapper></span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const StaticQuestionGridJSX = (
+    <div className="border px-[16px] py-[36px]">
+      <table className="w-full border-collapse text-black text-[15px]">
+        <thead>
+          <tr>
+            <th className="w-[60px] border-b-2 border-black"></th>
+            <th className="w-auto border-b-2 border-black"></th>
+            {matrixCategories.map((cat, index) => (
+              <th key={cat.categoryLetter} className={twMerge("w-[70px] p-2 text-center font-bold border-b-2 border-black", index > 0 && "border-l border-black", index === 0 && "border-l-2 border-black")}>
+                {cat.categoryLetter}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {matrixItems.map((item, itemIndex) => {
+            const absoluteIndex = realStartIndex + itemIndex;
+            const correctAnswer = item.correctCategoryLetter;
+            const userAnswer = userAnswers ? userAnswers[itemIndex] : undefined;
+            const userDidAnswer = userAnswer !== undefined && userAnswer !== null;
+
+            return (
+              <tr key={itemIndex} className="border-b last:border-b-0">
+                <td className="p-2 text-center align-middle font-bold text-[16px] pr-[0]">
+                  <div className="h-[34px] w-7 flex items-center justify-center rounded-sm mx-auto">{absoluteIndex + 1}</div>
+                </td>
+                <td className="p-3 align-middle text-[16px] pl-[0]">
+                  <TextSelectionWrapper>{parse(item.itemText)}</TextSelectionWrapper>
+                </td>
+                {matrixCategories.map((category, index) => {
+                  const currentLetter = category.categoryLetter;
+                  const isCorrectAnswer = currentLetter === correctAnswer;
+                  const isUserAnswer = currentLetter === userAnswer;
+                  const isUserCorrect = userDidAnswer && isUserAnswer && isCorrectAnswer;
+
+                  let cellContent = null;
+                  let cellBgClass = "";
+
+                  if (isCorrectAnswer) {
+                    if (isUserCorrect) {
+                      cellContent = <span className="material-symbols-rounded text-green-500">check_circle</span>;
+                      cellBgClass = "bg-green-100"; 
+                    } else if (!userDidAnswer) {
+                      cellContent = <span className="material-symbols-rounded text-gray-400">check_circle</span>;
+                      cellBgClass = "bg-gray-100"; 
+                    } else {
+                      cellContent = <span className="material-symbols-rounded text-green-500">check_circle</span>;
+                    }
+                  } else if (isUserAnswer) {
+                    cellContent = <span className="material-symbols-rounded text-red-500">cancel</span>;
+                    cellBgClass = "bg-red-100"; 
+                  }
+
+                  return (
+                    <td key={category.categoryLetter} className={twMerge("p-2 text-center align-middle h-[42px]", index > 0 && "border-l", index === 0 && "border-l-2 border-black", cellBgClass)}>
+                      {cellContent}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6" id={`#question-no-${realStartIndex + 1}`}>
+      <div className="heading-group space-y-2">
+        <h3 className="font-bold text-base">
+          {question.title || `Questions ${realStartIndex + 1}–${realStartIndex + matrixItems.length}`}
+        </h3>
+        <div className="leading-[2] prose prose-sm max-w-none">
+          {parse(question.question || question.instructions || "")}
+        </div>
+      </div>
+
+      {!readOnly && (
+        <>
+          <Controller
+            key={realStartIndex} 
+            name={`answers.${realStartIndex}`}
+            control={control}
+            defaultValue={{}}
+            render={({ field }) => {
+              const handleAnswerChange = (itemIndex: number, categoryLetter: string) => {
+                const currentAnswers = field.value || {};
+                const newAnswers = { ...currentAnswers, [itemIndex]: categoryLetter };
+                field.onChange(newAnswers);
+              };
+
+              return (
+                <div className="border px-[16px] py-[36px] max-w-[900] matrixboard">
+                  <table className="w-full border-collapse text-black text-[15px]">
+                    <thead>
+                      <tr>
+                        <th className="w-[60px] border-b-2 border-black"></th>
+                        <th className="w-auto border-b-2 border-black"></th>
+                        {matrixCategories.map((cat, index) => (
+                          <th key={cat.categoryLetter} className={twMerge("w-[70px] p-2 text-center font-bold border-b-2 border-black", index > 0 && "border-l border-black", index === 0 && "border-l-2 border-black")}>
+                            {cat.categoryLetter}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {matrixItems.map((item, itemIndex) => {
+                        const absoluteIndex = realStartIndex + itemIndex;
+                        const isActive = activeQuestionIndex === absoluteIndex;
+                        return (
+                          <tr key={itemIndex} className="border-b last:border-b-0">
+                            <td className="p-2 text-center align-middle font-bold text-[16px] pr-[0]">
+                              <div className={twMerge("h-[34px] w-7 flex items-center justify-center rounded-sm mx-auto", isActive && "border-[2px] border-[#418ec8]")}>
+                                {absoluteIndex + 1}
+                              </div>
+                            </td>
+                            <td className="p-3 align-middle text-[16px] pl-[0]">
+                              <TextSelectionWrapper>{parse(item.itemText)}</TextSelectionWrapper>
+                            </td>
+                            {matrixCategories.map((category, index) => {
+                              const isChecked = field.value?.[itemIndex] === category.categoryLetter;
+                              return (
+                                <td key={category.categoryLetter} className={twMerge("p-2 text-center align-middle", isChecked && "bg-[#bbd8f0]", index > 0 && "border-l", index === 0 && "border-l-2 border-black")}>
+                                  <label className="group flex justify-center items-center cursor-pointer h-full w-full" onClick={(e) => { e.preventDefault(); setActiveQuestionIndex(absoluteIndex); if (!isChecked) handleAnswerChange(itemIndex, category.categoryLetter); }}>
+                                    <input type="radio" className="sr-only" name={`q-${realStartIndex}-matrix-item-${itemIndex}`} value={category.categoryLetter} checked={isChecked} onChange={() => { if (isChecked) return; handleAnswerChange(itemIndex, category.categoryLetter); }} />
+                                    <div className="w-[13px] h-[13px] border-[1px] border-gray-700 rounded-full flex items-center justify-center group-has-[:checked]:border-blue-600">
+                                      <div className="w-[7px] h-[7px] bg-blue-600 rounded-full opacity-0 group-has-[:checked]:opacity-100"></div>
+                                    </div>
+                                  </label>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            }}
+          />
+          {CategoryListJSX}
+        </>
+      )}
+
+      {readOnly && (
+        <div className="space-y-6">
+          {StaticQuestionGridJSX}
+          {CategoryListJSX}
+          {question.explanations && question.explanations[0]?.content && (
+            <div className="mt-4">
+              <Collapse size="small" items={[{ key: `general-explanation-${realStartIndex}`, label: "View General Explanation", children: (<div className="prose prose-sm max-w-none p-2 rounded"><TextSelectionWrapper>{parse(question.explanations[0].content)}</TextSelectionWrapper></div>) }]} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
