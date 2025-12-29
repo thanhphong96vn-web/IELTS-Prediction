@@ -1,63 +1,48 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import fs from "fs";
-import path from "path";
+import { readData } from "../../../../lib/server/affiliate-data-helper";
 
-const AFFILIATES_FILE = path.join(process.cwd(), "data", "affiliates.json");
-const LINKS_FILE = path.join(process.cwd(), "data", "affiliate-links.json");
-const COMMISSIONS_FILE = path.join(process.cwd(), "data", "affiliate-commissions.json");
-const VISITS_FILE = path.join(process.cwd(), "data", "affiliate-visits.json");
+const AFFILIATES_FILE = "affiliates.json";
+const LINKS_FILE = "affiliate-links.json";
+const COMMISSIONS_FILE = "affiliate-commissions.json";
+const VISITS_FILE = "affiliate-visits.json";
 
-function ensureFile(filePath: string) {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify([], null, 2));
-  }
-}
-
-function getAffiliates(): any[] {
-  ensureFile(AFFILIATES_FILE);
+async function getAffiliates(): Promise<any[]> {
   try {
-    const data = fs.readFileSync(AFFILIATES_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(AFFILIATES_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getLinks(): any[] {
-  ensureFile(LINKS_FILE);
+async function getLinks(): Promise<any[]> {
   try {
-    const data = fs.readFileSync(LINKS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(LINKS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getCommissions(): any[] {
-  ensureFile(COMMISSIONS_FILE);
+async function getCommissions(): Promise<any[]> {
   try {
-    const data = fs.readFileSync(COMMISSIONS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(COMMISSIONS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getVisits(): any[] {
-  ensureFile(VISITS_FILE);
+async function getVisits(): Promise<any[]> {
   try {
-    const data = fs.readFileSync(VISITS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<any[]>(VISITS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -72,7 +57,7 @@ export default function handler(
       return res.status(400).json({ error: "Affiliate ID is required" });
     }
 
-    const affiliates = getAffiliates();
+    const affiliates = await getAffiliates();
     const affiliate = affiliates.find((a: any) => a.id === affiliateId);
 
     if (!affiliate) {
@@ -80,9 +65,9 @@ export default function handler(
     }
 
     // Get all related data
-    const links = getLinks().filter((l: any) => l.affiliateId === affiliateId);
-    const commissions = getCommissions().filter((c: any) => c.affiliateId === affiliateId);
-    const visits = getVisits().filter((v: any) => v.affiliateId === affiliateId);
+    const links = (await getLinks()).filter((l: any) => l.affiliateId === affiliateId);
+    const commissions = (await getCommissions()).filter((c: any) => c.affiliateId === affiliateId);
+    const visits = (await getVisits()).filter((v: any) => v.affiliateId === affiliateId);
 
     // Calculate stats
     const totalCommissions = commissions.reduce(

@@ -144,6 +144,33 @@ export default function AffiliateUsersPage() {
     }
   };
 
+  const handlePayCommission = async (commissionId: string, affiliateId: string) => {
+    try {
+      const res = await fetch("/api/admin/affiliate/pay-commission", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ commissionId }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        message.success("Thanh toán hoa hồng thành công");
+        // Refresh affiliate detail to show updated status
+        await fetchAffiliateDetail(affiliateId);
+        // Refresh affiliates list to update stats
+        await fetchAffiliates();
+      } else {
+        message.error(data.message || "Không thể thanh toán hoa hồng");
+      }
+    } catch (error) {
+      console.error("Error paying commission:", error);
+      message.error("Có lỗi xảy ra khi thanh toán");
+    }
+  };
+
   const handleApprove = async (affiliate: AffiliateUser) => {
     setSelectedAffiliate(affiliate);
     setCustomLink(affiliate.customLink || "");
@@ -537,7 +564,7 @@ export default function AffiliateUsersPage() {
                           className="p-3 bg-gray-50 rounded border border-gray-200"
                         >
                           <div className="flex items-center justify-between">
-                            <div>
+                            <div className="flex-1">
                               <div className="font-semibold text-sm">
                                 Order: #{commission.orderId.substring(0, 12)}...
                               </div>
@@ -547,8 +574,10 @@ export default function AffiliateUsersPage() {
                                   {formatPrice(commission.commissionAmount)}
                                 </strong>
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">
-                                {dayjs(commission.createdAt).format("DD/MM/YYYY HH:mm")} |{" "}
+                              <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                <span>
+                                  {dayjs(commission.createdAt).format("DD/MM/YYYY HH:mm")}
+                                </span>
                                 <Tag
                                   color={
                                     commission.status === "paid"
@@ -565,8 +594,25 @@ export default function AffiliateUsersPage() {
                                     ? "Chờ thanh toán"
                                     : "Đã hủy"}
                                 </Tag>
+                                {commission.status === "paid" && commission.paidAt && (
+                                  <span className="text-gray-400">
+                                    (Thanh toán: {dayjs(commission.paidAt).format("DD/MM/YYYY HH:mm")})
+                                  </span>
+                                )}
                               </div>
                             </div>
+                            {commission.status === "pending" && (
+                              <div className="ml-4">
+                                <Button
+                                  type="primary"
+                                  size="small"
+                                  onClick={() => handlePayCommission(commission.id, affiliateDetail.affiliate.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  Thanh toán
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))
@@ -581,3 +627,4 @@ export default function AffiliateUsersPage() {
     </AdminLayout>
   );
 }
+
