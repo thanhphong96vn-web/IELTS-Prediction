@@ -84,6 +84,11 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
     throw new Error("IMGBB_API_KEY chưa được cấu hình. Vui lòng lấy API key miễn phí từ https://api.imgbb.com");
   }
   
+  // Validate API key format (ImgBB keys thường có 32 ký tự hex)
+  if (imgbbApiKey.length < 20 || !/^[a-f0-9]+$/i.test(imgbbApiKey)) {
+    console.warn("⚠️ IMGBB_API_KEY có format không đúng. ImgBB API keys thường là chuỗi hex 32 ký tự.");
+  }
+  
   // Đọc file buffer và convert sang base64
   const fileBuffer = fs.readFileSync(file.filepath);
   const base64 = fileBuffer.toString("base64");
