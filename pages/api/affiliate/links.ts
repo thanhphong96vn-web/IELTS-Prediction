@@ -1,9 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import fs from "fs";
-import path from "path";
+import { readData, writeData } from "../../../lib/server/affiliate-data-helper";
 
-const AFFILIATE_LINKS_FILE = path.join(process.cwd(), "data", "affiliate-links.json");
-const AFFILIATES_FILE = path.join(process.cwd(), "data", "affiliates.json");
+const AFFILIATE_LINKS_FILE = "affiliate-links.json";
+const AFFILIATES_FILE = "affiliates.json";
 
 interface AffiliateLink {
   id: string;
@@ -20,39 +19,26 @@ interface AffiliateUser {
   customLink?: string;
 }
 
-function ensureFile(filePath: string) {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify([], null, 2));
-  }
-}
-
-function getAffiliates(): AffiliateUser[] {
-  ensureFile(AFFILIATES_FILE);
+async function getAffiliates(): Promise<AffiliateUser[]> {
   try {
-    const data = fs.readFileSync(AFFILIATES_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<AffiliateUser[]>(AFFILIATES_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function getLinks(): AffiliateLink[] {
-  ensureFile(AFFILIATE_LINKS_FILE);
+async function getLinks(): Promise<AffiliateLink[]> {
   try {
-    const data = fs.readFileSync(AFFILIATE_LINKS_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<AffiliateLink[]>(AFFILIATE_LINKS_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function saveLink(link: AffiliateLink): void {
-  ensureFile(AFFILIATE_LINKS_FILE);
-  const links = getLinks();
+async function saveLink(link: AffiliateLink): Promise<void> {
+  const links = await getLinks();
   const existingIndex = links.findIndex((l) => l.id === link.id);
   
   if (existingIndex >= 0) {
@@ -62,10 +48,10 @@ function saveLink(link: AffiliateLink): void {
   }
   
   try {
-    fs.writeFileSync(AFFILIATE_LINKS_FILE, JSON.stringify(links, null, 2), "utf-8");
-    console.log(`Link saved successfully to ${AFFILIATE_LINKS_FILE}:`, link.id);
+    await Promise.resolve(writeData<AffiliateLink[]>(AFFILIATE_LINKS_FILE, links));
+    console.log(`✓ Link saved successfully:`, link.id);
   } catch (error) {
-    console.error("Error writing link to file:", error);
+    console.error("Error writing link:", error);
     throw error;
   }
 }
@@ -106,7 +92,7 @@ export default function handler(
       }
 
       // Check if affiliate is approved
-      const affiliates = getAffiliates();
+      const affiliates = await getAffiliates();
       const affiliate = affiliates.find((a) => a.id === affiliateId);
 
       if (!affiliate) {
@@ -126,7 +112,7 @@ export default function handler(
         : generateRandomCode(10);
 
       // Check if link already exists for this affiliate with the same customLink
-      const existingLinks = getLinks();
+      const existingLinks = await getLinks();
       const existingLink = existingLinks.find(
         (l) => l.affiliateId === affiliateId && l.customLink === finalCustomLink
       );
@@ -152,7 +138,7 @@ export default function handler(
       };
 
       try {
-        saveLink(newLink);
+        await saveLink(newLink);
         console.log("Link saved successfully:", newLink.id);
       } catch (error) {
         console.error("Error saving link:", error);
@@ -187,12 +173,12 @@ export default function handler(
         return res.status(400).json({ error: "Affiliate ID is required" });
       }
 
-      const links = getLinks();
+      const links = await getLinks();
       let affiliateLinks = links.filter((l) => l.affiliateId === affiliateId);
 
       // If no links exist, create default one (only once)
       if (affiliateLinks.length === 0) {
-        const affiliates = getAffiliates();
+        const affiliates = await getAffiliates();
         const affiliate = affiliates.find((a) => a.id === affiliateId);
         
         if (affiliate && affiliate.status === "approved") {
@@ -205,7 +191,7 @@ export default function handler(
             customLink: affiliate.customLink,
             createdAt: new Date().toISOString(),
           };
-          saveLink(newLink);
+          await saveLink(newLink);
           affiliateLinks = [newLink];
         }
       }
