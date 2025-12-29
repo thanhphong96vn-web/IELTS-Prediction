@@ -1,8 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import fs from "fs";
-import path from "path";
-
-const AFFILIATES_FILE = path.join(process.cwd(), "data", "affiliates.json");
+import { readData, writeData } from "../../../lib/server/affiliate-data-helper";
 
 interface AffiliateUser {
   id: string;
@@ -14,28 +11,19 @@ interface AffiliateUser {
   emailNotifications: boolean;
 }
 
-function ensureAffiliatesFile() {
-  const dir = path.dirname(AFFILIATES_FILE);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  if (!fs.existsSync(AFFILIATES_FILE)) {
-    fs.writeFileSync(AFFILIATES_FILE, JSON.stringify([], null, 2));
-  }
-}
+const AFFILIATES_FILE = "affiliates.json";
 
-function getAffiliates(): AffiliateUser[] {
-  ensureAffiliatesFile();
+async function getAffiliates(): Promise<AffiliateUser[]> {
   try {
-    const data = fs.readFileSync(AFFILIATES_FILE, "utf-8");
-    return JSON.parse(data);
+    const data = await Promise.resolve(readData<AffiliateUser[]>(AFFILIATES_FILE));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
 }
 
-function saveAffiliate(affiliate: AffiliateUser): void {
-  const affiliates = getAffiliates();
+async function saveAffiliate(affiliate: AffiliateUser): Promise<void> {
+  const affiliates = await getAffiliates();
   const existingIndex = affiliates.findIndex((a) => a.userId === affiliate.userId);
   
   if (existingIndex >= 0) {
@@ -44,7 +32,7 @@ function saveAffiliate(affiliate: AffiliateUser): void {
     affiliates.push(affiliate);
   }
   
-  fs.writeFileSync(AFFILIATES_FILE, JSON.stringify(affiliates, null, 2));
+  await Promise.resolve(writeData<AffiliateUser[]>(AFFILIATES_FILE, affiliates));
 }
 
 export default function handler(
@@ -59,7 +47,7 @@ export default function handler(
         return res.status(400).json({ error: "User ID is required" });
       }
 
-      const affiliates = getAffiliates();
+      const affiliates = await getAffiliates();
       const existing = affiliates.find((a) => a.userId === userId);
 
       if (existing) {
@@ -82,7 +70,7 @@ export default function handler(
         emailNotifications: true,
       };
 
-      saveAffiliate(newAffiliate);
+      await saveAffiliate(newAffiliate);
 
       return res.status(200).json({
         success: true,
@@ -106,7 +94,7 @@ export default function handler(
         return res.status(400).json({ error: "User ID is required" });
       }
 
-      const affiliates = getAffiliates();
+      const affiliates = await getAffiliates();
       const affiliate = affiliates.find((a) => a.userId === userId);
 
       if (!affiliate) {
