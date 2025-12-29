@@ -274,7 +274,18 @@ export default async function handler(
       mimetype: file.mimetype,
       size: file.size,
       useBlob,
+      hasImgBBKey,
     });
+
+    // Kiểm tra kích thước file (ImgBB giới hạn 32MB, nhưng base64 sẽ lớn hơn ~33%)
+    const maxSizeForImgBB = 20 * 1024 * 1024; // 20MB để đảm bảo base64 không vượt quá 32MB
+    if (isVercel && hasImgBBKey && !useBlob && file.size > maxSizeForImgBB) {
+      return res.status(400).json({
+        message: "File quá lớn",
+        error: `File size (${(file.size / 1024 / 1024).toFixed(2)}MB) vượt quá giới hạn cho ImgBB (20MB)`,
+        hint: "Vui lòng giảm kích thước file hoặc cấu hình Vercel Blob Storage để upload file lớn hơn",
+      });
+    }
 
     // Upload file
     let relativePath: string;
