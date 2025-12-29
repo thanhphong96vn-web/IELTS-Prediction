@@ -26,13 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // if (!isAdmin(req)) return res.status(401).json({ message: "Unauthorized" });
 
       const body = req.body as PracticeLibraryBannerConfig;
-      const writeResult = writeConfig<PracticeLibraryBannerConfig>(sectionName, body);
-      
-      // Nếu writeConfig trả về Promise, đợi nó hoàn thành
-      if (writeResult instanceof Promise) {
-        await writeResult;
-      }
-      
+      await Promise.resolve(writeConfig<PracticeLibraryBannerConfig>(sectionName, body));
       return res.status(200).json({ message: "Lưu config thành công" });
     } catch (error) {
       console.error("Error writing config:", error);
