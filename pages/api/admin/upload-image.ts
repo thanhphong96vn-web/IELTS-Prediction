@@ -146,13 +146,10 @@ export default async function handler(
       nodeEnv: process.env.NODE_ENV,
     });
 
-    // Kiểm tra nếu đang trên Vercel nhưng không có Blob token
+    // Cảnh báo nếu đang trên Vercel nhưng không có Blob token
     if (isVercel && !useBlob) {
-      return res.status(500).json({
-        message: "Lỗi cấu hình: BLOB_READ_WRITE_TOKEN chưa được cấu hình trên Vercel",
-        error: "Vui lòng cấu hình BLOB_READ_WRITE_TOKEN trong Vercel Environment Variables",
-        hint: "Tạo Blob Store trong Vercel Dashboard và thêm token vào Environment Variables",
-      });
+      console.warn("⚠️ Running on Vercel without BLOB_READ_WRITE_TOKEN. Upload to filesystem will fail.");
+      // Không chặn ngay, để thử upload và trả về lỗi cụ thể nếu fail
     }
 
     const form = formidable({
@@ -197,12 +194,31 @@ export default async function handler(
         relativePath = await uploadToBlob(file, oldPath as string);
         console.log("Upload successful, path:", relativePath);
       } else {
+        // Thử upload vào filesystem
+        if (isVercel) {
+          // Trên Vercel, filesystem là read-only, không thể upload
+          throw new Error(
+            "Không thể upload file vào filesystem trên Vercel. " +
+            "Vui lòng cấu hình BLOB_READ_WRITE_TOKEN trong Vercel Environment Variables. " +
+            "Xem hướng dẫn trong file VERCEL_BLOB_SETUP.md"
+          );
+        }
         console.log("Uploading to filesystem...");
         relativePath = uploadToFileSystem(file, oldPath as string);
         console.log("Upload successful, path:", relativePath);
       }
     } catch (uploadError) {
       console.error("Upload failed:", uploadError);
+      
+      // Nếu lỗi do thiếu Blob token trên Vercel, trả về thông báo rõ ràng
+      if (isVercel && !useBlob && uploadError instanceof Error) {
+        return res.status(500).json({
+          message: "Lỗi cấu hình: BLOB_READ_WRITE_TOKEN chưa được cấu hình trên Vercel",
+          error: uploadError.message,
+          hint: "Tạo Blob Store trong Vercel Dashboard và thêm token vào Environment Variables. Xem VERCEL_BLOB_SETUP.md để biết chi tiết.",
+        });
+      }
+      
       throw uploadError;
     }
 
