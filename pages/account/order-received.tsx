@@ -65,7 +65,7 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
               <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Đơn hàng của bạn đã được đặt thành công!
           </h1>
           <p className="text-gray-600 text-base leading-relaxed max-w-2xl mx-auto">
@@ -85,9 +85,9 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
           <div className="p-6 space-y-4">
             {/* Bank Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <InfoRow label="Tên tài khoản" value="NGUYEN VAN A" />
-              <InfoRow label="Số tài khoản" value="2901750089" />
-              <InfoRow label="Ngân hàng" value="Vietcombank" />
+              <InfoRow label="Tên tài khoản" value="TRAN PHAN TIEN PHAT" />
+              <InfoRow label="Số tài khoản" value="0481000847499" />
+              <InfoRow label="Ngân hàng" value="Vietcombank (VCB)" />
               <InfoRow label="Số tiền" value={displayAmount.replace("đ", "vnd")} />
               <InfoRow label="Nội dung chuyển khoản" value={displayNote} className="md:col-span-2" />
               <InfoRow label="Trạng thái" value="Chờ thanh toán" className="md:col-span-2" />
@@ -100,13 +100,14 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
               </p>
             </div>
 
-            {/* QR Code Placeholder */}
+            {/* QR Code */}
             <div className="flex flex-col items-center py-6">
-              <div className="w-64 h-64 bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center mb-4">
-                <div className="text-center">
-                  <div className="text-gray-400 text-sm font-medium mb-2">QR CODE</div>
-                  <div className="text-gray-300 text-xs">Placeholder</div>
-                </div>
+              <div className="w-64 h-64 rounded-xl overflow-hidden mb-4 border-2 border-gray-200">
+                <img 
+                  src="/qr.png" 
+                  alt="QR Code chuyển khoản" 
+                  className="w-full h-full object-contain"
+                />
               </div>
 
               {/* Copy Transfer Content Button */}
