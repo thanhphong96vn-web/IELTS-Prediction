@@ -174,12 +174,18 @@ async function uploadToImgBB(file: formidable.File): Promise<string> {
 }
 
 /**
- * Upload file vào filesystem (local development)
+ * Upload file vào filesystem (CHỈ cho local development)
+ * KHÔNG BAO GIỜ được gọi trên Vercel
  */
 function uploadToFileSystem(
   file: formidable.File,
   oldPath?: string
 ): string {
+  // Safety check: không bao giờ chạy trên Vercel
+  if (process.env.VERCEL === "1") {
+    throw new Error("uploadToFileSystem không thể chạy trên Vercel. Sử dụng Blob Storage hoặc ImgBB.");
+  }
+  
   // Tạo tên file unique
   const timestamp = Date.now();
   const originalName = file.originalFilename || "image";
@@ -257,12 +263,23 @@ export default async function handler(
       });
     }
 
+    // Trên Vercel, luôn dùng temp dir (không thể ghi vào filesystem)
+    // Local development mới dùng public/img-admin
+    const uploadDir = isVercel 
+      ? require("os").tmpdir() // Dùng temp dir trên Vercel
+      : path.join(process.cwd(), "public", "img-admin");
+    
+    console.log("Upload directory:", {
+      uploadDir,
+      isVercel,
+      useBlob,
+      hasImgBBKey,
+    });
+    
     const form = formidable({
       maxFileSize: 5 * 1024 * 1024, // 5MB
       keepExtensions: true,
-      uploadDir: useBlob 
-        ? require("os").tmpdir() // Dùng temp dir trên Vercel
-        : path.join(process.cwd(), "public", "img-admin"),
+      uploadDir,
     });
 
     const [fields, files] = await form.parse(req);
@@ -305,23 +322,27 @@ export default async function handler(
     // Upload file
     let relativePath: string;
     try {
-      if (useBlob) {
-        console.log("Uploading to Vercel Blob Storage...");
-        relativePath = await uploadToBlob(file, oldPath as string);
-        console.log("Upload successful, path:", relativePath);
-      } else if (isVercel && hasImgBBKey) {
-        // Trên Vercel nhưng không có Blob token, sử dụng ImgBB làm fallback
-        console.log("Uploading to ImgBB (fallback)...");
-        relativePath = await uploadToImgBB(file);
-        console.log("Upload successful to ImgBB, URL:", relativePath);
-      } else if (!isVercel) {
+      // Đảm bảo không bao giờ gọi uploadToFileSystem trên Vercel
+      if (isVercel) {
+        if (useBlob) {
+          console.log("Uploading to Vercel Blob Storage...");
+          relativePath = await uploadToBlob(file, oldPath as string);
+          console.log("Upload successful, path:", relativePath);
+        } else if (hasImgBBKey) {
+          // Trên Vercel nhưng không có Blob token, sử dụng ImgBB làm fallback
+          console.log("Uploading to ImgBB (fallback)...");
+          relativePath = await uploadToImgBB(file);
+          console.log("Upload successful to ImgBB, URL:", relativePath);
+        } else {
+          // Trên Vercel nhưng không có cả Blob token và ImgBB key
+          // Điều này không nên xảy ra vì đã check ở trên, nhưng để chắc chắn
+          throw new Error("Không có phương thức upload nào được cấu hình trên Vercel. Vui lòng cấu hình BLOB_READ_WRITE_TOKEN hoặc IMGBB_API_KEY");
+        }
+      } else {
         // Local development, upload vào filesystem
-        console.log("Uploading to filesystem...");
+        console.log("Uploading to filesystem (local development)...");
         relativePath = uploadToFileSystem(file, oldPath as string);
         console.log("Upload successful, path:", relativePath);
-      } else {
-        // Trên Vercel nhưng không có cả Blob token và ImgBB key
-        throw new Error("Không có phương thức upload nào được cấu hình");
       }
     } catch (uploadError) {
       console.error("Upload failed:", uploadError);
