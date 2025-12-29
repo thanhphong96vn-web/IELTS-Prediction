@@ -11,24 +11,28 @@ const withRegisterConfig = async (
   let registerConfig: RegisterPageConfig;
 
   try {
-    // Gọi API route nội bộ để đọc config
-    const protocol = context.req.headers["x-forwarded-proto"] || "http";
-    const host = context.req.headers.host || "localhost:3000";
-    const baseUrl = `${protocol}://${host}`;
-
-    const res = await fetch(`${baseUrl}/api/admin/account/register-config`, {
-      headers: {
-        cookie: context.req.headers.cookie || "",
-      },
-    });
-
-    if (res.ok) {
-      registerConfig = await res.json();
-    } else {
-      throw new Error("Failed to fetch config");
+    // Import readConfig trực tiếp thay vì gọi API
+    const { readConfig } = await import("../../lib/server/admin-config-helper");
+    
+    try {
+      const config = await Promise.resolve(
+        readConfig<RegisterPageConfig>("account/register")
+      );
+      
+      // Validate và đảm bảo có backgroundColor
+      registerConfig = {
+        backgroundColor: config?.backgroundColor || "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
+      };
+    } catch (configError: any) {
+      console.warn("Failed to read register config:", configError?.message || configError);
+      // Nếu đọc config fail, dùng config mặc định
+      registerConfig = {
+        backgroundColor: "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
+      };
     }
-  } catch {
-    // Nếu API route fail, dùng config mặc định
+  } catch (error: any) {
+    console.error("Error in withRegisterConfig:", error?.message || error);
+    // Nếu có lỗi, dùng config mặc định
     registerConfig = {
       backgroundColor: "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
     };

@@ -16,13 +16,23 @@ export default async function handler(
 
   try {
     const config = await Promise.resolve(readConfig<RegisterPageConfig>("account/register"));
+    
     // Validate config có đầy đủ properties
-    if (!config || !config.backgroundColor) {
-      throw new Error("Invalid config structure");
+    if (!config) {
+      throw new Error("Config is null or undefined");
     }
-    return res.status(200).json(config);
-  } catch (error) {
-    // Trả về config mặc định nếu file không tồn tại
+    
+    // Đảm bảo có backgroundColor, nếu không thì dùng default
+    const validConfig: RegisterPageConfig = {
+      backgroundColor: config.backgroundColor || "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
+    };
+    
+    return res.status(200).json(validConfig);
+  } catch (error: any) {
+    // Log error để debug
+    console.error("Error reading register config:", error?.message || error);
+    
+    // Trả về config mặc định nếu có lỗi
     const defaultConfig: RegisterPageConfig = {
       backgroundColor: "linear-gradient(rgb(255, 255, 255) 0%, rgb(239, 241, 255) 100%)",
     };
