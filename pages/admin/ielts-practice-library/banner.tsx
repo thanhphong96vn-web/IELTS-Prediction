@@ -20,6 +20,7 @@ function PracticeLibraryBannerPage() {
   );
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
 
   useEffect(() => {
     fetchConfig();
@@ -32,7 +33,12 @@ function PracticeLibraryBannerPage() {
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
       setConfig(data);
-      form.setFieldsValue(data);
+      
+      // Chỉ set form values lần đầu tiên khi load
+      if (!isFormInitialized) {
+        form.setFieldsValue(data);
+        setIsFormInitialized(true);
+      }
     } catch {
       message.error("Error loading config");
     }
@@ -62,8 +68,11 @@ function PracticeLibraryBannerPage() {
       const result = await res.json();
       message.success(result.message || "Config saved successfully");
 
-      // Reload config từ server để đảm bảo đồng bộ
-      await fetchConfig();
+      // Update config state với giá trị đã save để đồng bộ
+      setConfig(configData);
+      
+      // KHÔNG reload form để tránh reset các field user đang nhập
+      // Form values đã được update khi user save, không cần reset
     } catch (error) {
       console.error("Error saving config:", error);
       message.error(
@@ -95,7 +104,15 @@ function PracticeLibraryBannerPage() {
           </div>
         }
       >
-        <Form form={form} layout="vertical" initialValues={config}>
+        <Form 
+          form={form} 
+          layout="vertical" 
+          preserve={true}
+          onValuesChange={(changedValues, allValues) => {
+            // Debug: log khi values thay đổi
+            console.log('Form values changed:', { changedValues, allValues });
+          }}
+        >
           <Collapse
             defaultActiveKey={["listening", "reading"]}
           >
