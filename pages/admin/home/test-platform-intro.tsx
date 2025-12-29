@@ -129,6 +129,8 @@ function TestPlatformIntroPage() {
               <Form.Item
                 name={["title", "line3"]}
                 label="Line 3"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 3" }]}
               >
                 <Input placeholder="Change" />
@@ -136,6 +138,8 @@ function TestPlatformIntroPage() {
               <Form.Item
                 name={["title", "line4"]}
                 label="Line 4"
+                preserve={true}
+                validateTrigger="onBlur"
                 rules={[{ required: true, message: "Please enter line 4" }]}
               >
                 <Input placeholder="Yourself" />
