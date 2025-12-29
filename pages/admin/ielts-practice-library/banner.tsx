@@ -140,7 +140,6 @@ function PracticeLibraryBannerPage() {
           layout="vertical" 
           preserve={true}
           validateTrigger="onBlur"
-          initialValues={config}
         >
           <Collapse
             defaultActiveKey={["listening", "reading"]}
