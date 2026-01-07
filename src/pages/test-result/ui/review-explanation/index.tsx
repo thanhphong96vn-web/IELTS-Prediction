@@ -2,7 +2,7 @@
 
 import { Button, ConfigProvider, Splitter, Collapse } from "antd";
 import { IPracticeSingle, ITestResult } from "../../api";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { QuestionRender } from "@/shared/ui/exam";
 import { FormProvider, useForm } from "react-hook-form";
@@ -416,6 +416,59 @@ function ReviewExplanation({
               // Tách bỏ 'style' ra khỏi attributes để tránh lỗi React khi render
               const { style, ...restAttribs } = domNode.attribs || {};
 
+              // Đảm bảo children là array trước khi truyền vào domToReact
+              const childrenArray = Array.isArray(domNode.children)
+                ? domNode.children
+                : domNode.children
+                ? Object.values(domNode.children)
+                : [];
+
+              // Đảm bảo domToReact trả về React element hợp lệ
+              let reactChildren: any;
+              try {
+                reactChildren = domToReact(childrenArray, parserOptions);
+                
+                // Kiểm tra và xử lý nếu domToReact trả về object thay vì React element
+                if (reactChildren && typeof reactChildren === 'object') {
+                  // Nếu là React element hợp lệ, giữ nguyên
+                  if (React.isValidElement(reactChildren)) {
+                    // OK, giữ nguyên
+                  }
+                  // Nếu là array, giữ nguyên (React có thể render array)
+                  else if (Array.isArray(reactChildren)) {
+                    // OK, giữ nguyên
+                  }
+                  // Nếu là object với numeric keys (như {0: ..., 1: ..., 3: ...}), convert thành array
+                  else if (Object.keys(reactChildren).every(key => !isNaN(Number(key)))) {
+                    reactChildren = Object.values(reactChildren);
+                  }
+                  // Nếu là object khác, wrap trong fragment để tránh lỗi
+                  else {
+                    reactChildren = <>{reactChildren}</>;
+                  }
+                }
+              } catch (error) {
+                console.error("Error in domToReact:", error);
+                // Fallback: render children trực tiếp bằng dangerouslySetInnerHTML
+                reactChildren = null;
+              }
+              
+              // Nếu reactChildren là null hoặc undefined, fallback về dangerouslySetInnerHTML
+              if (!reactChildren && domNode.children) {
+                const fallbackHtml = Array.isArray(domNode.children)
+                  ? domNode.children.map((child: any) => child.data || child.children || '').join('')
+                  : Object.values(domNode.children).map((child: any) => child.data || child.children || '').join('');
+                return (
+                  <>
+                    <HeadingAnswerBlock
+                      userAnswer={userAnswerText}
+                      correctAnswer={correctAnswerText}
+                    />
+                    <p {...restAttribs} dangerouslySetInnerHTML={{ __html: fallbackHtml }} />
+                  </>
+                );
+              }
+
               return (
                 <>
                   <HeadingAnswerBlock
@@ -424,13 +477,33 @@ function ReviewExplanation({
                   />
                   {/* Sử dụng restAttribs thay vì domNode.attribs */}
                   <p {...restAttribs}>
-                    {domToReact(domNode.children, parserOptions)}
+                    {reactChildren}
                   </p>
                 </>
               );
             }
           }
-          return domNode;
+          // Đảm bảo không return object trực tiếp
+          // Nếu domNode có children, convert thành React element
+          if (domNode.children && (Array.isArray(domNode.children) || Object.keys(domNode.children).length > 0)) {
+            const childrenArray = Array.isArray(domNode.children)
+              ? domNode.children
+              : Object.values(domNode.children);
+            try {
+              const reactChildren = domToReact(childrenArray, parserOptions);
+              // Nếu reactChildren là object với numeric keys, convert thành array
+              if (reactChildren && typeof reactChildren === 'object' && !React.isValidElement(reactChildren) && !Array.isArray(reactChildren)) {
+                if (Object.keys(reactChildren).every(key => !isNaN(Number(key)))) {
+                  return Object.values(reactChildren);
+                }
+              }
+              return reactChildren;
+            } catch (error) {
+              console.error("Error converting domNode to React element:", error);
+            }
+          }
+          // Fallback: return undefined để parse() tự xử lý
+          return undefined;
         },
       };
 
