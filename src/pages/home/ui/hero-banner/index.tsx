@@ -41,11 +41,22 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
     featureCards.find(
       (card) => Array.isArray(card.avatars) && card.avatars.length > 0
     ) || featureCards[1] || null;
+  // Validate và format backgroundImage URL
+  const getBackgroundImageUrl = () => {
+    if (!backgroundImage) return '';
+    // Nếu là URL external, dùng trực tiếp
+    if (isExternalUrl(backgroundImage)) {
+      return backgroundImage;
+    }
+    // Nếu là relative path, đảm bảo có dấu / ở đầu
+    return backgroundImage.startsWith('/') ? backgroundImage : `/${backgroundImage}`;
+  };
+
   return (
     <div
       className="relative overflow-hidden py-12 md:py-35"
       style={{
-        background: `url('${backgroundImage}') no-repeat center center`,
+        background: backgroundImage ? `url('${getBackgroundImageUrl()}') no-repeat center center` : 'none',
         backgroundSize: "cover",
       }}
     >

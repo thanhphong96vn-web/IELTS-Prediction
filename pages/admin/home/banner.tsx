@@ -17,19 +17,45 @@ function HeroBannerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    // Set form values mỗi khi config thay đổi
+    if (config) {
+      console.log("Config loaded, setting form values:", config);
+      
+      // Đảm bảo featureCards có avatars là array (không phải undefined/null)
+      // Filter out invalid URLs (fakepath, empty strings)
+      const normalizedConfig = {
+        ...config,
+        featureCards: (config.featureCards || []).map((card: any) => ({
+          ...card,
+          avatars: Array.isArray(card.avatars) 
+            ? card.avatars.filter((url: string) => {
+                if (!url || !url.trim()) return false;
+                if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) return false;
+                return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+              })
+            : [],
+        })),
+      };
+      
+      console.log("Normalized config:", normalizedConfig);
+      
+      // Set form values với normalized config
+      // Không reset form để giữ Form.List state
+      form.setFieldsValue(normalizedConfig);
+      setIsFormInitialized(true);
+    }
+  }, [config, form]);
+
   const fetchConfig = async () => {
     try {
       const res = await fetch("/api/admin/home/hero-banner");
       if (!res.ok) throw new Error("Failed to load config");
       const data = await res.json();
+      console.log("Fetched config from API:", data);
       setConfig(data);
-      
-      // Chỉ set form values lần đầu tiên khi load
-      if (!isFormInitialized) {
-        form.setFieldsValue(data);
-        setIsFormInitialized(true);
-      }
-    } catch {
+    } catch (error) {
+      console.error("Error fetching config:", error);
       message.error("Error loading config");
     }
   };
@@ -37,6 +63,7 @@ function HeroBannerPage() {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      console.log("Saving form values:", values);
       setSaving(true);
 
       const res = await fetch("/api/admin/home/hero-banner", {
@@ -45,12 +72,21 @@ function HeroBannerPage() {
         body: JSON.stringify(values),
       });
 
-      if (!res.ok) throw new Error("Save failed");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Save failed");
+      }
 
+      const result = await res.json();
+      console.log("Save response:", result);
+      
       message.success("Config saved successfully");
-      setConfig(values);
-    } catch {
-      message.error("Error saving config");
+      
+      // Reload config sau khi save để đảm bảo đồng bộ
+      await fetchConfig();
+    } catch (error) {
+      console.error("Error saving config:", error);
+      message.error(error instanceof Error ? error.message : "Error saving config");
     } finally {
       setSaving(false);
     }
@@ -78,7 +114,7 @@ function HeroBannerPage() {
         <Form 
           form={form} 
           layout="vertical" 
-          preserve={true}
+          preserve={false}
           validateTrigger="onBlur"
         >
           <Collapse
@@ -234,7 +270,10 @@ function HeroBannerPage() {
 
             {/* Feature Cards Section */}
             <Panel header="Feature Cards" key="featureCards">
-              <Form.List name="featureCards">
+              <Form.List 
+                name="featureCards"
+                initialValue={config?.featureCards || []}
+              >
                 {(fields, { add, remove }) => (
                   <>
                     {fields.map((field, index) => (
@@ -289,42 +328,56 @@ function HeroBannerPage() {
                         >
                           <Input placeholder="Admission Complete" />
                         </Form.Item>
-                        <Form.List name={[field.name, "avatars"]}>
+                        <Form.List 
+                          name={[field.name, "avatars"]}
+                          initialValue={config?.featureCards?.[index]?.avatars || []}
+                        >
                           {(
                             avatarFields,
                             { add: addAvatar, remove: removeAvatar }
-                          ) => (
-                            <>
-                              {avatarFields.map((avatarField) => (
-                                <Form.Item
-                                  key={avatarField.key}
-                                  name={avatarField.name}
-                                  label={`Avatar ${avatarField.name + 1}`}
-                                >
-                                  <div className="space-y-2">
-                                    <ImageUpload />
-                                    <Button
-                                      type="link"
-                                      danger
-                                      onClick={() =>
-                                        removeAvatar(avatarField.name)
-                                      }
-                                      className="p-0"
+                          ) => {
+                            // Debug: Log avatar fields
+                            console.log(`Card ${index + 1} avatar fields:`, avatarFields);
+                            return (
+                              <>
+                                {avatarFields.map((avatarField) => {
+                                  console.log(`Rendering avatar field:`, avatarField);
+                                  return (
+                                    <Form.Item
+                                      key={avatarField.key}
+                                      name={avatarField.name}
+                                      label={`Avatar ${avatarField.name + 1}`}
+                                      preserve={true}
                                     >
-                                      Delete this Avatar
-                                    </Button>
-                                  </div>
-                                </Form.Item>
-                              ))}
-                              <Button
-                                type="dashed"
-                                onClick={() => addAvatar()}
-                                className="w-full"
-                              >
-                                + Add Avatar
-                              </Button>
-                            </>
-                          )}
+                                      <div className="space-y-2">
+                                        <ImageUpload />
+                                        <Button
+                                          type="link"
+                                          danger
+                                          onClick={() =>
+                                            removeAvatar(avatarField.name)
+                                          }
+                                          className="p-0"
+                                        >
+                                          Delete this Avatar
+                                        </Button>
+                                      </div>
+                                    </Form.Item>
+                                  );
+                                })}
+                                <Button
+                                  type="dashed"
+                                  onClick={() => {
+                                    console.log(`Adding avatar to card ${index + 1}`);
+                                    addAvatar();
+                                  }}
+                                  className="w-full"
+                                >
+                                  + Add Avatar
+                                </Button>
+                              </>
+                            );
+                          }}
                         </Form.List>
                       </Card>
                     ))}
