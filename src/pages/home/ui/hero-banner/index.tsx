@@ -198,32 +198,42 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
               </div>
 
               {/* Main Banner Image */}
-              <div className="relative aspect-square max-w-lg mx-auto w-full">
-                <div className="relative w-full h-full rounded-2xl overflow-hidden max-h-[600px]">
-                  {isExternalUrl(bannerImage) ? (
-                    // External URL (ImgBB) - use regular img tag
-                    <img
-                      src={bannerImage}
-                      alt="Banner"
-                      className="w-full h-full object-contain"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
-                    />
-                  ) : (
-                    // Local/relative URL - use Next.js Image
-                    <Image
-                      src={bannerImage}
-                      alt="Banner"
-                      fill
-                      className="object-contain"
-                      priority
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      style={{ maxWidth: "100%", maxHeight: "100%" }}
-                      unoptimized={bannerImage.startsWith('/img-admin/')}
-                    />
-                  )}
+              {bannerImage && isValidImageUrl(bannerImage) && (
+                <div className="relative aspect-square max-w-lg mx-auto w-full">
+                  <div className="relative w-full h-full rounded-2xl overflow-hidden max-h-[600px]">
+                    {isExternalUrl(bannerImage) ? (
+                      // External URL (ImgBB) - use regular img tag
+                      <img
+                        src={bannerImage}
+                        alt="Banner"
+                        className="w-full h-full object-contain"
+                        style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        onError={(e) => {
+                          console.error("Failed to load banner image:", bannerImage);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      // Local/relative URL - use Next.js Image
+                      <Image
+                        src={bannerImage}
+                        alt="Banner"
+                        fill
+                        className="object-contain"
+                        priority
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        unoptimized={bannerImage.startsWith('/img-admin/')}
+                        onError={(e) => {
+                          console.error("Failed to load banner image:", bannerImage);
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
+              )}
 
-                {/* Feature Card 1 - Top Right */}
+              {/* Feature Card 1 - Top Right */}
                 {featureCards[0] && (
                   <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float max-w-[200px] sm:max-w-[250px]">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">

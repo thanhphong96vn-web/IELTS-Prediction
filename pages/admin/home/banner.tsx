@@ -40,10 +40,16 @@ function HeroBannerPage() {
       
       console.log("Normalized config:", normalizedConfig);
       
-      // Set form values với normalized config
-      // Không reset form để giữ Form.List state
-      form.setFieldsValue(normalizedConfig);
-      setIsFormInitialized(true);
+      // Reset form với normalized config để Form.List được khởi tạo lại đúng cách
+      form.resetFields();
+      
+      // Set form values sau khi reset
+      // Sử dụng requestAnimationFrame để đảm bảo form đã reset xong và DOM đã update
+      requestAnimationFrame(() => {
+        form.setFieldsValue(normalizedConfig);
+        setIsFormInitialized(true);
+        console.log("Form values set:", normalizedConfig);
+      });
     }
   }, [config, form]);
 
@@ -92,7 +98,7 @@ function HeroBannerPage() {
     }
   };
 
-  if (!config) {
+  if (!config || !isFormInitialized) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
@@ -272,7 +278,7 @@ function HeroBannerPage() {
             <Panel header="Feature Cards" key="featureCards">
               <Form.List 
                 name="featureCards"
-                initialValue={config?.featureCards || []}
+                key={config ? JSON.stringify(config.featureCards?.map((c: any) => c.avatars?.length || 0)) : 'loading'}
               >
                 {(fields, { add, remove }) => (
                   <>
@@ -330,7 +336,7 @@ function HeroBannerPage() {
                         </Form.Item>
                         <Form.List 
                           name={[field.name, "avatars"]}
-                          initialValue={config?.featureCards?.[index]?.avatars || []}
+                          key={`avatars-${field.key}-${config?.featureCards?.[index]?.avatars?.length || 0}`}
                         >
                           {(
                             avatarFields,
