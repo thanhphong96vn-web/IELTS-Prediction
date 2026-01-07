@@ -41,6 +41,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
     featureCards.find(
       (card) => Array.isArray(card.avatars) && card.avatars.length > 0
     ) || featureCards[1] || null;
+
   // Validate và format backgroundImage URL
   const getBackgroundImageUrl = () => {
     if (!backgroundImage) return '';
@@ -234,8 +235,8 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
               )}
 
               {/* Feature Card 1 - Top Right */}
-                {featureCards[0] && (
-                  <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float max-w-[200px] sm:max-w-[250px]">
+              {featureCards[0] && (
+                <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float max-w-[200px] sm:max-w-[250px]">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                       {isExternalUrl(featureCards[0].icon) ? (
                         <img
@@ -269,11 +270,11 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                       </p>
                     </div>
                   </div>
-                )}
+              )}
 
-                {/* Enrolled Card - Middle Left */}
-                {enrolledCard && (
-                  <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-3 sm:p-5 animate-float-delayed max-w-[200px] sm:max-w-[250px]">
+              {/* Enrolled Card - Middle Left */}
+              {enrolledCard && (
+                <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-3 sm:p-5 animate-float-delayed max-w-[200px] sm:max-w-[250px]">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                         {isExternalUrl(enrolledCard.icon) ? (
@@ -352,11 +353,11 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                       </div>
                     )}
                   </div>
-                )}
+              )}
 
-                {/* Feature Card 2 - Bottom Right */}
-                {featureCards[2] && (
-                  <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float-delayed-2 max-w-[200px] sm:max-w-[250px]">
+              {/* Feature Card 2 - Bottom Right */}
+              {featureCards[2] && (
+                <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float-delayed-2 max-w-[200px] sm:max-w-[250px]">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
                       {isExternalUrl(featureCards[2].icon) ? (
                         <img
@@ -390,8 +391,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                       </p>
                     </div>
                   </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>
