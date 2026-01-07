@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button, Input, Form, Card, Space, Collapse, message } from "antd";
 import type { HeroBannerConfig } from "@/shared/types/admin-config";
 import { ImageUpload } from "@/shared/ui/image-upload";
@@ -12,6 +12,24 @@ function HeroBannerPage() {
   const [form] = Form.useForm();
   const [isFormInitialized, setIsFormInitialized] = useState(false);
 
+  // Normalize config để đảm bảo avatars là array hợp lệ
+  const normalizedConfig = useMemo(() => {
+    if (!config) return null;
+    return {
+      ...config,
+      featureCards: (config.featureCards || []).map((card: any) => ({
+        ...card,
+        avatars: Array.isArray(card.avatars) && card.avatars.length > 0
+          ? card.avatars.filter((url: string) => {
+              if (!url || !url.trim()) return false;
+              if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) return false;
+              return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+            })
+          : [],
+      })),
+    };
+  }, [config]);
+
   useEffect(() => {
     fetchConfig();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -19,26 +37,8 @@ function HeroBannerPage() {
 
   useEffect(() => {
     // Set form values mỗi khi config thay đổi và form chưa được initialized
-    if (config && !isFormInitialized) {
-      console.log("Config loaded, initializing form with:", config);
-      
-      // Đảm bảo featureCards có avatars là array (không phải undefined/null)
-      // Filter out invalid URLs (fakepath, empty strings)
-      const normalizedConfig = {
-        ...config,
-        featureCards: (config.featureCards || []).map((card: any) => ({
-          ...card,
-          avatars: Array.isArray(card.avatars) && card.avatars.length > 0
-            ? card.avatars.filter((url: string) => {
-                if (!url || !url.trim()) return false;
-                if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) return false;
-                return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
-              })
-            : [],
-        })),
-      };
-      
-      console.log("Normalized config:", normalizedConfig);
+    if (normalizedConfig && !isFormInitialized) {
+      console.log("Config loaded, initializing form with:", normalizedConfig);
       console.log("Feature cards with avatars:", normalizedConfig.featureCards.map((c: any, i: number) => ({
         index: i,
         avatars: c.avatars,
@@ -46,14 +46,11 @@ function HeroBannerPage() {
       })));
       
       // Reset form và set values
-      // Sử dụng setTimeout để đảm bảo form đã được mount hoàn toàn
+      form.resetFields();
+      form.setFieldsValue(normalizedConfig);
+      
+      // Verify form values sau khi set
       setTimeout(() => {
-        form.resetFields();
-        
-        // Set values từng phần để đảm bảo Form.List được khởi tạo đúng
-        form.setFieldsValue(normalizedConfig);
-        
-        // Verify form values sau khi set
         const formValues = form.getFieldsValue();
         console.log("Form values after setFieldsValue:", formValues);
         console.log("Feature cards in form:", formValues?.featureCards?.map((c: any, i: number) => ({
@@ -62,16 +59,10 @@ function HeroBannerPage() {
           avatarsLength: c.avatars?.length || 0
         })));
         
-        // Force update form để đảm bảo Form.List được render lại
-        form.setFieldsValue({
-          ...formValues,
-          featureCards: normalizedConfig.featureCards
-        });
-        
         setIsFormInitialized(true);
-      }, 200);
+      }, 100);
     }
-  }, [config, form, isFormInitialized]);
+  }, [normalizedConfig, form, isFormInitialized]);
 
   const fetchConfig = async () => {
     try {
@@ -160,6 +151,7 @@ function HeroBannerPage() {
           layout="vertical" 
           preserve={false}
           validateTrigger="onBlur"
+          initialValues={normalizedConfig || {}}
         >
           <Collapse
             defaultActiveKey={[
@@ -373,8 +365,6 @@ function HeroBannerPage() {
                         </Form.Item>
                         <Form.List 
                           name={[field.name, "avatars"]}
-                          initialValue={config?.featureCards?.[index]?.avatars || []}
-                          key={`avatars-${field.key}-${isFormInitialized ? (config?.featureCards?.[index]?.avatars?.length || 0) : 'loading'}`}
                         >
                           {(
                             avatarFields,
