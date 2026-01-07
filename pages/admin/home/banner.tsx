@@ -11,6 +11,7 @@ function HeroBannerPage() {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
   const [isFormInitialized, setIsFormInitialized] = useState(false);
+  const [avatarSyncDone, setAvatarSyncDone] = useState<Record<number, boolean>>({});
 
   // Normalize config để đảm bảo avatars là array hợp lệ
   const normalizedConfig = useMemo(() => {
@@ -118,6 +119,7 @@ function HeroBannerPage() {
       
       // Reset form state và reload config để đảm bảo đồng bộ
       setIsFormInitialized(false);
+      setAvatarSyncDone({}); // Reset avatar sync state
       await fetchConfig();
     } catch (error) {
       console.error("Error saving config:", error);
@@ -376,8 +378,13 @@ function HeroBannerPage() {
                             const initialAvatars = normalizedConfig?.featureCards?.[index]?.avatars || [];
                             
                             // Sync avatarFields với config avatars khi form được initialized
-                            useEffect(() => {
-                              if (isFormInitialized && normalizedConfig && initialAvatars.length > 0 && avatarFields.length === 0) {
+                            // Chỉ sync một lần cho mỗi card
+                            if (isFormInitialized && normalizedConfig && initialAvatars.length > 0 && avatarFields.length === 0 && !avatarSyncDone[index]) {
+                              // Mark as synced để tránh infinite loop
+                              setAvatarSyncDone(prev => ({ ...prev, [index]: true }));
+                              
+                              // Sử dụng setTimeout để tránh update trong render
+                              setTimeout(() => {
                                 console.log(`Card ${index + 1}: Manually adding ${initialAvatars.length} avatars to Form.List`);
                                 initialAvatars.forEach(() => {
                                   addAvatar();
@@ -388,8 +395,8 @@ function HeroBannerPage() {
                                     featureCards: normalizedConfig.featureCards
                                   });
                                 }, 50);
-                              }
-                            }, [isFormInitialized, normalizedConfig, initialAvatars.length, avatarFields.length, index, addAvatar, form]);
+                              }, 0);
+                            }
                             
                             console.log(`Card ${index + 1}:`, {
                               avatarFieldsCount: avatarFields.length,
