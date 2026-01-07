@@ -373,7 +373,23 @@ function HeroBannerPage() {
                             // Debug: Log avatar fields và form values
                             const formValues = form.getFieldsValue();
                             const cardAvatars = formValues?.featureCards?.[index]?.avatars || [];
-                            const initialAvatars = config?.featureCards?.[index]?.avatars || [];
+                            const initialAvatars = normalizedConfig?.featureCards?.[index]?.avatars || [];
+                            
+                            // Sync avatarFields với config avatars khi form được initialized
+                            useEffect(() => {
+                              if (isFormInitialized && normalizedConfig && initialAvatars.length > 0 && avatarFields.length === 0) {
+                                console.log(`Card ${index + 1}: Manually adding ${initialAvatars.length} avatars to Form.List`);
+                                initialAvatars.forEach(() => {
+                                  addAvatar();
+                                });
+                                // Set values sau khi add fields
+                                setTimeout(() => {
+                                  form.setFieldsValue({
+                                    featureCards: normalizedConfig.featureCards
+                                  });
+                                }, 50);
+                              }
+                            }, [isFormInitialized, normalizedConfig, initialAvatars.length, avatarFields.length, index, addAvatar, form]);
                             
                             console.log(`Card ${index + 1}:`, {
                               avatarFieldsCount: avatarFields.length,
@@ -383,11 +399,6 @@ function HeroBannerPage() {
                               configAvatars: initialAvatars,
                               configAvatarsLength: initialAvatars.length,
                             });
-                            
-                            // Nếu form values có avatars nhưng avatarFields rỗng, cần sync lại
-                            if (cardAvatars.length > 0 && avatarFields.length === 0 && isFormInitialized) {
-                              console.warn(`Card ${index + 1}: Form has avatars but avatarFields is empty. This is a Form.List initialization issue.`);
-                            }
                             
                             return (
                               <>
