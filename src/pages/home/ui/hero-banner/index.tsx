@@ -35,6 +35,12 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
     featureCards,
     decorativeShape,
   } = config;
+
+  // Chọn card có avatars (nếu có), fallback về card thứ 2
+  const enrolledCard =
+    featureCards.find(
+      (card) => Array.isArray(card.avatars) && card.avatars.length > 0
+    ) || featureCards[1] || null;
   return (
     <div
       className="relative overflow-hidden py-12 md:py-35"
@@ -245,20 +251,20 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                 )}
 
                 {/* Enrolled Card - Middle Left */}
-                {featureCards[1] && (
+                {enrolledCard && (
                   <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-3 sm:p-5 animate-float-delayed max-w-[200px] sm:max-w-[250px]">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-                        {isExternalUrl(featureCards[1].icon) ? (
+                        {isExternalUrl(enrolledCard.icon) ? (
                           <img
-                            src={featureCards[1].icon}
+                            src={enrolledCard.icon}
                             alt="Icon"
                             className="object-contain w-full h-full"
                             style={{ width: "48px", height: "48px" }}
                           />
                         ) : (
                           <Image
-                            src={featureCards[1].icon}
+                            src={enrolledCard.icon}
                             alt="Icon"
                             width={48}
                             height={48}
@@ -268,23 +274,23 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        {featureCards[1].value && (
+                        {enrolledCard.value && (
                           <h6 className="font-bold text-lg sm:text-xl text-gray-900 wrap-break-word line-clamp-1">
-                            {featureCards[1].value}
+                            {enrolledCard.value}
                           </h6>
                         )}
                         <p
                           className="text-xs sm:text-sm wrap-break-word line-clamp-2"
                           style={{ color: "#22c55e" }}
                         >
-                          {featureCards[1].subtitle}
+                          {enrolledCard.subtitle}
                         </p>
                       </div>
                     </div>
                     {/* Profile Avatars */}
-                    {featureCards[1].avatars && (
+                    {enrolledCard.avatars && (
                       <div className="flex -space-x-2 flex-wrap">
-                        {featureCards[1].avatars
+                        {enrolledCard.avatars
                           .slice(0, 5)
                           .map((avatar, i) => {
                             // Bỏ qua avatar không hợp lệ nhưng không chặn cả mảng
