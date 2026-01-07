@@ -384,6 +384,145 @@ html.text-size-xlarge .text-\[14px\] {
   padding-bottom: 0 !important;
 }
 
+/* Fix Plyr settings menu bị che bởi overflow-hidden */
+.plyr__menu {
+  z-index: 10000 !important;
+  position: absolute !important;
+  overflow: visible !important;
+}
+
+.plyr__menu__container {
+  overflow: visible !important;
+  z-index: 10000 !important;
+  position: relative !important;
+  margin-bottom: 0 !important
+}
+
+/* Đảm bảo container của Plyr không clip menu */
+.plyr__controls__item[data-plyr="settings"] {
+  position: relative !important;
+  z-index: 10000 !important;
+  overflow: visible !important;
+}
+
+.plyr__menu .plyr__control svg {
+  margin-right: -4.5px;
+}
+
+.plyr__controls__item[data-plyr="settings"] .plyr__menu {
+  overflow: visible !important;
+}
+
+/* Đảm bảo parent containers không clip menu */
+.plyr__controls {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.plyr {
+  overflow: visible !important;
+}
+
+/* Fix cho test result page - đảm bảo menu settings không bị clip */
+.plyr__menu__container > .plyr__menu__value {
+  overflow: visible !important;
+}
+
+.plyr__menu__container > .plyr__menu__value > ul {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 10001 !important;
+}
+
+/* Đảm bảo tất cả containers cha của Plyr không clip menu */
+.plyr__controls__item {
+  overflow: visible !important;
+}
+
+/* Fix cho Splitter.Panel - đảm bảo không clip menu */
+.ant-split-panel {
+  overflow: visible !important;
+}
+
+.ant-split-panel > div {
+  overflow: visible !important;
+}
+
+/* Fix cụ thể cho Splitter.Panel chứa Plyr */
+.ant-split-panel:has(.plyr) {
+  overflow: visible !important;
+}
+
+.ant-split-panel:has(.plyr) > div {
+  overflow: visible !important;
+}
+
+/* Đảm bảo Splitter container không clip */
+.ant-split {
+  overflow: visible !important;
+}
+
+.ant-split > div {
+  overflow: visible !important;
+}
+
+/* Override cho test result page cụ thể */
+.plyr__menu,
+.plyr__menu__container,
+.plyr__menu__container > * {
+  overflow: visible !important;
+  clip: unset !important;
+  clip-path: none !important;
+}
+
+/* Đảm bảo Splitter.Panel không clip menu của Plyr */
+.ant-split-panel:has(.plyr) {
+  overflow: visible !important;
+}
+
+.ant-split-panel:has(.plyr) > div {
+  overflow: visible !important;
+}
+
+/* Fix cụ thể cho test result listening panel */
+.ant-split-panel:has(.plyr__controls) {
+  overflow: visible !important;
+}
+
+/* Đảm bảo menu được render đúng cách */
+.plyr__menu[role="menu"] {
+  position: absolute !important;
+  z-index: 10002 !important;
+  overflow: visible !important;
+  max-height: none !important;
+  clip: unset !important;
+  clip-path: none !important;
+}
+
+/* Fix cho tất cả containers cha của Plyr menu */
+.plyr__menu__container,
+.plyr__menu__container > *,
+.plyr__controls__item[data-plyr="settings"],
+.plyr__controls__item[data-plyr="settings"] > * {
+  overflow: visible !important;
+  clip: unset !important;
+  clip-path: none !important;
+}
+
+/* Đảm bảo Splitter và Panel không clip menu */
+.ant-split:has(.plyr),
+.ant-split-panel:has(.plyr),
+.ant-split-panel:has(.plyr) > div:not(.ex-right):not([class*="overflow-y-auto"]) {
+  overflow: visible !important;
+  overflow-y: visible !important;
+}
+
+/* Chỉ giữ overflow-y-auto cho explanations area */
+.ant-split-panel:has(.plyr) > div.overflow-y-auto:has(.ex-right) {
+  overflow-y: auto !important;
+  overflow-x: visible !important;
+}
+
 .fill-dark {
   filter: brightness(0) saturate(100%);
 }

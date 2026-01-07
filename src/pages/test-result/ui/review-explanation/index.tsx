@@ -637,6 +637,141 @@ function ReviewExplanation({
   const isReading = quiz.quizFields.skill[0] === "reading";
   const isListening = quiz.quizFields.skill[0] === "listening";
 
+  // Effect để fix menu settings bị clip khi Plyr được render
+  useEffect(() => {
+    if (!isListening) return;
+    
+    const fixPlyrMenu = () => {
+      // Tìm tất cả menu của Plyr và đảm bảo chúng không bị clip
+      const plyrMenus = document.querySelectorAll('.plyr__menu');
+      plyrMenus.forEach((menu: any) => {
+        if (menu) {
+          menu.style.overflow = 'visible';
+          menu.style.zIndex = '10000';
+          menu.style.position = 'absolute';
+          menu.style.clip = 'unset';
+          menu.style.clipPath = 'none';
+          menu.style.maxHeight = 'none';
+          menu.style.height = 'auto';
+        }
+      });
+      
+      // Đảm bảo container không clip
+      const plyrContainers = document.querySelectorAll('.plyr__menu__container');
+      plyrContainers.forEach((container: any) => {
+        if (container) {
+          container.style.overflow = 'visible';
+          container.style.zIndex = '10000';
+          container.style.clip = 'unset';
+          container.style.clipPath = 'none';
+          container.style.maxHeight = 'none';
+        }
+      });
+      
+      // Đảm bảo settings button container không clip
+      const settingsButtons = document.querySelectorAll('[data-plyr="settings"]');
+      settingsButtons.forEach((button: any) => {
+        if (button) {
+          button.style.overflow = 'visible';
+          button.style.zIndex = '10000';
+          button.style.clip = 'unset';
+          button.style.clipPath = 'none';
+        }
+      });
+      
+      // Đảm bảo tất cả parent containers không clip
+      const allParents = document.querySelectorAll('.plyr, .plyr__controls, .plyr__controls__item');
+      allParents.forEach((parent: any) => {
+        if (parent) {
+          const computedStyle = window.getComputedStyle(parent);
+          if (computedStyle.overflow === 'hidden' || computedStyle.overflowY === 'hidden' || computedStyle.overflowX === 'hidden') {
+            parent.style.overflow = 'visible';
+            parent.style.overflowY = 'visible';
+            parent.style.overflowX = 'visible';
+          }
+        }
+      });
+      
+      // Tìm và fix Splitter.Panel nếu có
+      const splitterPanels = document.querySelectorAll('.ant-split-panel');
+      splitterPanels.forEach((panel: any) => {
+        if (panel && panel.querySelector('.plyr')) {
+          const computedStyle = window.getComputedStyle(panel);
+          if (computedStyle.overflow === 'hidden' || computedStyle.overflowY === 'hidden') {
+            panel.style.overflow = 'visible';
+            panel.style.overflowY = 'visible';
+          }
+          // Fix tất cả children của panel
+          const panelChildren = panel.querySelectorAll('*');
+          panelChildren.forEach((child: any) => {
+            if (child && child !== panel.querySelector('.plyr') && !child.closest('.plyr')) {
+              const childStyle = window.getComputedStyle(child);
+              if (childStyle.overflow === 'hidden' && child !== panel.querySelector('.plyr__menu')) {
+                // Chỉ fix nếu không phải là explanations scrollable area
+                if (!child.classList.contains('ex-right') && !child.closest('.ex-right')) {
+                  // Không làm gì, giữ nguyên overflow cho explanations
+                }
+              }
+            }
+          });
+        }
+      });
+      
+      // Fix Splitter container
+      const splitter = document.querySelector('.ant-split') as HTMLElement;
+      if (splitter) {
+        const computedStyle = window.getComputedStyle(splitter);
+        if (computedStyle.overflow === 'hidden') {
+          splitter.style.overflow = 'visible';
+        }
+      }
+    };
+    
+    // Fix ngay khi component mount
+    const timer = setTimeout(fixPlyrMenu, 100);
+    
+    // Fix khi menu mở (observe mutations) - chạy liên tục
+    const observer = new MutationObserver(() => {
+      fixPlyrMenu();
+    });
+    const plyrElement = document.querySelector('.plyr');
+    if (plyrElement) {
+      observer.observe(plyrElement, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+      });
+    }
+    
+    // Fix khi click vào settings button
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-plyr="settings"]') || target.closest('.plyr__menu')) {
+        setTimeout(fixPlyrMenu, 10);
+      }
+    };
+    document.addEventListener('click', handleClick, true);
+    
+    // Fix khi hover vào settings button
+    const handleMouseEnter = () => {
+      setTimeout(fixPlyrMenu, 10);
+    };
+    const settingsButton = document.querySelector('[data-plyr="settings"]');
+    if (settingsButton) {
+      settingsButton.addEventListener('mouseenter', handleMouseEnter);
+    }
+    
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+      document.removeEventListener('click', handleClick, true);
+      if (settingsButton) {
+        settingsButton.removeEventListener('mouseenter', handleMouseEnter);
+      }
+    };
+  }, [isListening, PlyrComponent]);
+
   return (
     <>
       <Splitter
@@ -673,7 +808,7 @@ function ReviewExplanation({
         </Splitter.Panel>
 
         {/* PANEL 2 (BÊN PHẢI) */}
-        <Splitter.Panel className="relative">
+        <Splitter.Panel className="relative" style={{ overflow: 'visible' }}>
           {/* 2a. NẾU LÀ READING: Hiển thị Câu hỏi */}
           {isReading && (
             <div className="overflow-y-auto h-[calc(600px-50px)]">
@@ -683,13 +818,17 @@ function ReviewExplanation({
 
           {/* 2b. NẾU LÀ LISTENING: Hiển thị Audio & Explanations */}
           {isListening && (
-            <div className="overflow-y-auto h-[calc(600px-50px)]">
-              {/* Audio giữ padding */}
-              <div ref={ref} className="p-4 md:p-12">
-                {PlyrComponent}
+            <div className="h-[calc(600px-50px)] relative flex flex-col" style={{ overflow: 'visible' }}>
+              {/* Audio player - không scroll, overflow visible để menu settings không bị che */}
+              <div ref={ref} className="p-4 md:p-12 flex-shrink-0" style={{ overflow: 'visible', position: 'relative', zIndex: 100 }}>
+                <div style={{ overflow: 'visible', position: 'relative', zIndex: 100 }}>
+                  {PlyrComponent}
+                </div>
               </div>
-              {/* Explanation bỏ padding ngang */}
-              <div className="ex-right">{ExplanationsPanelContent}</div>
+              {/* Explanations - scrollable */}
+              <div className="flex-1 overflow-y-auto min-h-0" style={{ overflowX: 'visible' }}>
+                <div className="ex-right">{ExplanationsPanelContent}</div>
+              </div>
             </div>
           )}
 
