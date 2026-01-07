@@ -285,37 +285,43 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                     {featureCards[1].avatars && (
                       <div className="flex -space-x-2 flex-wrap">
                         {featureCards[1].avatars
-                          .filter(avatar => isValidImageUrl(avatar)) // Chỉ hiển thị avatar hợp lệ
                           .slice(0, 5)
-                          .map((avatar, i) => (
-                            <div
-                              key={i}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white overflow-hidden relative shrink-0"
-                            >
-                              {isExternalUrl(avatar) ? (
-                                <img
-                                  src={avatar}
-                                  alt={`Student ${i + 1}`}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    console.error("Failed to load avatar:", avatar);
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              ) : (
-                                <Image
-                                  src={avatar}
-                                  alt={`Student ${i + 1}`}
-                                  fill
-                                  className="object-cover"
-                                  unoptimized
-                                  onError={() => {
-                                    console.error("Failed to load avatar:", avatar);
-                                  }}
-                                />
-                              )}
-                            </div>
-                          ))}
+                          .map((avatar, i) => {
+                            // Bỏ qua avatar không hợp lệ nhưng không chặn cả mảng
+                            if (!isValidImageUrl(avatar)) {
+                              return null;
+                            }
+
+                            return (
+                              <div
+                                key={i}
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white overflow-hidden relative shrink-0"
+                              >
+                                {isExternalUrl(avatar) ? (
+                                  <img
+                                    src={avatar}
+                                    alt={`Student ${i + 1}`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      console.error("Failed to load avatar:", avatar);
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                ) : (
+                                  <Image
+                                    src={avatar}
+                                    alt={`Student ${i + 1}`}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                    onError={() => {
+                                      console.error("Failed to load avatar:", avatar);
+                                    }}
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                       </div>
                     )}
                   </div>
