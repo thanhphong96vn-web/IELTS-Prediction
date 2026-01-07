@@ -20,17 +20,38 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(value || null);
 
+  // Helper function để validate URL hợp lệ
+  const isValidImageUrl = (url: string): boolean => {
+    if (!url || !url.trim()) return false;
+    // Loại bỏ các đường dẫn fakepath (local file paths)
+    if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) {
+      return false;
+    }
+    // Chấp nhận URL external hoặc relative path hợp lệ
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+  };
+
   useEffect(() => {
-    setPreview(value || null);
-  }, [value]);
+    // Chỉ set preview nếu URL hợp lệ
+    if (value && isValidImageUrl(value)) {
+      setPreview(value);
+    } else if (!value) {
+      setPreview(null);
+    } else {
+      // Nếu giá trị không hợp lệ, clear nó
+      console.warn("Invalid image URL detected:", value);
+      setPreview(null);
+      onChange?.("");
+    }
+  }, [value, onChange]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      // Truyền đường dẫn file cũ để xóa (nếu có)
-      if (value && value.trim()) {
+      // Truyền đường dẫn file cũ để xóa (nếu có và hợp lệ)
+      if (value && value.trim() && isValidImageUrl(value)) {
         formData.append("oldPath", value);
       }
 
@@ -46,6 +67,11 @@ export function ImageUpload({
 
       const data = await res.json();
       const imagePath = data.path;
+
+      // Validate URL trước khi lưu
+      if (!isValidImageUrl(imagePath)) {
+        throw new Error("URL ảnh không hợp lệ. Vui lòng thử lại.");
+      }
 
       setPreview(imagePath);
       onChange?.(imagePath);
@@ -137,7 +163,24 @@ export function ImageUpload({
             </Button>
           </div>
           <div className="mt-2 text-sm text-gray-500">
-            <Input value={preview} readOnly className="text-xs" />
+            <Input 
+              value={preview || ""} 
+              className="text-xs"
+              onChange={(e) => {
+                // Cho phép paste URL trực tiếp vào input
+                const newValue = e.target.value.trim();
+                if (isValidImageUrl(newValue)) {
+                  setPreview(newValue);
+                  onChange?.(newValue);
+                } else if (newValue === "") {
+                  setPreview(null);
+                  onChange?.("");
+                } else {
+                  message.warning("URL không hợp lệ. Vui lòng nhập URL đầy đủ (http:// hoặc https://) hoặc đường dẫn relative (/img-admin/...)");
+                }
+              }}
+              placeholder="Hoặc dán URL ảnh trực tiếp vào đây"
+            />
           </div>
         </div>
       ) : (

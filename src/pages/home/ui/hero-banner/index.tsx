@@ -13,6 +13,17 @@ const isExternalUrl = (url: string): boolean => {
   return url.startsWith('http://') || url.startsWith('https://');
 };
 
+// Helper function để kiểm tra URL có hợp lệ không (loại bỏ fakepath)
+const isValidImageUrl = (url: string): boolean => {
+  if (!url || !url.trim()) return false;
+  // Loại bỏ các đường dẫn fakepath (local file paths)
+  if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) {
+    return false;
+  }
+  // Chấp nhận URL external hoặc relative path hợp lệ
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+};
+
 export const HeroBanner = ({ config }: HeroBannerProps) => {
   const {
     trustpilot,
@@ -274,6 +285,7 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                     {featureCards[1].avatars && (
                       <div className="flex -space-x-2 flex-wrap">
                         {featureCards[1].avatars
+                          .filter(avatar => isValidImageUrl(avatar)) // Chỉ hiển thị avatar hợp lệ
                           .slice(0, 5)
                           .map((avatar, i) => (
                             <div
@@ -285,6 +297,10 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                                   src={avatar}
                                   alt={`Student ${i + 1}`}
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    console.error("Failed to load avatar:", avatar);
+                                    e.currentTarget.style.display = 'none';
+                                  }}
                                 />
                               ) : (
                                 <Image
@@ -293,6 +309,9 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                                   fill
                                   className="object-cover"
                                   unoptimized
+                                  onError={() => {
+                                    console.error("Failed to load avatar:", avatar);
+                                  }}
                                 />
                               )}
                             </div>
