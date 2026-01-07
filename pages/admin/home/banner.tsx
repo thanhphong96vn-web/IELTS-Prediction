@@ -48,22 +48,48 @@ function HeroBannerPage() {
       
       // Reset form và set values
       form.resetFields();
-      form.setFieldsValue(normalizedConfig);
       
-      // Verify form values sau khi set
+      // Set values với delay để đảm bảo Form.List được mount
       setTimeout(() => {
-        const formValues = form.getFieldsValue();
-        console.log("Form values after setFieldsValue:", formValues);
-        console.log("Feature cards in form:", formValues?.featureCards?.map((c: any, i: number) => ({
-          index: i,
-          avatars: c.avatars,
-          avatarsLength: c.avatars?.length || 0
-        })));
+        // Set toàn bộ config vào form
+        form.setFieldsValue(normalizedConfig);
         
-        setIsFormInitialized(true);
-      }, 100);
+        // Verify form values sau khi set
+        setTimeout(() => {
+          const formValues = form.getFieldsValue();
+          console.log("Form values after setFieldsValue:", formValues);
+          console.log("Feature cards in form:", formValues?.featureCards?.map((c: any, i: number) => ({
+            index: i,
+            avatars: c.avatars,
+            avatarsLength: c.avatars?.length || 0
+          })));
+          
+          setIsFormInitialized(true);
+        }, 300);
+      }, 200);
     }
   }, [normalizedConfig, form, isFormInitialized]);
+  
+  // Effect để manually add avatar fields vào Form.List sau khi form được initialized
+  useEffect(() => {
+    if (isFormInitialized && normalizedConfig) {
+      // Đợi Form.List được render hoàn toàn
+      setTimeout(() => {
+        const formValues = form.getFieldsValue();
+        const featureCards = formValues?.featureCards || normalizedConfig.featureCards || [];
+        
+        // Check và add avatar fields cho mỗi card nếu cần
+        featureCards.forEach((card: any, cardIndex: number) => {
+          const cardAvatars = normalizedConfig.featureCards[cardIndex]?.avatars || [];
+          if (cardAvatars.length > 0 && !avatarSyncDone[cardIndex]) {
+            // Get Form.List instance và add fields
+            // Note: Không thể access Form.List instance trực tiếp, cần dùng cách khác
+            console.log(`Card ${cardIndex + 1}: Need to add ${cardAvatars.length} avatars, but cannot access Form.List instance directly`);
+          }
+        });
+      }, 500);
+    }
+  }, [isFormInitialized, normalizedConfig, form, avatarSyncDone]);
 
   const fetchConfig = async () => {
     try {
@@ -367,6 +393,7 @@ function HeroBannerPage() {
                         </Form.Item>
                         <Form.List 
                           name={[field.name, "avatars"]}
+                          initialValue={normalizedConfig?.featureCards?.[index]?.avatars || []}
                         >
                           {(
                             avatarFields,
@@ -386,15 +413,25 @@ function HeroBannerPage() {
                               // Sử dụng setTimeout để tránh update trong render
                               setTimeout(() => {
                                 console.log(`Card ${index + 1}: Manually adding ${initialAvatars.length} avatars to Form.List`);
+                                // Add fields trước
                                 initialAvatars.forEach(() => {
                                   addAvatar();
                                 });
-                                // Set values sau khi add fields
+                                // Sau đó set values với delay để đảm bảo fields đã được add
                                 setTimeout(() => {
-                                  form.setFieldsValue({
-                                    featureCards: normalizedConfig.featureCards
-                                  });
-                                }, 50);
+                                  const currentValues = form.getFieldsValue();
+                                  const updatedFeatureCards = [...(currentValues.featureCards || [])];
+                                  if (updatedFeatureCards[index]) {
+                                    updatedFeatureCards[index] = {
+                                      ...updatedFeatureCards[index],
+                                      avatars: initialAvatars
+                                    };
+                                    form.setFieldsValue({
+                                      featureCards: updatedFeatureCards
+                                    });
+                                    console.log(`Card ${index + 1}: Set avatars values:`, initialAvatars);
+                                  }
+                                }, 100);
                               }, 0);
                             }
                             
