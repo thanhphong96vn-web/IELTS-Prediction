@@ -8,6 +8,11 @@ interface HeroBannerProps {
   config: HeroBannerConfig;
 }
 
+// Helper function để kiểm tra xem URL có phải là external URL không
+const isExternalUrl = (url: string): boolean => {
+  return url.startsWith('http://') || url.startsWith('https://');
+};
+
 export const HeroBanner = ({ config }: HeroBannerProps) => {
   const {
     trustpilot,
@@ -73,14 +78,23 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
             {/* Trustpilot Rating */}
             <div className="flex items-center gap-3 relative z-10 flex-wrap">
               <div className="relative max-w-[220px] max-h-[26px] shrink-0">
-                <Image
-                  src={trustpilot.image}
-                  alt="Trustpilot"
-                  width={220}
-                  height={26}
-                  unoptimized
-                  className="object-contain w-full h-full"
-                />
+                {trustpilot.image.startsWith('http://') || trustpilot.image.startsWith('https://') ? (
+                  <img
+                    src={trustpilot.image}
+                    alt="Trustpilot"
+                    className="object-contain w-full h-full"
+                    style={{ maxWidth: "220px", maxHeight: "26px" }}
+                  />
+                ) : (
+                  <Image
+                    src={trustpilot.image}
+                    alt="Trustpilot"
+                    width={220}
+                    height={26}
+                    unoptimized
+                    className="object-contain w-full h-full"
+                  />
+                )}
               </div>
               <span
                 className="text-base font-medium wrap-break-word"
@@ -92,7 +106,8 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight wrap-break-word">
-              <span style={{ color: "#374151" }}>{headline.line1} </span>
+              <span style={{ color: "#374151" }}>{headline.line1}</span>
+              <br className="!block" />
               <span style={{ color: "#374151" }}>{headline.line2} </span>
               <span style={{ color: "#2563eb" }}>{headline.line3} </span>
               <span style={{ color: "#a855f7" }}>{headline.line4}</span>
@@ -157,29 +172,50 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
               {/* Main Banner Image */}
               <div className="relative aspect-square max-w-lg mx-auto w-full">
                 <div className="relative w-full h-full rounded-2xl overflow-hidden max-h-[600px]">
-                  <Image
-                    src={bannerImage}
-                    alt="Banner"
-                    fill
-                    className="object-contain"
-                    priority
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    style={{ maxWidth: "100%", maxHeight: "100%" }}
-                  />
+                  {isExternalUrl(bannerImage) ? (
+                    // External URL (ImgBB) - use regular img tag
+                    <img
+                      src={bannerImage}
+                      alt="Banner"
+                      className="w-full h-full object-contain"
+                      style={{ maxWidth: "100%", maxHeight: "100%" }}
+                    />
+                  ) : (
+                    // Local/relative URL - use Next.js Image
+                    <Image
+                      src={bannerImage}
+                      alt="Banner"
+                      fill
+                      className="object-contain"
+                      priority
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      style={{ maxWidth: "100%", maxHeight: "100%" }}
+                      unoptimized={bannerImage.startsWith('/img-admin/')}
+                    />
+                  )}
                 </div>
 
                 {/* Feature Card 1 - Top Right */}
                 {featureCards[0] && (
                   <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float max-w-[200px] sm:max-w-[250px]">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-                      <Image
-                        src={featureCards[0].icon}
-                        alt="Icon"
-                        width={48}
-                        height={48}
-                        unoptimized
-                        className="object-contain w-full h-full"
-                      />
+                      {isExternalUrl(featureCards[0].icon) ? (
+                        <img
+                          src={featureCards[0].icon}
+                          alt="Icon"
+                          className="object-contain w-full h-full"
+                          style={{ width: "48px", height: "48px" }}
+                        />
+                      ) : (
+                        <Image
+                          src={featureCards[0].icon}
+                          alt="Icon"
+                          width={48}
+                          height={48}
+                          unoptimized
+                          className="object-contain w-full h-full"
+                        />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       {featureCards[0].title && (
@@ -202,14 +238,23 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                   <div className="absolute bottom-1/4 left-0 bg-white rounded-xl shadow-lg p-3 sm:p-5 animate-float-delayed max-w-[200px] sm:max-w-[250px]">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-                        <Image
-                          src={featureCards[1].icon}
-                          alt="Icon"
-                          width={48}
-                          height={48}
-                          unoptimized
-                          className="object-contain w-full h-full"
-                        />
+                        {isExternalUrl(featureCards[1].icon) ? (
+                          <img
+                            src={featureCards[1].icon}
+                            alt="Icon"
+                            className="object-contain w-full h-full"
+                            style={{ width: "48px", height: "48px" }}
+                          />
+                        ) : (
+                          <Image
+                            src={featureCards[1].icon}
+                            alt="Icon"
+                            width={48}
+                            height={48}
+                            unoptimized
+                            className="object-contain w-full h-full"
+                          />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         {featureCards[1].value && (
@@ -235,13 +280,21 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                               key={i}
                               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white overflow-hidden relative shrink-0"
                             >
-                              <Image
-                                src={avatar}
-                                alt={`Student ${i + 1}`}
-                                fill
-                                className="object-cover"
-                                unoptimized
-                              />
+                              {isExternalUrl(avatar) ? (
+                                <img
+                                  src={avatar}
+                                  alt={`Student ${i + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <Image
+                                  src={avatar}
+                                  alt={`Student ${i + 1}`}
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
+                              )}
                             </div>
                           ))}
                       </div>
@@ -253,14 +306,23 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                 {featureCards[2] && (
                   <div className="absolute bottom-4 right-4 bg-white rounded-xl shadow-lg p-3 sm:p-5 flex items-center gap-2 sm:gap-3 animate-float-delayed-2 max-w-[200px] sm:max-w-[250px]">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
-                      <Image
-                        src={featureCards[2].icon}
-                        alt="Icon"
-                        width={48}
-                        height={48}
-                        unoptimized
-                        className="object-contain w-full h-full"
-                      />
+                      {isExternalUrl(featureCards[2].icon) ? (
+                        <img
+                          src={featureCards[2].icon}
+                          alt="Icon"
+                          className="object-contain w-full h-full"
+                          style={{ width: "48px", height: "48px" }}
+                        />
+                      ) : (
+                        <Image
+                          src={featureCards[2].icon}
+                          alt="Icon"
+                          width={48}
+                          height={48}
+                          unoptimized
+                          className="object-contain w-full h-full"
+                        />
+                      )}
                     </div>
                     <div className="min-w-0 flex-1">
                       {featureCards[2].value && (
@@ -277,38 +339,6 @@ export const HeroBanner = ({ config }: HeroBannerProps) => {
                     </div>
                   </div>
                 )}
-              </div>
-              {/* Decorative Shape */}
-              <div
-                className="absolute top-1/2 left-1/4 w-16 h-16 sm:w-24 sm:h-24"
-                style={{
-                  filter: "drop-shadow(0 0 10px rgba(217, 74, 86, 0.4))",
-                }}
-              >
-                <div
-                  className="w-full h-full relative rounded-full"
-                  style={{
-                    backgroundColor: "#d94a56",
-                    opacity: 0.15,
-                    mixBlendMode: "multiply",
-                  }}
-                />
-                <div className="absolute inset-0">
-                  <Image
-                    src={decorativeShape.image}
-                    alt="Shape"
-                    fill
-                    unoptimized
-                    className="object-contain"
-                    style={{
-                      filter:
-                        "brightness(0) saturate(100%) invert(27%) sepia(92%) saturate(1352%) hue-rotate(326deg) brightness(85%) contrast(85%)",
-                      opacity: 0.6,
-                      maxWidth: "100%",
-                      maxHeight: "100%",
-                    }}
-                  />
-                </div>
               </div>
             </div>
           </div>

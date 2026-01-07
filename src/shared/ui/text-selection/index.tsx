@@ -496,16 +496,39 @@ const NoteFormInput = ({ initialValue, isEdit = false }: { initialValue?: string
   const { handleNoteSubmit, removeUnderline } = useTextSelectionContext()!;
   const [value, setValue] = useState(initialValue || "");
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setValue(e.target.value);
-  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); handleNoteSubmit(value, isEdit); };
-  const handleDelete = () => { if (!isEdit) return; removeUnderline(isEdit.nodeId); };
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleNoteSubmit(value, isEdit);
+  };
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isEdit) return;
+    removeUnderline(isEdit.nodeId);
+  };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleNoteSubmit(value, isEdit);
+    }
+  };
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
-      <Input.TextArea value={value} onChange={handleChange} placeholder={isEdit ? "Remove note..." : "Add note..."} className="mb-2 min-w-[250px]" rows={4} />
+    <div className="flex flex-col">
+      <Input.TextArea 
+        value={value} 
+        onChange={handleChange} 
+        onKeyDown={handleKeyDown}
+        placeholder={isEdit ? "Remove note..." : "Add note..."} 
+        className="mb-2 min-w-[250px]" 
+        rows={4} 
+      />
       <div className="flex gap-2">
-        <Button type="primary" htmlType="submit">{isEdit ? "Save Changes" : "Save Changes"}</Button>
-        {isEdit && <Button type="default" onClick={handleDelete} className="flex items-center"><NoteClearIcon className="text-lg" />Remove Note</Button>}
+        <Button type="primary" htmlType="button" onClick={handleSave}>{isEdit ? "Save Changes" : "Save Changes"}</Button>
+        {isEdit && <Button type="default" htmlType="button" onClick={handleDelete} className="flex items-center"><NoteClearIcon className="text-lg" />Remove Note</Button>}
       </div>
-    </form>
+    </div>
   );
 };
 

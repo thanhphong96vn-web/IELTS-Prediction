@@ -42,6 +42,7 @@ const calcTimeTaken = (testTime: string, timeLeft: string) => {
 export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
   const { currentUser } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [getData, { data, loading }] = useLazyQuery<
     GetPracticeHistory,
@@ -64,14 +65,20 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
         title: <div className="text-center">Taken on</div>,
         dataIndex: ["testResultFields", "dateTaken"],
         key: "dateTaken",
-        render: (dateSubmitted) => (
-          <div className="text-center">
-            <p>{dayjs.unix(dateSubmitted).format("DD/MM/YYYY")}</p>
-            <span className="text-gray-600 text-xs">
-              {dayjs.unix(dateSubmitted).format("HH:mm:ss")}
-            </span>
-          </div>
-        ),
+        render: (dateTaken, record) => {
+          // Sử dụng dateTaken nếu có, nếu không thì dùng dateSubmitted
+          const dateToDisplay = dateTaken 
+            ? Number(dateTaken)
+            : Number(record.testResultFields.dateSubmitted);
+          return (
+            <div className="text-center">
+              <p>{dayjs.unix(dateToDisplay).format("DD/MM/YYYY")}</p>
+              <span className="text-gray-600 text-xs">
+                {dayjs.unix(dateToDisplay).format("HH:mm:ss")}
+              </span>
+            </div>
+          );
+        },
       },
       {
         title: "Time Taken",
@@ -153,57 +160,109 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
       },
     ];
 
-  const dataSource = useMemo(() => {
+  // Filter để chỉ hiển thị bài làm trong 60 ngày gần nhất và paginate client-side
+  const { filteredDataSource, paginatedDataSource } = useMemo(() => {
     if (data) {
-      return data.testResults.edges.map((item, idx) => {
-        return {
-          ...item.node,
-          key: idx,
-        };
+      // Debug: Log dữ liệu để kiểm tra
+      console.log("Practice History Data:", {
+        total: data.testResults.edges.length,
+        edges: data.testResults.edges.map(e => ({
+          id: e.node.id,
+          status: e.node.status,
+          dateSubmitted: e.node.testResultFields.dateSubmitted,
+          dateTaken: e.node.testResultFields.dateTaken,
+          hasAnswers: !!e.node.testResultFields.answers,
+        })),
       });
+
+      const sixtyDaysAgo = dayjs().subtract(60, "days").unix();
+      const filtered = data.testResults.edges
+        .map((item, idx) => {
+          return {
+            ...item.node,
+            key: idx,
+          };
+        })
+        .filter((item) => {
+          // Chỉ hiển thị các bài đã được submit (có dateSubmitted)
+          if (!item.testResultFields.dateSubmitted) {
+            return false;
+          }
+          
+          // Sử dụng dateTaken nếu có, nếu không thì dùng dateSubmitted
+          const dateToCheck = item.testResultFields.dateTaken 
+            ? Number(item.testResultFields.dateTaken)
+            : Number(item.testResultFields.dateSubmitted);
+          return dateToCheck >= sixtyDaysAgo;
+        })
+        .sort((a, b) => {
+          // Sắp xếp theo ngày mới nhất trước
+          const dateA = a.testResultFields.dateTaken 
+            ? Number(a.testResultFields.dateTaken)
+            : Number(a.testResultFields.dateSubmitted);
+          const dateB = b.testResultFields.dateTaken 
+            ? Number(b.testResultFields.dateTaken)
+            : Number(b.testResultFields.dateSubmitted);
+          return dateB - dateA;
+        });
+      
+      // Paginate client-side
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginated = filtered.slice(startIndex, endIndex);
+      
+      return {
+        filteredDataSource: filtered,
+        paginatedDataSource: paginated,
+      };
     }
-    return [];
-  }, [data]);
+    return {
+      filteredDataSource: [],
+      paginatedDataSource: [],
+    };
+  }, [data, currentPage, pageSize]);
 
   useEffect(() => {
-    getData({
-      variables: {
-        quizSkill: skill,
-        authorId: currentUser!.id,
-        offset: 0,
-        size: 5,
-      },
-    });
+    if (currentUser?.id) {
+      console.log("Loading practice history for:", {
+        userId: currentUser.id,
+        skill,
+      });
+      getData({
+        variables: {
+          quizSkill: skill,
+          authorId: currentUser.id,
+          offset: 0,
+          size: 100, // Tăng size để load nhiều bài làm hơn (tối đa 100 bài)
+        },
+      });
+    }
   }, [currentUser, getData, skill]);
 
   const handleTableChange: TableProps<
     GetPracticeHistory["testResults"]["edges"][number]["node"]
   >["onChange"] = (pagination) => {
     const current = pagination.current || 1;
-    const pageSize = pagination.pageSize || 1;
+    const newPageSize = pagination.pageSize || 10;
 
     setCurrentPage(current);
-    getData({
-      variables: {
-        quizSkill: skill,
-        authorId: currentUser!.id,
-        offset: (current - 1) * pageSize,
-        size: pagination.pageSize,
-      },
-    });
+    setPageSize(newPageSize);
   };
 
   return (
     <Table<GetPracticeHistory["testResults"]["edges"][number]["node"]>
       columns={columns}
-      dataSource={dataSource}
+      dataSource={paginatedDataSource}
       scroll={{ x: 768 }}
       loading={loading}
       size="small"
       pagination={{
         current: currentPage,
-        pageSize: 5,
-        total: data?.testResults.pageInfo.offsetPagination.total,
+        pageSize: pageSize,
+        total: filteredDataSource.length, // Sử dụng số lượng đã filter
+        showSizeChanger: true,
+        pageSizeOptions: ["10", "20", "50"],
+        showTotal: (total) => `Hiển thị ${total} bài làm trong 60 ngày gần nhất`,
       }}
       onChange={handleTableChange}
     />

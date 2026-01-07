@@ -6,7 +6,7 @@ export const GET_PRACTICE_HISTORY = gql`
     $authorId: ID!
     $quizSkill: String = "reading"
     $offset: Int = 0
-    $size: Int = 1
+    $size: Int = 100
   ) {
     testResults(
       where: {
@@ -18,6 +18,7 @@ export const GET_PRACTICE_HISTORY = gql`
       edges {
         node {
           id
+          status
           testResultFields {
             answers
             dateSubmitted
@@ -90,6 +91,7 @@ export const GET_PRACTICE_HISTORY = gql`
 
 export type TestResult = {
   id: string;
+  status: "publish" | "draft";
   testResultFields: {
     answers: string;
     dateSubmitted: string;
