@@ -18,9 +18,9 @@ function HeroBannerPage() {
   }, []);
 
   useEffect(() => {
-    // Set form values mỗi khi config thay đổi
-    if (config) {
-      console.log("Config loaded, setting form values:", config);
+    // Set form values mỗi khi config thay đổi và form chưa được initialized
+    if (config && !isFormInitialized) {
+      console.log("Config loaded, initializing form with:", config);
       
       // Đảm bảo featureCards có avatars là array (không phải undefined/null)
       // Filter out invalid URLs (fakepath, empty strings)
@@ -28,7 +28,7 @@ function HeroBannerPage() {
         ...config,
         featureCards: (config.featureCards || []).map((card: any) => ({
           ...card,
-          avatars: Array.isArray(card.avatars) 
+          avatars: Array.isArray(card.avatars) && card.avatars.length > 0
             ? card.avatars.filter((url: string) => {
                 if (!url || !url.trim()) return false;
                 if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) return false;
@@ -40,18 +40,13 @@ function HeroBannerPage() {
       
       console.log("Normalized config:", normalizedConfig);
       
-      // Reset form với normalized config để Form.List được khởi tạo lại đúng cách
+      // Reset form và set values ngay lập tức
       form.resetFields();
-      
-      // Set form values sau khi reset
-      // Sử dụng requestAnimationFrame để đảm bảo form đã reset xong và DOM đã update
-      requestAnimationFrame(() => {
-        form.setFieldsValue(normalizedConfig);
-        setIsFormInitialized(true);
-        console.log("Form values set:", normalizedConfig);
-      });
+      form.setFieldsValue(normalizedConfig);
+      setIsFormInitialized(true);
+      console.log("Form initialized with values:", normalizedConfig);
     }
-  }, [config, form]);
+  }, [config, form, isFormInitialized]);
 
   const fetchConfig = async () => {
     try {
@@ -70,12 +65,29 @@ function HeroBannerPage() {
     try {
       const values = await form.validateFields();
       console.log("Saving form values:", values);
+      
+      // Đảm bảo featureCards có avatars là array hợp lệ
+      const cleanedValues = {
+        ...values,
+        featureCards: (values.featureCards || []).map((card: any) => ({
+          ...card,
+          avatars: Array.isArray(card.avatars) 
+            ? card.avatars.filter((url: string) => {
+                if (!url || !url.trim()) return false;
+                if (url.includes('fakepath') || url.includes('C:\\') || url.includes('C:/')) return false;
+                return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+              })
+            : [],
+        })),
+      };
+      
+      console.log("Cleaned values to save:", cleanedValues);
       setSaving(true);
 
       const res = await fetch("/api/admin/home/hero-banner", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(cleanedValues),
       });
 
       if (!res.ok) {
@@ -88,7 +100,8 @@ function HeroBannerPage() {
       
       message.success("Config saved successfully");
       
-      // Reload config sau khi save để đảm bảo đồng bộ
+      // Reset form state và reload config để đảm bảo đồng bộ
+      setIsFormInitialized(false);
       await fetchConfig();
     } catch (error) {
       console.error("Error saving config:", error);
@@ -278,7 +291,7 @@ function HeroBannerPage() {
             <Panel header="Feature Cards" key="featureCards">
               <Form.List 
                 name="featureCards"
-                key={config ? JSON.stringify(config.featureCards?.map((c: any) => c.avatars?.length || 0)) : 'loading'}
+                key={`featureCards-${isFormInitialized ? JSON.stringify(config?.featureCards?.map((c: any) => c.avatars?.length || 0)) : 'loading'}`}
               >
                 {(fields, { add, remove }) => (
                   <>
@@ -336,24 +349,28 @@ function HeroBannerPage() {
                         </Form.Item>
                         <Form.List 
                           name={[field.name, "avatars"]}
-                          key={`avatars-${field.key}-${config?.featureCards?.[index]?.avatars?.length || 0}`}
                         >
                           {(
                             avatarFields,
                             { add: addAvatar, remove: removeAvatar }
                           ) => {
-                            // Debug: Log avatar fields
-                            console.log(`Card ${index + 1} avatar fields:`, avatarFields);
+                            // Debug: Log avatar fields và form values
+                            const formValues = form.getFieldsValue();
+                            const cardAvatars = formValues?.featureCards?.[index]?.avatars || [];
+                            console.log(`Card ${index + 1}:`, {
+                              avatarFields,
+                              formAvatars: cardAvatars,
+                              configAvatars: config?.featureCards?.[index]?.avatars,
+                            });
+                            
                             return (
                               <>
                                 {avatarFields.map((avatarField) => {
-                                  console.log(`Rendering avatar field:`, avatarField);
                                   return (
                                     <Form.Item
                                       key={avatarField.key}
                                       name={avatarField.name}
                                       label={`Avatar ${avatarField.name + 1}`}
-                                      preserve={true}
                                     >
                                       <div className="space-y-2">
                                         <ImageUpload />
