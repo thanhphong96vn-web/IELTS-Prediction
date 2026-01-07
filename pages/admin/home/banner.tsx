@@ -39,12 +39,37 @@ function HeroBannerPage() {
       };
       
       console.log("Normalized config:", normalizedConfig);
+      console.log("Feature cards with avatars:", normalizedConfig.featureCards.map((c: any, i: number) => ({
+        index: i,
+        avatars: c.avatars,
+        avatarsLength: c.avatars?.length || 0
+      })));
       
-      // Reset form và set values ngay lập tức
-      form.resetFields();
-      form.setFieldsValue(normalizedConfig);
-      setIsFormInitialized(true);
-      console.log("Form initialized with values:", normalizedConfig);
+      // Reset form và set values
+      // Sử dụng setTimeout để đảm bảo form đã được mount hoàn toàn
+      setTimeout(() => {
+        form.resetFields();
+        
+        // Set values từng phần để đảm bảo Form.List được khởi tạo đúng
+        form.setFieldsValue(normalizedConfig);
+        
+        // Verify form values sau khi set
+        const formValues = form.getFieldsValue();
+        console.log("Form values after setFieldsValue:", formValues);
+        console.log("Feature cards in form:", formValues?.featureCards?.map((c: any, i: number) => ({
+          index: i,
+          avatars: c.avatars,
+          avatarsLength: c.avatars?.length || 0
+        })));
+        
+        // Force update form để đảm bảo Form.List được render lại
+        form.setFieldsValue({
+          ...formValues,
+          featureCards: normalizedConfig.featureCards
+        });
+        
+        setIsFormInitialized(true);
+      }, 200);
     }
   }, [config, form, isFormInitialized]);
 
@@ -291,7 +316,6 @@ function HeroBannerPage() {
             <Panel header="Feature Cards" key="featureCards">
               <Form.List 
                 name="featureCards"
-                key={`featureCards-${isFormInitialized ? JSON.stringify(config?.featureCards?.map((c: any) => c.avatars?.length || 0)) : 'loading'}`}
               >
                 {(fields, { add, remove }) => (
                   <>
@@ -349,6 +373,8 @@ function HeroBannerPage() {
                         </Form.Item>
                         <Form.List 
                           name={[field.name, "avatars"]}
+                          initialValue={config?.featureCards?.[index]?.avatars || []}
+                          key={`avatars-${field.key}-${isFormInitialized ? (config?.featureCards?.[index]?.avatars?.length || 0) : 'loading'}`}
                         >
                           {(
                             avatarFields,
@@ -357,11 +383,21 @@ function HeroBannerPage() {
                             // Debug: Log avatar fields và form values
                             const formValues = form.getFieldsValue();
                             const cardAvatars = formValues?.featureCards?.[index]?.avatars || [];
+                            const initialAvatars = config?.featureCards?.[index]?.avatars || [];
+                            
                             console.log(`Card ${index + 1}:`, {
+                              avatarFieldsCount: avatarFields.length,
                               avatarFields,
                               formAvatars: cardAvatars,
-                              configAvatars: config?.featureCards?.[index]?.avatars,
+                              formAvatarsLength: cardAvatars.length,
+                              configAvatars: initialAvatars,
+                              configAvatarsLength: initialAvatars.length,
                             });
+                            
+                            // Nếu form values có avatars nhưng avatarFields rỗng, cần sync lại
+                            if (cardAvatars.length > 0 && avatarFields.length === 0 && isFormInitialized) {
+                              console.warn(`Card ${index + 1}: Form has avatars but avatarFields is empty. This is a Form.List initialization issue.`);
+                            }
                             
                             return (
                               <>
