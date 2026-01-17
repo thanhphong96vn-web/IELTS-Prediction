@@ -19,6 +19,9 @@ dayjs.locale("vi");
 import { unstableSetRender } from "antd";
 import { createRoot } from "react-dom/client";
 import { ProContentModal } from "@/shared/ui/pro-content";
+import { MaintenancePage } from "./maintenance";
+
+const isMaintenanceMode = process.env.NEXT_PUBLIC_MAINTENANCE_MODE === "true";
 
 export default function App({
   Component,
@@ -26,6 +29,38 @@ export default function App({
 }: AppProps & {
   Component: NextComponentType & { Layout?: NextComponentType };
 }) {
+  if (isMaintenanceMode) {
+    return (
+      <ProgressProvider
+        color="oklch(60.987% 0.17833 19.421)"
+        options={{ showSpinner: false }}
+        shallowRouting
+      >
+        <StyleProvider layer>
+          <ConfigProvider
+            card={{ className: "shadow-primary border-none" }}
+            theme={{
+              token: {
+                colorPrimary: "#d94a56",
+                fontFamily: "inherit, sans-serif",
+                colorLink: "#d94a56",
+              },
+              components: {
+                Input: {
+                  fontSizeLG: 14,
+                },
+              },
+            }}
+          >
+            <BlankLayout>
+              <MaintenancePage />
+            </BlankLayout>
+          </ConfigProvider>
+        </StyleProvider>
+      </ProgressProvider>
+    );
+  }
+
   const Layout = pageProps.masterData
     ? Component.Layout || BaseLayout
     : BlankLayout;
