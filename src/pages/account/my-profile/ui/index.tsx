@@ -89,7 +89,7 @@ export const PageMyProfile = () => {
       <Head>
         <title>{`My Profile | ${generalSettingsTitle}`}</title>
       </Head>
-      {data?.viewer ? (
+        {data?.viewer ? (
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex items-center space-x-4 border-b pb-4 border-gray-100 mb-4">
             <div className="h-24">

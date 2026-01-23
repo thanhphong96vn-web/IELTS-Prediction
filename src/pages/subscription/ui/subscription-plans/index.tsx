@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Check,
   ChevronRight,
@@ -126,7 +126,18 @@ const AutoSlider = ({ children }: { children: React.ReactNode }) => {
 export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
   const [singleSkill, setSingleSkill] = useState<SkillType>("listening");
   const [config, setConfig] = useState<CoursePackagesConfig | null>(null);
-  const [monthCounts, setMonthCounts] = useState<Record<string, number>>({});
+  const comboPriceTable = useMemo(() => {
+    if (!config) return undefined;
+    return Object.fromEntries(
+      config.combo.plans.map((plan) => [plan.months, plan.price])
+    );
+  }, [config]);
+  const singlePriceTable = useMemo(() => {
+    if (!config) return undefined;
+    return Object.fromEntries(
+      config.single.plans.map((plan) => [plan.months, plan.price])
+    );
+  }, [config]);
 
   // Fetch config on mount
   useEffect(() => {
@@ -136,15 +147,6 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
         if (res.ok) {
           const data = (await res.json()) as CoursePackagesConfig;
           setConfig(data);
-          // Initialize month counts from config plans
-          const initialCounts: Record<string, number> = {};
-          data.combo.plans.forEach((plan) => {
-            initialCounts[`combo-${plan.months}`] = plan.months;
-          });
-          data.single.plans.forEach((plan) => {
-            initialCounts[`single-${plan.months}`] = plan.months;
-          });
-          setMonthCounts(initialCounts);
         }
       } catch (error) {
         console.error("Failed to fetch config:", error);
@@ -161,15 +163,23 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
     type: "combo" | "single";
   }) => {
     const cardKey = `${type}-${initialMonths}`;
-    const currentMonths = monthCounts[cardKey] ?? initialMonths;
+    const [currentMonths, setCurrentMonths] = useState(initialMonths);
+    const canAdjustMonths = 
+      (type === "combo" && (initialMonths === 1 || initialMonths === 2)) ||
+      (type === "single" && initialMonths === 2);
 
-    // Tìm plan tương ứng trong config để lấy name
-    const plan =
+    const initialPlan =
       type === "combo"
         ? config?.combo.plans.find((p) => p.months === initialMonths)
         : config?.single.plans.find((p) => p.months === initialMonths);
+    const currentPlan =
+      type === "combo"
+        ? config?.combo.plans.find((p) => p.months === currentMonths)
+        : config?.single.plans.find((p) => p.months === currentMonths);
     const planName =
-      plan?.name || (type === "combo" ? "Standard Plan" : "Single Pack");
+      currentPlan?.name ||
+      initialPlan?.name ||
+      (type === "combo" ? "Standard Plan" : "Single Pack");
 
     const basePrice =
       type === "combo" ? config?.combo.basePrice : config?.single.basePrice;
@@ -178,17 +188,72 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
         ? config?.combo.monthlyIncrementPrice ?? 100000
         : config?.single.monthlyIncrementPrice ?? 100000;
 
-    const price = calculatePrice(
-      type,
-      currentMonths,
-      basePrice,
-      monthlyIncrement
-    );
-    const isFeatured =
-      (type === "combo" && [3, 5, 12, 13].includes(initialMonths)) ||
-      (type === "single" && initialMonths === 6);
-    const isDeal =
-      type === "combo" && (initialMonths === 5 || initialMonths === 13);
+    const getPriceForMonths = (months: number): number | null => {
+      if (type === "combo") {
+        const priceTable = comboPriceTable;
+        if (priceTable && priceTable[months] !== undefined) {
+          return priceTable[months];
+        }
+        
+        if (basePrice && monthlyIncrement) {
+          let calculatedPrice: number;
+          if (months === 1) {
+            calculatedPrice = 250000;
+          } else if (months === 2) {
+            calculatedPrice = 400000;
+          } else {
+            calculatedPrice = 400000 + (months - 2) * 200000;
+            
+            if (months === 6) {
+              calculatedPrice = 1000000;
+            } else if (months === 12) {
+              calculatedPrice = 1800000;
+            }
+          }
+          
+          return calculatedPrice;
+        }
+      }
+      
+      if (type === "single") {
+        const priceTable = singlePriceTable;
+        if (priceTable && priceTable[months] !== undefined) {
+          return priceTable[months];
+        }
+        
+        if (basePrice && monthlyIncrement) {
+          let calculatedPrice: number;
+          if (months === 2) {
+            calculatedPrice = 200000;
+          } else {
+            calculatedPrice = 200000 + (months - 2) * 100000;
+            
+            if (months === 6) {
+              calculatedPrice = 500000;
+            } else if (months === 12) {
+              calculatedPrice = 900000;
+            }
+          }
+          
+          return calculatedPrice;
+        }
+      }
+      
+      const priceTable = type === "combo" ? comboPriceTable : singlePriceTable;
+      return calculatePrice(type, months, basePrice, monthlyIncrement, priceTable);
+    };
+
+    const price = getPriceForMonths(currentMonths);
+    const currentPlanInConfig = type === "combo"
+      ? config?.combo.plans.find((p) => p.months === currentMonths)
+      : config?.single.plans.find((p) => p.months === currentMonths);
+    
+    const isFeatured = Boolean(initialPlan?.popular);
+    const isDeal = Boolean(currentPlanInConfig?.featuredDeal || currentPlanInConfig?.originalPrice);
+    const dealNote = currentPlanInConfig?.dealNote || 
+      (currentPlanInConfig?.originalPrice 
+        ? `Giảm ${formatPrice((currentPlanInConfig.originalPrice - (price || 0)))}`
+        : config?.dealNoteTemplate || "SAME PRICE AS THE SHORTER PLAN");
 
     const checkoutLink =
       type === "single"
@@ -196,14 +261,18 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
         : `${ROUTES.CHECKOUT}?type=combo&months=${currentMonths}`;
 
     const handleDecrease = () => {
-      const minMonths = type === "single" ? 1 : 1;
-      if (currentMonths > minMonths) {
-        setMonthCounts((prev) => ({ ...prev, [cardKey]: currentMonths - 1 }));
+      if (canAdjustMonths) {
+        const minMonths = type === "single" ? 2 : (initialMonths === 1 ? 1 : 2);
+        if (currentMonths > minMonths) {
+          setCurrentMonths(currentMonths - 1);
+        }
       }
     };
 
     const handleIncrease = () => {
-      setMonthCounts((prev) => ({ ...prev, [cardKey]: currentMonths + 1 }));
+      if (canAdjustMonths && currentMonths < 12) {
+        setCurrentMonths(currentMonths + 1);
+      }
     };
 
     return (
@@ -224,28 +293,40 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
 
         <h4 className="text-xl font-bold text-gray-800 mb-2">{planName}</h4>
 
-        {/* Month selector with +/- buttons */}
         <div className="bg-gray-50 px-3 py-2 rounded-md mb-6 flex items-center justify-center gap-3">
-          <button
-            onClick={handleDecrease}
-            disabled={currentMonths <= (type === "single" ? 1 : 1)}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Minus className="h-4 w-4 text-gray-600" />
-          </button>
-          <span className="text-[10px] font-bold text-gray-400 uppercase min-w-[80px]">
-            {currentMonths}{" "}
-            {currentMonths === 1
-              ? config?.monthText?.singular || "Month"
-              : config?.monthText?.plural || "Months"}{" "}
-            {config?.accessText || "Access"}
-          </span>
-          <button
-            onClick={handleIncrease}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-100 transition-colors"
-          >
-            <Plus className="h-4 w-4 text-gray-600" />
-          </button>
+          {canAdjustMonths ? (
+            <>
+              <button
+                onClick={handleDecrease}
+                disabled={currentMonths <= 2}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Minus className="h-4 w-4 text-gray-600" />
+              </button>
+              <span className="text-[10px] font-bold text-gray-400 uppercase min-w-[80px]">
+                {currentMonths}{" "}
+                {currentMonths === 1
+                  ? config?.monthText?.singular || "Month"
+                  : config?.monthText?.plural || "Months"}{" "}
+                {config?.accessText || "Access"}
+              </span>
+              <button
+                onClick={handleIncrease}
+                disabled={currentMonths >= 12}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Plus className="h-4 w-4 text-gray-600" />
+              </button>
+            </>
+          ) : (
+            <span className="text-[10px] font-bold text-gray-400 uppercase min-w-[80px]">
+              {currentMonths}{" "}
+              {currentMonths === 1
+                ? config?.monthText?.singular || "Month"
+                : config?.monthText?.plural || "Months"}{" "}
+              {config?.accessText || "Access"}
+            </span>
+          )}
         </div>
 
         <div className="mb-6 flex flex-col items-center">
@@ -257,9 +338,9 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
               {config?.priceSuffix || "/Monthly"}
             </span>
           </div>
-          {isDeal && initialMonths === currentMonths && (
+          {isDeal && (
             <div className="mt-2 bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase whitespace-nowrap">
-              {config?.dealNoteTemplate || "SAME PRICE AS THE SHORTER PLAN"}
+              {dealNote}
             </div>
           )}
         </div>
@@ -345,8 +426,12 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
           </h2>
         </div>
         <AutoSlider>
-          {[1, 2, 3, 5, 12, 13].map((m) => (
-            <PricingCard key={`combo-${m}`} initialMonths={m} type="combo" />
+          {[1, 2, 6, 12].map((months) => (
+            <PricingCard
+              key={`combo-${months}`}
+              initialMonths={months}
+              type="combo"
+            />
           ))}
         </AutoSlider>
       </section>
@@ -387,8 +472,12 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
           </div>
         </div>
         <AutoSlider>
-          {[2, 3, 6, 12].map((m) => (
-            <PricingCard key={`single-${m}`} initialMonths={m} type="single" />
+          {[2, 6, 12].map((months) => (
+            <PricingCard
+              key={`single-${months}`}
+              initialMonths={months}
+              type="single"
+            />
           ))}
         </AutoSlider>
       </section>

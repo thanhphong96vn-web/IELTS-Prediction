@@ -41,16 +41,37 @@ const CheckoutPage = () => {
     const pkgType = type === "single" ? "single" : "combo";
     const duration = Number(months) || (pkgType === "single" ? 2 : 3);
     const skillType = (skill as SkillType) || "listening";
-    
-    // Thêm dấu ?. sau combo và single để tránh lỗi khi config chưa load xong
-    const basePrice = pkgType === 'combo' ? config?.combo?.basePrice : config?.single?.basePrice;
-    const monthlyIncrement = pkgType === 'combo' 
-      ? (config?.combo?.monthlyIncrementPrice ?? 100000)
-      : (config?.single?.monthlyIncrementPrice ?? 100000);
-    
-    // Đảm bảo truyền giá trị số (mặc định là 0 nếu chưa có) vào hàm tính toán
-    const price = calculatePrice(pkgType, duration, basePrice ?? 0, monthlyIncrement);
-    
+
+    const basePrice =
+      pkgType === "combo" ? config?.combo?.basePrice : config?.single?.basePrice;
+    const monthlyIncrement =
+      pkgType === "combo"
+        ? (config?.combo?.monthlyIncrementPrice ?? 100000)
+        : (config?.single?.monthlyIncrementPrice ?? 100000);
+    const priceTable =
+      pkgType === "combo"
+        ? config?.combo?.plans.reduce<Record<number, number>>(
+            (acc, plan) => {
+              acc[plan.months] = plan.price;
+              return acc;
+            },
+            {}
+          )
+        : config?.single?.plans.reduce<Record<number, number>>(
+            (acc, plan) => {
+              acc[plan.months] = plan.price;
+              return acc;
+            },
+            {}
+          );
+    const price = calculatePrice(
+      pkgType,
+      duration,
+      basePrice,
+      monthlyIncrement,
+      priceTable
+    );
+
     return {
       pkgType,
       duration,

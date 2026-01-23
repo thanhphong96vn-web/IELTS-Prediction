@@ -139,6 +139,7 @@ export interface CoursePackageItem {
   name: string;
   months: number;
   price: number;
+  originalPrice?: number;
   popular?: boolean;
   featuredDeal?: boolean;
   dealNote?: string;

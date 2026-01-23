@@ -2,15 +2,28 @@ export const PRICING_TIERS = {
   combo: {
     1: 250000,
     2: 400000,
-    3: 500000,
-    5: 500000, // Deal: same price as 3 months
+    3: 600000,
+    4: 800000,
+    5: 1000000,
+    6: 1000000,
+    7: 1400000,
+    8: 1600000,
+    9: 1800000,
+    10: 2000000,
+    11: 2200000,
     12: 1800000,
-    13: 1800000, // Deal: 13 months = 12 months price
   },
   single: {
     2: 200000,
     3: 300000,
-    6: 500000, // Deal: best value for single skill
+    4: 400000,
+    5: 500000,
+    6: 500000,
+    7: 700000,
+    8: 800000,
+    9: 900000,
+    10: 1000000,
+    11: 1100000,
     12: 900000,
   },
 } as const;
@@ -34,7 +47,8 @@ export function calculatePrice(
   packageType: PackageType,
   duration: number,
   basePrice?: number,
-  monthlyIncrementPrice?: number
+  monthlyIncrementPrice?: number,
+  priceTable?: Record<number, number>
 ): number | null {
   // Single-skill plans must be at least 2 months
   if (packageType === "single" && duration < 1) {
@@ -44,12 +58,14 @@ export function calculatePrice(
     return null;
   }
 
-  // If basePrice and monthlyIncrementPrice are provided, calculate dynamically
+  if (priceTable && priceTable[duration] !== undefined) {
+    return priceTable[duration];
+  }
+
   if (basePrice !== undefined && monthlyIncrementPrice !== undefined) {
     return basePrice + (duration - 1) * monthlyIncrementPrice;
   }
 
-  // Fallback to static tiers
   const tiers = PRICING_TIERS[packageType];
   const price = tiers[duration as keyof typeof tiers];
 

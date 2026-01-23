@@ -3,7 +3,7 @@ import { IeltsTestPlatformIntro } from "./ielts-test-platform-intro";
 import { HeroBanner } from "./hero-banner";
 import { WhyChooseUs } from "./why-choose-us";
 import { Testimonials } from "./testimonials";
-import { PracticeTest, SampleEssaysSlider } from "@/widgets/blocks";
+import { FullTestCarousel, PracticeTest, SampleEssaysSlider } from "@/widgets/blocks";
 import { useAuth } from "@/appx/providers";
 import { PracticeHistory, TargetScore } from "@/widgets";
 import { ROUTES } from "@/shared/routes";
@@ -58,6 +58,10 @@ export const PageHome = ({
         }}
       >
         <Container className="space-y-16">
+          <FullTestCarousel
+            title="IELTS Online Test"
+            view_more_link={ROUTES.EXAM.ARCHIVE}
+          />
           <PracticeTest
             skill="listening"
             title="IELTS Listening Practice"
