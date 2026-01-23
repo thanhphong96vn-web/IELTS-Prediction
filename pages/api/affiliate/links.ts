@@ -73,8 +73,29 @@ function generateAffiliateCode(affiliateId: string, customLink?: string): string
   return generateRandomCode(10);
 }
 
-function generateAffiliateLink(affiliateId: string, customLink?: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+function getBaseUrl(req?: NextApiRequest): string {
+  if (req) {
+    const protocol = req.headers['x-forwarded-proto'] || (req.headers.referer?.startsWith('https') ? 'https' : 'http');
+    const host = req.headers.host || req.headers['x-forwarded-host'];
+    
+    if (host) {
+      return `${protocol}://${host}`;
+    }
+  }
+  
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+  
+  return "http://localhost:3000";
+}
+
+function generateAffiliateLink(affiliateId: string, customLink?: string, req?: NextApiRequest): string {
+  const baseUrl = getBaseUrl(req);
   const affiliateCode = generateAffiliateCode(affiliateId, customLink);
   return `${baseUrl}/subscription?ref=${affiliateCode}`;
 }
@@ -127,7 +148,7 @@ export default async function handler(
       }
 
       const affiliateCode = generateAffiliateCode(affiliateId, finalCustomLink);
-      const link = generateAffiliateLink(affiliateId, finalCustomLink);
+      const link = generateAffiliateLink(affiliateId, finalCustomLink, req);
 
       const newLink: AffiliateLink = {
         id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -183,7 +204,7 @@ export default async function handler(
         
         if (affiliate && affiliate.status === "approved") {
           const affiliateCode = generateAffiliateCode(affiliateId, affiliate.customLink);
-          const defaultLink = generateAffiliateLink(affiliateId, affiliate.customLink);
+          const defaultLink = generateAffiliateLink(affiliateId, affiliate.customLink, req);
           const newLink: AffiliateLink = {
             id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             affiliateId,
@@ -205,9 +226,34 @@ export default async function handler(
         return acc;
       }, []);
 
+      // Normalize links: update old localhost links to use current domain
+      const baseUrl = getBaseUrl(req);
+      const normalizedLinks = await Promise.all(
+        uniqueLinks.map(async (link) => {
+          if (link.link.includes('localhost:3000') || link.link.includes('http://localhost')) {
+            const urlMatch = link.link.match(/ref=([^&]+)/);
+            const affiliateCode = urlMatch ? urlMatch[1] : (link.customLink || '');
+            if (affiliateCode) {
+              const updatedLink = {
+                ...link,
+                link: `${baseUrl}/subscription?ref=${affiliateCode}`,
+              };
+              // Update in database
+              try {
+                await saveLink(updatedLink);
+              } catch (error) {
+                console.error('Error updating link:', error);
+              }
+              return updatedLink;
+            }
+          }
+          return link;
+        })
+      );
+
       return res.status(200).json({
         success: true,
-        links: uniqueLinks,
+        links: normalizedLinks,
       });
     } catch (error) {
       console.error("Error fetching affiliate links:", error);
