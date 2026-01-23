@@ -19,6 +19,13 @@ const CheckoutPage = () => {
   const { currentUser } = useAuth();
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [config, setConfig] = useState<CoursePackagesConfig | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    id: string;
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
   // 1. Fetch config on mount
   useEffect(() => {
@@ -80,6 +87,42 @@ const CheckoutPage = () => {
     };
   }, [type, months, skill, config]);
 
+  const finalPrice = useMemo(() => {
+    if (!selection.price) return 0;
+    const discount = appliedCoupon?.discountAmount || 0;
+    return Math.max(0, selection.price - discount);
+  }, [selection.price, appliedCoupon]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Vui lòng nhập mã giảm giá");
+      return;
+    }
+
+    setIsValidatingCoupon(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode }),
+      });
+
+      const data = await res.json();
+
+      if (data.valid && data.coupon) {
+        setAppliedCoupon(data.coupon);
+        toast.success(data.message || "Áp dụng mã giảm giá thành công");
+      } else {
+        setAppliedCoupon(null);
+        toast.error(data.message || "Mã giảm giá không hợp lệ");
+      }
+    } catch (error) {
+      toast.error("Có lỗi xảy ra khi kiểm tra mã giảm giá");
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
   const productName =
     selection.pkgType === "combo"
       ? "Combo (Listening + Reading)"
@@ -111,7 +154,11 @@ const CheckoutPage = () => {
           packageType: selection.pkgType,
           duration: selection.duration,
           skillType: selection.skillType,
-          amount: selection.price,
+          amount: finalPrice,
+          originalAmount: selection.price,
+          couponId: appliedCoupon?.id,
+          couponCode: appliedCoupon?.code,
+          discountAmount: appliedCoupon?.discountAmount || 0,
           userId: userId,
         }),
       });
@@ -199,17 +246,50 @@ const CheckoutPage = () => {
           <h3 className="text-lg font-bold text-gray-900">Your order</h3>
 
           <div className="space-y-3">
-            <label className="text-sm text-gray-700 font-medium">Coupon</label>
-            <div className="relative gap-2">
-              <input
-                type="text"
-                placeholder="Enter code"
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-200"
-              />
-              <button className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-black transition absolute right-0 top-0">
-                Apply
-              </button>
-            </div>
+            <label className="text-sm text-gray-700 font-medium">Mã giảm giá</label>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div>
+                  <p className="text-sm font-semibold text-green-800">
+                    {appliedCoupon.code}
+                  </p>
+                  <p className="text-xs text-green-600">
+                    Giảm {formatPrice(appliedCoupon.discountAmount)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setAppliedCoupon(null);
+                    setCouponCode("");
+                  }}
+                  className="text-red-500 hover:text-red-600 text-sm"
+                >
+                  Xóa
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  placeholder="Nhập mã giảm giá"
+                  className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-200"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleApplyCoupon();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={isValidatingCoupon}
+                  className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-black transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isValidatingCoupon ? "..." : "Áp dụng"}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2 text-sm text-gray-700">
@@ -217,13 +297,19 @@ const CheckoutPage = () => {
               <span>Sub total</span>
               <span>{formatPrice(selection.price)}</span>
             </div>
+            {appliedCoupon && (
+              <div className="flex items-center justify-between text-green-600">
+                <span>Giảm giá ({appliedCoupon.code})</span>
+                <span>-{formatPrice(appliedCoupon.discountAmount)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span>Tax</span>
               <span>0</span>
             </div>
             <div className="border-t pt-2 flex items-center justify-between text-base font-bold text-gray-900">
               <span>Total</span>
-              <span>{formatPrice(selection.price)}</span>
+              <span>{formatPrice(finalPrice)}</span>
             </div>
           </div>
 

@@ -20,6 +20,7 @@ if (process.env.VERCEL !== "1" || !process.env.KV_REST_API_URL) {
 }
 
 const { readConfigFromFileSystem, writeConfig } = require('../lib/server/admin-config-helper');
+const { readData, writeData } = require('../lib/server/affiliate-data-helper');
 
 const configs = [
   'hero-banner',
@@ -92,9 +93,33 @@ async function migrate() {
     }
   }
 
-  console.log(`\n✅ Migration completed: ${successCount} success, ${failCount} failed`);
+  console.log(`\n✅ Config migration completed: ${successCount} success, ${failCount} failed`);
+
+  const dataFiles = ['coupons.json'];
+  console.log('\n🚀 Starting data files migration...');
+  let dataSuccessCount = 0;
+  let dataFailCount = 0;
+
+  for (const fileName of dataFiles) {
+    try {
+      const data = await Promise.resolve(readData(fileName));
+      if (Array.isArray(data) && data.length === 0) {
+        console.log(`⚠ ${fileName} is empty, skipping...`);
+        continue;
+      }
+      await Promise.resolve(writeData(fileName, data));
+      console.log(`✓ Migrated data: ${fileName}`);
+      dataSuccessCount++;
+    } catch (error: any) {
+      dataFailCount++;
+      console.error(`✗ Failed to migrate data ${fileName}:`, error?.message || error);
+    }
+  }
+
+  console.log(`\n✅ Data migration completed: ${dataSuccessCount} success, ${dataFailCount} failed`);
+  console.log(`\n📊 Total: ${successCount + dataSuccessCount} success, ${failCount + dataFailCount} failed`);
   
-  if (failCount > 0) {
+  if (failCount > 0 || dataFailCount > 0) {
     process.exit(1);
   }
 }

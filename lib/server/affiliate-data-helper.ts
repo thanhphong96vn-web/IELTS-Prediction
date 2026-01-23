@@ -158,6 +158,15 @@ export function readData<T>(fileName: string): T | Promise<T> {
       try {
         const fsData = readDataFromFileSystem<T>(fileName);
         console.log(`⚠ Data "${fileName}" not found in KV, using filesystem fallback`);
+        
+        // Tự động migrate data vào KV để lần sau không cần fallback
+        // Chạy async trong background, không block response
+        if (Array.isArray(fsData) && fsData.length > 0) {
+          Promise.resolve(writeData(fileName, fsData)).catch((migrateError) => {
+            console.warn(`Failed to auto-migrate "${fileName}" to KV:`, migrateError);
+          });
+        }
+        
         return fsData;
       } catch (fsError: any) {
         // Nếu cả hai đều fail, trả về empty array

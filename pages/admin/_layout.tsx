@@ -81,6 +81,10 @@ const menuItems: MenuItem[] = [
         label: "Course Packages",
       },
       {
+        key: "/admin/subscription/coupons",
+        label: "Mã giảm giá",
+      },
+      {
         key: "/admin/subscription/faq",
         label: "FAQ",
       },

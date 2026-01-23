@@ -3,6 +3,7 @@ import { createServerApolloClient } from "@/shared/graphql";
 import { gql } from "@apollo/client";
 import { GetServerSidePropsContext } from "next";
 import { readData, writeData } from "../../../lib/server/affiliate-data-helper";
+import type { Coupon } from "../admin/coupons";
 
 const AFFILIATE_COOKIE_NAME = "affiliate_ref";
 const COMMISSIONS_FILE = "affiliate-commissions.json";
@@ -41,11 +42,15 @@ interface Order {
   duration: number;
   skillType?: "listening" | "reading";
   amount: number;
+  originalAmount?: number;
+  couponId?: string;
+  couponCode?: string;
+  discountAmount?: number;
   status: "pending" | "completed" | "cancelled";
   paymentMethod: string;
   transferContent: string;
   createdAt: string;
-  affiliateRef?: string; // Lưu affiliate ref để tính hoa hồng sau khi thanh toán thành công
+  affiliateRef?: string;
 }
 
 function generateOrderId(): string {
@@ -228,10 +233,41 @@ export default async function handler(
   }
 
   try {
-    const { packageType, duration, skillType, amount, userId } = req.body;
+    const {
+      packageType,
+      duration,
+      skillType,
+      amount,
+      originalAmount,
+      couponId,
+      couponCode,
+      discountAmount,
+      userId,
+    } = req.body;
 
     if (!packageType || !duration || !amount) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (couponId) {
+      const coupons = await Promise.resolve(readData<Coupon[]>("coupons.json"));
+      const coupon = coupons.find((c) => c.id === couponId);
+
+      if (!coupon || !coupon.isActive) {
+        return res.status(400).json({
+          error: "Mã giảm giá không hợp lệ",
+        });
+      }
+
+      if (coupon.currentUses >= coupon.maxUses) {
+        return res.status(400).json({
+          error: "Mã giảm giá đã hết lượt sử dụng",
+        });
+      }
+
+      coupon.currentUses += 1;
+      coupon.updatedAt = new Date().toISOString();
+      await Promise.resolve(writeData<Coupon[]>("coupons.json", coupons));
     }
 
     // Get userId from request body or try to get from auth context
@@ -256,11 +292,15 @@ export default async function handler(
       duration,
       skillType: packageType === "single" ? skillType : undefined,
       amount,
+      originalAmount: originalAmount || amount,
+      couponId: couponId || undefined,
+      couponCode: couponCode || undefined,
+      discountAmount: discountAmount || 0,
       status: "pending",
       paymentMethod: "Ngân hàng VCB (Vietcombank)",
       transferContent,
       createdAt: new Date().toISOString(),
-      affiliateRef: affiliateRef || undefined, // Lưu affiliate ref vào order
+      affiliateRef: affiliateRef || undefined,
     };
 
     // Try GraphQL mutation first
@@ -276,7 +316,7 @@ export default async function handler(
               packageType,
               duration,
               skillType,
-              amount,
+              amount: originalAmount || amount,
               status: "pending",
               paymentMethod: order.paymentMethod,
               transferContent,
