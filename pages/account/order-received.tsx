@@ -7,6 +7,9 @@ import { formatPrice } from "@/pages/subscription/ui/subscription-plans/pricing"
 import dayjs from "dayjs";
 import { CheckCircle } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useEffect, useState, useRef } from "react";
+import { Modal, Button } from "antd";
+import { useRouter } from "next/router";
 
 const CopyButton = dynamic(() => import("./copy-button"), { ssr: false });
 
@@ -24,7 +27,88 @@ interface OrderReceivedPageProps {
   error?: string;
 }
 
-const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
+const OrderReceivedPage = ({ order: initialOrder, error }: OrderReceivedPageProps) => {
+  const router = useRouter();
+  const [order, setOrder] = useState<OrderData | null>(initialOrder);
+  const [isPaymentSuccessModalOpen, setIsPaymentSuccessModalOpen] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hasShownSuccessModalRef = useRef(false);
+
+  // Polling để check order status
+  useEffect(() => {
+    if (!order || order.status === "completed" || error) {
+      return;
+    }
+
+    // Chỉ polling nếu order đang pending
+    if (order.status === "pending") {
+      setIsPolling(true);
+      
+      const pollOrderStatus = async () => {
+        try {
+          const res = await fetch(`/api/orders/${order.orderId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.order) {
+              const newStatus = data.order.orderFields.status;
+              
+              // Nếu status chuyển sang completed và chưa hiển thị modal
+              if (newStatus === "completed" && !hasShownSuccessModalRef.current) {
+                setOrder((prevOrder) => {
+                  if (!prevOrder) return prevOrder;
+                  return {
+                    ...prevOrder,
+                    status: "completed",
+                  };
+                });
+                setIsPaymentSuccessModalOpen(true);
+                hasShownSuccessModalRef.current = true;
+                setIsPolling(false);
+                
+                // Dừng polling
+                if (pollingIntervalRef.current) {
+                  clearInterval(pollingIntervalRef.current);
+                  pollingIntervalRef.current = null;
+                }
+              } else if (newStatus !== order.status) {
+                // Cập nhật status nếu có thay đổi
+                setOrder((prevOrder) => {
+                  if (!prevOrder) return prevOrder;
+                  return {
+                    ...prevOrder,
+                    status: newStatus,
+                  };
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error polling order status:", error);
+        }
+      };
+
+      // Poll ngay lập tức, sau đó mỗi 5 giây
+      pollOrderStatus();
+      pollingIntervalRef.current = setInterval(pollOrderStatus, 5000);
+
+      // Cleanup khi component unmount
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
+      };
+    }
+  }, [order?.status, order?.orderId, error]);
+
+  // Cleanup polling khi component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   if (error || !order) {
     return (
@@ -90,7 +174,11 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
               <InfoRow label="Ngân hàng" value="Vietcombank (VCB)" />
               <InfoRow label="Số tiền" value={displayAmount.replace("đ", "vnd")} />
               <InfoRow label="Nội dung chuyển khoản" value={displayNote} className="md:col-span-2" />
-              <InfoRow label="Trạng thái" value="Chờ thanh toán" className="md:col-span-2" />
+              <InfoRow 
+                label="Trạng thái" 
+                value={order.status === "completed" ? "Đã thanh toán thành công" : "Chờ thanh toán"} 
+                className="md:col-span-2" 
+              />
             </div>
 
             {/* Important Notice */}
@@ -104,7 +192,7 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
             <div className="flex flex-col items-center py-6">
               <div className="w-64 h-64 rounded-xl overflow-hidden mb-4 border-2 border-gray-200">
                 <img 
-                  src="/qr.png" 
+                  src={`https://qr.sepay.vn/img?acc=2447967&bank=ACB&amount=${order.amount}&des=${encodeURIComponent(order.orderId)}`}
                   alt="QR Code chuyển khoản" 
                   className="w-full h-full object-contain"
                 />
@@ -121,8 +209,19 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
                 kết quả giao dịch trên website. Xin cảm ơn!
               </p>
               <div className="flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <p className="font-semibold text-green-700">Đang chờ chuyển khoản</p>
+                {order.status === "completed" ? (
+                  <>
+                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <p className="font-semibold text-green-700">Đã thanh toán thành công</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <p className="font-semibold text-green-700">
+                      {isPolling ? "Đang kiểm tra thanh toán..." : "Đang chờ chuyển khoản"}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex justify-center pt-2">
                 <a
@@ -165,6 +264,51 @@ const OrderReceivedPage = ({ order, error }: OrderReceivedPageProps) => {
           </Link>
         </div>
       </div>
+
+      {/* Payment Success Modal */}
+      <Modal
+        open={isPaymentSuccessModalOpen}
+        onCancel={() => setIsPaymentSuccessModalOpen(false)}
+        footer={null}
+        centered
+        closable={true}
+        width={500}
+      >
+        <div className="text-center py-6">
+          <div className="flex justify-center mb-4">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            Thanh toán thành công!
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Đơn hàng <span className="font-semibold">{displayOrderId}</span> của bạn đã được thanh toán thành công.
+            <br />
+            Tài khoản Pro đã được kích hoạt.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => {
+                setIsPaymentSuccessModalOpen(false);
+                router.push(ROUTES.ACCOUNT.DASHBOARD);
+              }}
+              className="bg-yellow-500 hover:bg-yellow-600 border-none"
+            >
+              Vào Dashboard
+            </Button>
+            <Button
+              size="large"
+              onClick={() => setIsPaymentSuccessModalOpen(false)}
+            >
+              Ở lại trang này
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
