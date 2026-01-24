@@ -502,6 +502,15 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // API Key authentication (simple header check)
+  const apiKeyHeader = req.headers["x-api-key"];
+  const apiKey = Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader;
+  const expectedApiKey = "EAKHTNSZCLWQIEVL1TT5DVWOZ8JYLGHU2WCSMRWDBUDNGVSXPAY4AJZOODR06UBB";
+
+  if (!apiKey || apiKey !== expectedApiKey) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   // Chỉ chấp nhận POST request
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
