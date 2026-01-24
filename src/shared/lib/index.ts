@@ -4,3 +4,4 @@ export * from './extractWords';
 export * from './countQuestion';
 export * from './randomUUID';
 export * from './calculateScore';
+export * from './calculateStartIndex';

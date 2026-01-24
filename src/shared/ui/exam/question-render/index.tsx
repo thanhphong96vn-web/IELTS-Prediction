@@ -30,24 +30,30 @@ export function QuestionRender({ question, startIndex = 0, readOnly = false }: Q
     ? question.type[0]
     : question?.type; // Fallback nếu nó là string
 
+  // QUAN TRỌNG: Trong review mode (readOnly), ưu tiên dùng question.startIndex nếu có
+  // Vì question.startIndex đã được tính đúng từ newPost trong ReviewExplanation
+  const finalStartIndex = (readOnly && question.startIndex !== undefined && question.startIndex >= 0)
+    ? question.startIndex
+    : startIndex;
+
   switch (questionType) {
     case 'radio':
-      return <Radio question={question} startIndex={startIndex} readOnly={readOnly} />;
+      return <Radio question={question} startIndex={finalStartIndex} readOnly={readOnly} />;
 
     case 'checkbox':
-      return <Checkbox question={question} startIndex={startIndex} readOnly={readOnly} />;
+      return <Checkbox question={question} startIndex={finalStartIndex} readOnly={readOnly} />;
 
     case 'select':
-      return <Select question={question} startIndex={startIndex} readOnly={readOnly} />;
+      return <Select question={question} startIndex={finalStartIndex} readOnly={readOnly} />;
 
     case 'fillup':
-      return <Fillup question={question} startIndex={startIndex} readOnly={readOnly} />;
+      return <Fillup question={question} startIndex={finalStartIndex} readOnly={readOnly} />;
 
     case 'matching': // Đảm bảo type trong ACF của bạn là 'matching'
-      return <MatchingQuestion question={question} startIndex={startIndex} readOnly={readOnly} />;
+      return <MatchingQuestion question={question} startIndex={finalStartIndex} readOnly={readOnly} />;
 
     case 'matrix':
-      return <MatrixQuestion question={question} startIndex={startIndex} readOnly={readOnly} />;
+      return <MatrixQuestion question={question} startIndex={finalStartIndex} readOnly={readOnly} />;
 
     default:
       return (

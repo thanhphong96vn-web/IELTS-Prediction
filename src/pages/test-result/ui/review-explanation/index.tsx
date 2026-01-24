@@ -13,63 +13,76 @@ const Plyr = dynamic(() => import("plyr-react"), { ssr: false });
 import "plyr-react/plyr.css";
 import { TextSelectionWrapper } from "@/shared/ui/text-selection";
 import { Checkbox as AntCheckbox } from "antd";
+import { normalizeParseResult, SafeRender } from "@/shared/lib/html-normalize";
+import { countQuestion } from "@/shared/lib";
+import { calculateStartIndexForAllQuestions } from "@/shared/lib/calculateStartIndex";
 
-// Helper function để đếm số câu hỏi con từ một question (giống logic trong countQuestion)
+// Helper function để đếm số câu hỏi con từ một question
+// Sử dụng cùng logic với countQuestion để đảm bảo nhất quán
 const countSubQuestions = (question: any): number => {
   if (!question) return 1;
-
+  
   const questionType = question.type?.[0];
-
-  // Checkbox: đếm số đáp án đúng
-  if (questionType === "checkbox") {
-    const correctCount =
-      question.list_of_options?.reduce(
-        (acc: number, option: any) => (option.correct ? acc + 1 : acc),
-        0
-      ) || 0;
-    return correctCount > 0 ? correctCount : 1;
-  }
-
-  // Matching: xử lý các layout khác nhau
+  
+  // Matching với layoutType = "heading": đếm gaps trong passage_content
   if (questionType === "matching" && question.matchingQuestion) {
-    const layoutType = String(question.matchingQuestion.layoutType)
-      .trim()
-      .toLowerCase();
-    if (layoutType === "summary") {
+    const layoutType = String(question.matchingQuestion.layoutType).trim().toLowerCase();
+    if (layoutType === "heading") {
+      // Note: passage_content không có trong question object, cần lấy từ passage
+      // Nhưng ở đây chúng ta không có passage, nên dùng logic khác
       const summaryText = question.matchingQuestion.summaryText || "";
-      const gapCount = (summaryText.match(/\{(.*?)\}/g) || []).length;
-      return gapCount > 0 ? gapCount : 1;
-    }
-    if (
-      layoutType === "standard" &&
-      question.matchingQuestion.matchingItems?.length > 0
-    ) {
+      if (summaryText && /\{(.*?)\}/.test(summaryText)) {
+        const gapCount = (summaryText.match(/\{(.*?)\}/g) || []).length;
+        return gapCount > 0 ? gapCount : 1;
+      }
+      // Fallback: đếm matchingItems nếu có
+      if (question.matchingQuestion.matchingItems?.length > 0) {
+        return question.matchingQuestion.matchingItems.length;
+      }
+    } else if (layoutType === "summary") {
+      const summaryText = question.matchingQuestion.summaryText || "";
+      if (summaryText && /\{(.*?)\}/.test(summaryText)) {
+        const gapCount = (summaryText.match(/\{(.*?)\}/g) || []).length;
+        return gapCount > 0 ? gapCount : 1;
+      }
+    } else if (layoutType === "standard" && question.matchingQuestion.matchingItems?.length > 0) {
       return question.matchingQuestion.matchingItems.length;
     }
   }
-
+  
   // Matrix: đếm số items
   if (questionType === "matrix" && question.matrixQuestion?.matrixItems) {
     return question.matrixQuestion.matrixItems.length;
   }
-
+  
   // Fillup: đếm số gaps trong question text
-  const questionText = question.question || question.instructions || "";
-  if (questionText && /\{(.*?)\}/.test(questionText)) {
-    const gapCount = (questionText.match(/\{(.*?)\}/g) || []).length;
-    if (gapCount > 0) return gapCount;
+  const textWithGaps = question.question || "";
+  if (textWithGaps && /\{(.*?)\}/.test(textWithGaps)) {
+    const gapCount = (textWithGaps.match(/\{(.*?)\}/g) || []).length;
+    if (gapCount > 0) {
+      return gapCount;
+    }
   }
-
+  
   // List of questions
   if (question.list_of_questions && question.list_of_questions.length > 0) {
     return question.list_of_questions.length;
   }
-
+  
+  // Checkbox: đếm số đáp án đúng
+  if (questionType === "checkbox") {
+    const correctCount = question.list_of_options?.reduce(
+      (acc: number, option: any) => (option.correct ? acc + 1 : acc), 0
+    ) || 0;
+    return correctCount > 0 ? correctCount : 1;
+  }
+  
   // Explanations
   if (question.explanations && question.explanations.length > 1) {
     return question.explanations.length;
   }
-
+  
+  // Mặc định là 1 câu hỏi
   return 1;
 };
 
@@ -102,11 +115,103 @@ function ReviewExplanation({
   quiz: IPracticeSingle;
   testResult: ITestResult;
 }) {
+  // Parse answers từ JSON string và debug
+  const parsedAnswers = useMemo(() => {
+    try {
+      const rawAnswers = testResult.testResultFields.answers || '{"answers":[]}';
+      
+      const parsed = JSON.parse(rawAnswers) as {
+        answers: (string | number[] | object | null | undefined)[];
+      };
+      
+      console.log("[ReviewExplanation] Raw answers string length:", rawAnswers.length);
+      console.log("[ReviewExplanation] Parsed answers array length:", parsed.answers?.length);
+      console.log("[ReviewExplanation] Answers at index 15-25:", parsed.answers?.slice(15, 26));
+      
+      // Map answers, chỉ convert null/undefined thành "", giữ nguyên các giá trị khác
+      let mapped = (parsed.answers || []).map((a, index) => {
+        // Log chi tiết cho index 15-25 để debug
+        if (index >= 15 && index <= 25) {
+          console.log(`[ReviewExplanation] Answer[${index}]:`, a, 'Type:', typeof a, 'Is array:', Array.isArray(a), 'Is null:', a === null, 'Is undefined:', a === undefined, 'Value:', JSON.stringify(a));
+        }
+        if (a === null || a === undefined) {
+          return "";
+        }
+        return a;
+      });
+      
+      console.log("[ReviewExplanation] Mapped answers length:", mapped.length);
+      console.log("[ReviewExplanation] Mapped answers at index 15-25:", mapped.slice(15, 26));
+      
+      // Đảm bảo answers array đủ dài bằng cách tính tổng số câu hỏi từ quiz
+      // Tính tổng số câu hỏi từ TẤT CẢ passages (không filter) để khớp với startIndex
+      // Logic này PHẢI GIỐNG HỆT với cách tính trong newPost useMemo
+      let totalQuestionsNeeded = 0;
+      if (quiz?.quizFields?.passages) {
+        quiz.quizFields.passages.forEach((passage: any) => {
+          if (passage?.questions) {
+            passage.questions.forEach((question: any) => {
+              const questionType = question.type?.[0];
+              let questionCount = 1;
+              
+              // Logic giống hệt với newPost useMemo
+              if (questionType === 'matching' && String(question.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+                let gapCount = 0;
+                (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+                questionCount = gapCount > 0 ? gapCount : 1;
+              } else if (questionType === 'checkbox') {
+                // @ts-ignore
+                questionCount = Number(question.optionChoose) || 1;
+              } else {
+                // Dùng countQuestion giống hệt với newPost useMemo
+                questionCount = countQuestion({ questions: [question] } as any);
+              }
+              
+              if (isNaN(questionCount) || questionCount < 1) {
+                questionCount = 1;
+              }
+              
+              totalQuestionsNeeded += questionCount;
+            });
+          }
+        });
+      }
+      
+      console.log("[ReviewExplanation] Total questions needed:", totalQuestionsNeeded);
+      console.log("[ReviewExplanation] Current mapped length:", mapped.length);
+      
+      // Pad answers array nếu thiếu phần tử
+      if (mapped.length < totalQuestionsNeeded) {
+        console.log(`[ReviewExplanation] Padding answers array: ${mapped.length} -> ${totalQuestionsNeeded}`);
+        const padding = Array(totalQuestionsNeeded - mapped.length).fill("");
+        mapped = [...mapped, ...padding];
+      }
+      
+      console.log("[ReviewExplanation] Final answers array length:", mapped.length);
+      console.log("[ReviewExplanation] Final answers at index 15-25:", mapped.slice(15, 26));
+      
+      return mapped;
+    } catch (error) {
+      console.error("[ReviewExplanation] Error parsing answers:", error);
+      return [];
+    }
+  }, [testResult.testResultFields.answers, quiz]);
+
   const methods = useForm<AnswerFormValues>({
-    defaultValues: JSON.parse(
-      testResult.testResultFields.answers || '{"answers":[]}'
-    ),
+    defaultValues: {
+      answers: parsedAnswers,
+    },
   });
+
+  // Reset form values khi parsedAnswers thay đổi để đảm bảo form có dữ liệu mới nhất
+  useEffect(() => {
+    if (parsedAnswers.length > 0) {
+      console.log("[ReviewExplanation] Resetting form values with parsedAnswers length:", parsedAnswers.length);
+      methods.reset({
+        answers: parsedAnswers,
+      });
+    }
+  }, [parsedAnswers, methods]);
 
   const [isMobileView, setIsMobileView] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -134,7 +239,7 @@ function ReviewExplanation({
       return (
         <div className="mb-[-15px] border border-dashed border-green-600 leading-[22px] text-[17px] font-bold text-center bg-green-50 text-green-600 p-2 py-[1px] rounded-md prose prose-sm max-w-none">
           <TextSelectionWrapper>
-            {parse(cleanedCorrectAnswer)}
+            {normalizeParseResult(parse(cleanedCorrectAnswer))}
           </TextSelectionWrapper>
         </div>
       );
@@ -143,7 +248,7 @@ function ReviewExplanation({
       return (
         <div className="mb-[-15px] text-[17px] leading-[22px] font-bold border border-dashed border-gray-400 text-center bg-gray-100 text-gray-500 p-2 py-[1px] rounded-md prose prose-sm max-w-none">
           <TextSelectionWrapper>
-            {parse(cleanedCorrectAnswer)}
+            {normalizeParseResult(parse(cleanedCorrectAnswer))}
           </TextSelectionWrapper>
         </div>
       );
@@ -152,12 +257,12 @@ function ReviewExplanation({
       <div className="mb-[-15px] flex flex-row gap-2 leading-[20px] border text-center border-dashed border-red-500 bg-red-50 text-red-700 p-2 py-[1px] rounded-md prose prose-sm max-w-none">
         <div className="line-through">
           <TextSelectionWrapper>
-            {parse(cleanedUserAnswer)}
+            {normalizeParseResult(parse(cleanedUserAnswer))}
           </TextSelectionWrapper>
         </div>
         <div className="text-green-600">
           <TextSelectionWrapper>
-            {parse(cleanedCorrectAnswer)}
+            {normalizeParseResult(parse(cleanedCorrectAnswer))}
           </TextSelectionWrapper>
         </div>
       </div>
@@ -200,7 +305,7 @@ function ReviewExplanation({
           {subQuestionCount > 1 && `–${startIndex + subQuestionCount}`}
         </h3>
         <div className="leading-[2] prose prose-sm max-w-none">
-          {parse(question.question || question.instructions || "")}
+          {normalizeParseResult(parse(question.question || question.instructions || ""))}
         </div>
         <div className="flex flex-col space-y-1">
           {(question.list_of_options || []).map(
@@ -253,7 +358,7 @@ function ReviewExplanation({
                   />
                   <span className={twMerge("flex-grow", textClass)}>
                     <TextSelectionWrapper>
-                      {parse(option.option)}
+                      {normalizeParseResult(parse(option.option))}
                     </TextSelectionWrapper>
                   </span>
                   {icon}
@@ -271,7 +376,7 @@ function ReviewExplanation({
                 label: "Explanation",
                 children: (
                   <div className="prose prose-sm max-w-none">
-                    {parse(explanationText)}
+                    {normalizeParseResult(parse(explanationText))}
                   </div>
                 ),
               },
@@ -283,48 +388,132 @@ function ReviewExplanation({
   };
   // ▲▲▲ KẾT THÚC CheckboxReviewBlock ▲▲▲
 
-  // ▼▼▼ LOGIC newPost ▼▼▼
+  // ▼▼▼ LOGIC newPost - SỬ DỤNG HÀM TẬP TRUNG ▼▼▼
+  const allQuestionsStartIndexMap = useMemo(() => {
+    return calculateStartIndexForAllQuestions(quiz);
+  }, [quiz]);
+
   const newPost = useMemo(() => {
     const rawPost = JSON.parse(JSON.stringify(quiz));
 
-    // BƯỚC 1: Tính startIndex cho TẤT CẢ passages TRƯỚC (giống như khi làm bài)
-    // Để đảm bảo index khớp với đáp án đã lưu
-    let currentIndex = 0;
+    // BƯỚC 1: Gán startIndex cho TẤT CẢ questions từ map đã tính sẵn
+    // Điều này đảm bảo startIndex khớp với answers array đã lưu
     rawPost.quizFields.passages.forEach(
       (passage: any, passageIndex: number) => {
         if (passage && passage.questions) {
           passage.questions.forEach((question: any, questionIndex: number) => {
-            _.set(
-              rawPost,
-              `quizFields.passages.${passageIndex}.questions.${questionIndex}.startIndex`,
-              currentIndex
-            );
             const questionType = question.type?.[0];
+            
+            // Lấy startIndex từ map để đảm bảo nhất quán
+            const key = question.id || `passage-${passageIndex}-question-${questionIndex}`;
+            const startIndexFromMap = allQuestionsStartIndexMap.get(key);
+            
+            if (startIndexFromMap !== undefined) {
+              _.set(
+                rawPost,
+                `quizFields.passages.${passageIndex}.questions.${questionIndex}.startIndex`,
+                startIndexFromMap
+              );
 
-            // Debug: Log startIndex được gán
-            // Dùng helper function để đảm bảo logic nhất quán với khi làm bài
-            const numberOfSubQuestions = countSubQuestions(question);
-            currentIndex += numberOfSubQuestions;
+              // Log chi tiết cho fillup questions trong Passage 2 (index 1)
+              if (passageIndex === 1 && questionType === 'fillup') {
+                console.log(`[ReviewExplanation] FILLUP QUESTION in Passage 2:`, {
+                  passageIndex,
+                  questionIndex,
+                  startIndex: startIndexFromMap,
+                  questionTitle: question.title,
+                  questionText: question.question?.substring(0, 100),
+                  key,
+                  mapValue: startIndexFromMap,
+                });
+              }
+            } else {
+              console.warn(`[ReviewExplanation] Could not find startIndex for question:`, {
+                passageIndex,
+                questionIndex,
+                key,
+                questionId: question.id,
+                questionTitle: question.title,
+              });
+            }
           });
         }
       }
     );
 
-    // BƯỚC 2: Filter passages SAU KHI tính startIndex (giống như khi làm bài)
-    const testParts = JSON.parse(testResult.testResultFields.testPart);
+    // BƯỚC 2: Parse testPart và filter passages SAU KHI tính startIndex (giống như khi làm bài)
+    let testParts: number[] = [];
+    try {
+      testParts = JSON.parse(testResult.testResultFields.testPart || "[]");
+      if (!Array.isArray(testParts)) {
+        testParts = [];
+      }
+    } catch (error) {
+      console.error("Error parsing testPart:", error);
+      testParts = [];
+    }
+    
     rawPost.quizFields.passages = rawPost.quizFields.passages.filter(
       (_: any, index: number) => testParts.includes(index)
     );
 
     return rawPost;
-  }, [quiz, testResult.testResultFields.testPart]);
+  }, [quiz, testResult.testResultFields.testPart, allQuestionsStartIndexMap]);
   // ▲▲▲ KẾT THÚC newPost ▲▲▲
 
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
 
   const currentPassage = useMemo(() => {
+    if (!newPost?.quizFields?.passages || !Array.isArray(newPost.quizFields.passages)) {
+      return undefined;
+    }
+    if (currentPassageIndex < 0 || currentPassageIndex >= newPost.quizFields.passages.length) {
+      return undefined;
+    }
     return newPost.quizFields.passages[currentPassageIndex];
   }, [newPost, currentPassageIndex]);
+
+  // Validate và reset currentPassageIndex nếu cần
+  useEffect(() => {
+    if (!newPost?.quizFields?.passages || !Array.isArray(newPost.quizFields.passages)) {
+      setCurrentPassageIndex(0);
+      return;
+    }
+    if (currentPassageIndex < 0 || currentPassageIndex >= newPost.quizFields.passages.length) {
+      setCurrentPassageIndex(0);
+    }
+  }, [newPost, currentPassageIndex]);
+
+  // Reset currentPassageIndex khi newPost thay đổi (khi quiz hoặc testResult thay đổi)
+  useEffect(() => {
+    setCurrentPassageIndex(0);
+  }, [quiz.id, testResult.id]);
+
+  // Debug: Log để so sánh answers array với startIndex được tính
+  useEffect(() => {
+    console.log("[ReviewExplanation] Form initialized with answers array length:", parsedAnswers.length);
+    console.log("[ReviewExplanation] Answers array (first 30):", parsedAnswers.slice(0, 30));
+    console.log("[ReviewExplanation] Answers at index 15-25:", parsedAnswers.slice(15, 25));
+    
+    // Tính tổng số câu hỏi từ newPost để so sánh
+    if (newPost?.quizFields?.passages) {
+      let totalQuestions = 0;
+      newPost.quizFields.passages.forEach((passage: any) => {
+        if (passage.questions) {
+          passage.questions.forEach((question: any) => {
+            const subQuestions = countSubQuestions(question);
+            totalQuestions += subQuestions;
+            console.log(`[ReviewExplanation] Question startIndex: ${question.startIndex}, subQuestions: ${subQuestions}`);
+          });
+        }
+      });
+      console.log("[ReviewExplanation] Total questions calculated:", totalQuestions);
+      console.log("[ReviewExplanation] Answers array length:", parsedAnswers.length);
+      if (totalQuestions > parsedAnswers.length) {
+        console.warn(`[ReviewExplanation] WARNING: Total questions (${totalQuestions}) > Answers array length (${parsedAnswers.length})`);
+      }
+    }
+  }, [parsedAnswers, newPost, countSubQuestions]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -372,7 +561,7 @@ function ReviewExplanation({
       let headingIndex = -1;
 
       const parserOptions: HTMLReactParserOptions = {
-        replace: (domNode: any) => {
+        replace: (domNode: any): any => {
           if (domNode.type === "tag" && domNode.name === "p") {
             const firstChild = domNode.children?.[0];
 
@@ -427,25 +616,16 @@ function ReviewExplanation({
               let reactChildren: any;
               try {
                 reactChildren = domToReact(childrenArray, parserOptions);
+                console.log('[parserOptions.replace] domToReact result type:', typeof reactChildren, 'Is array:', Array.isArray(reactChildren), 'Is valid element:', React.isValidElement(reactChildren), reactChildren);
                 
-                // Kiểm tra và xử lý nếu domToReact trả về object thay vì React element
-                if (reactChildren && typeof reactChildren === 'object') {
-                  // Nếu là React element hợp lệ, giữ nguyên
-                  if (React.isValidElement(reactChildren)) {
-                    // OK, giữ nguyên
-                  }
-                  // Nếu là array, giữ nguyên (React có thể render array)
-                  else if (Array.isArray(reactChildren)) {
-                    // OK, giữ nguyên
-                  }
-                  // Nếu là object với numeric keys (như {0: ..., 1: ..., 3: ...}), convert thành array
-                  else if (Object.keys(reactChildren).every(key => !isNaN(Number(key)))) {
-                    reactChildren = Object.values(reactChildren);
-                  }
-                  // Nếu là object khác, wrap trong fragment để tránh lỗi
-                  else {
-                    reactChildren = <>{reactChildren}</>;
-                  }
+                // Normalize kết quả để đảm bảo không có object với numeric keys
+                reactChildren = normalizeParseResult(reactChildren);
+                console.log('[parserOptions.replace] Normalized reactChildren type:', typeof reactChildren, 'Is array:', Array.isArray(reactChildren), 'Is valid element:', React.isValidElement(reactChildren), reactChildren);
+                
+                // Kiểm tra lại sau khi normalize
+                if (reactChildren && typeof reactChildren === 'object' && !React.isValidElement(reactChildren) && !Array.isArray(reactChildren)) {
+                  console.error('[parserOptions.replace] reactChildren is still an object after normalize:', reactChildren);
+                  reactChildren = <>{reactChildren}</>;
                 }
               } catch (error) {
                 console.error("Error in domToReact:", error);
@@ -469,6 +649,9 @@ function ReviewExplanation({
                 );
               }
 
+              // Đảm bảo reactChildren được normalize trước khi render
+              const normalizedChildren = normalizeParseResult(reactChildren);
+              
               return (
                 <>
                   <HeadingAnswerBlock
@@ -477,7 +660,9 @@ function ReviewExplanation({
                   />
                   {/* Sử dụng restAttribs thay vì domNode.attribs */}
                   <p {...restAttribs}>
-                    {reactChildren}
+                    <SafeRender name="normalizedChildren">
+                      {normalizedChildren}
+                    </SafeRender>
                   </p>
                 </>
               );
@@ -491,13 +676,19 @@ function ReviewExplanation({
               : Object.values(domNode.children);
             try {
               const reactChildren = domToReact(childrenArray, parserOptions);
-              // Nếu reactChildren là object với numeric keys, convert thành array
-              if (reactChildren && typeof reactChildren === 'object' && !React.isValidElement(reactChildren) && !Array.isArray(reactChildren)) {
-                if (Object.keys(reactChildren).every(key => !isNaN(Number(key)))) {
-                  return Object.values(reactChildren);
-                }
+              console.log('[parserOptions.replace fallback] domToReact result type:', typeof reactChildren, 'Is array:', Array.isArray(reactChildren), 'Is valid element:', React.isValidElement(reactChildren), reactChildren);
+              
+              // Normalize kết quả để đảm bảo không có object với numeric keys
+              const normalized = normalizeParseResult(reactChildren);
+              console.log('[parserOptions.replace fallback] Normalized result type:', typeof normalized, 'Is array:', Array.isArray(normalized), 'Is valid element:', React.isValidElement(normalized), normalized);
+              
+              // Kiểm tra lại sau khi normalize
+              if (normalized && typeof normalized === 'object' && !React.isValidElement(normalized) && !Array.isArray(normalized)) {
+                console.error('[parserOptions.replace fallback] Normalized result is still an object:', normalized);
+                return <>{normalized}</>;
               }
-              return reactChildren;
+              
+              return normalized;
             } catch (error) {
               console.error("Error converting domNode to React element:", error);
             }
@@ -507,7 +698,36 @@ function ReviewExplanation({
         },
       };
 
-      return parse(currentPassage.passage_content, parserOptions);
+      const parsedResult = parse(currentPassage.passage_content, parserOptions);
+      console.log('[processedPassageComponent] Parsed result type:', typeof parsedResult, 'Is array:', Array.isArray(parsedResult), 'Is valid element:', React.isValidElement(parsedResult), parsedResult);
+      
+      const normalized = normalizeParseResult(parsedResult);
+      console.log('[processedPassageComponent] Normalized result type:', typeof normalized, 'Is array:', Array.isArray(normalized), 'Is valid element:', React.isValidElement(normalized), normalized);
+      
+      // Đảm bảo kết quả cuối cùng luôn là React element hoặc array hợp lệ
+      // Nếu vẫn là object, wrap trong div
+      if (normalized && typeof normalized === 'object' && !React.isValidElement(normalized) && !Array.isArray(normalized)) {
+        console.error('[processedPassageComponent] Normalized result is still an object, wrapping in div:', normalized);
+        return <div>{normalized}</div>;
+      }
+      
+      // Nếu là array, đảm bảo tất cả phần tử đều hợp lệ
+      if (Array.isArray(normalized)) {
+        const invalidItems = normalized.filter(item => 
+          item && typeof item === 'object' && !React.isValidElement(item) && !Array.isArray(item)
+        );
+        if (invalidItems.length > 0) {
+          console.error('[processedPassageComponent] Array contains invalid items:', invalidItems);
+          return <div>{normalized.map((item, idx) => {
+            if (item && typeof item === 'object' && !React.isValidElement(item) && !Array.isArray(item)) {
+              return <React.Fragment key={idx}>{item}</React.Fragment>;
+            }
+            return item;
+          })}</div>;
+        }
+      }
+      
+      return normalized;
     } catch (error) {
       console.error("Error processing heading passage:", error);
       return (
@@ -522,19 +742,36 @@ function ReviewExplanation({
   // ▲▲▲ KẾT THÚC 'processedPassageComponent' ▲▲▲
 
   const hasPrevPassage = useMemo(
-    () => currentPassageIndex > 0,
-    [currentPassageIndex]
+    () => {
+      if (!newPost?.quizFields?.passages || !Array.isArray(newPost.quizFields.passages)) {
+        return false;
+      }
+      return currentPassageIndex > 0;
+    },
+    [currentPassageIndex, newPost]
   );
   const hasNextPassage = useMemo(
-    () => currentPassageIndex < newPost.quizFields.passages.length - 1,
-    [currentPassageIndex, newPost.quizFields.passages]
+    () => {
+      if (!newPost?.quizFields?.passages || !Array.isArray(newPost.quizFields.passages)) {
+        return false;
+      }
+      return currentPassageIndex < newPost.quizFields.passages.length - 1;
+    },
+    [currentPassageIndex, newPost]
   );
 
   const handlePrevPassage = () => {
-    if (hasPrevPassage) setCurrentPassageIndex(currentPassageIndex - 1);
+    if (hasPrevPassage && currentPassageIndex > 0) {
+      setCurrentPassageIndex(currentPassageIndex - 1);
+    }
   };
   const handleNextPassage = () => {
-    if (hasNextPassage) setCurrentPassageIndex(currentPassageIndex + 1);
+    if (hasNextPassage && newPost?.quizFields?.passages && Array.isArray(newPost.quizFields.passages)) {
+      const nextIndex = currentPassageIndex + 1;
+      if (nextIndex < newPost.quizFields.passages.length) {
+        setCurrentPassageIndex(nextIndex);
+      }
+    }
   };
 
   const PlyrComponent = useMemo(() => {
@@ -654,6 +891,36 @@ function ReviewExplanation({
       );
     }
 
+    const explanationsHtml = allHtml.join('<hr class="my-3"/>');
+    const parsedExplanations = parse(explanationsHtml);
+    console.log('[ExplanationsPanelContent] Parsed result type:', typeof parsedExplanations, 'Is array:', Array.isArray(parsedExplanations), 'Is valid element:', React.isValidElement(parsedExplanations), parsedExplanations);
+    
+    const validExplanations = normalizeParseResult(parsedExplanations);
+    console.log('[ExplanationsPanelContent] Normalized result type:', typeof validExplanations, 'Is array:', Array.isArray(validExplanations), 'Is valid element:', React.isValidElement(validExplanations), validExplanations);
+    
+    // Đảm bảo kết quả cuối cùng luôn là React element hoặc array hợp lệ
+    let finalExplanations = validExplanations;
+    if (validExplanations && typeof validExplanations === 'object' && !React.isValidElement(validExplanations) && !Array.isArray(validExplanations)) {
+      console.error('[ExplanationsPanelContent] Normalized result is still an object, wrapping in div:', validExplanations);
+      finalExplanations = <div>{validExplanations}</div>;
+    }
+    
+    // Nếu là array, đảm bảo tất cả phần tử đều hợp lệ
+    if (Array.isArray(finalExplanations)) {
+      const invalidItems = finalExplanations.filter(item => 
+        item && typeof item === 'object' && !React.isValidElement(item) && !Array.isArray(item)
+      );
+      if (invalidItems.length > 0) {
+        console.error('[ExplanationsPanelContent] Array contains invalid items:', invalidItems);
+        finalExplanations = <div>{finalExplanations.map((item, idx) => {
+          if (item && typeof item === 'object' && !React.isValidElement(item) && !Array.isArray(item)) {
+            return <React.Fragment key={idx}>{item}</React.Fragment>;
+          }
+          return item;
+        })}</div>;
+      }
+    }
+
     return (
       <div className="">
         <h3 className="text-xl font-bold text-primary md:px-12">
@@ -661,7 +928,9 @@ function ReviewExplanation({
         </h3>
         <div className="space-y-2 px-1">
           <div className="prose prose-sm max-w-none">
-            {parse(allHtml.join('<hr class="my-3"/>'))}
+            <SafeRender name="finalExplanations">
+              {finalExplanations}
+            </SafeRender>
           </div>
         </div>
       </div>
@@ -671,12 +940,17 @@ function ReviewExplanation({
 
   // ▼▼▼ QuestionsPanelContent ▼▼▼
   const QuestionsPanelContent = useMemo(() => {
+    if (!currentPassage || !currentPassage.questions) {
+      return (
+        <div className="p-4 md:p-12 text-gray-500">No questions available</div>
+      );
+    }
     return (
       <ConfigProvider>
         <FormProvider {...methods}>
           <div className={twMerge("p-4 md:p-12 space-y-6 bg-white")}>
             {currentPassage.questions &&
-              currentPassage.questions.map((question, index) => {
+              currentPassage.questions.map((question: any, index: number) => {
                 const questionType = question.type?.[0];
                 if (questionType === "checkbox") {
                   return (
@@ -687,6 +961,16 @@ function ReviewExplanation({
                     />
                   );
                 }
+                // Debug: Log để kiểm tra question.startIndex
+                if (question.type?.[0] === 'fillup' && currentPassageIndex === 1) {
+                  console.log(`[QuestionsPanelContent] Rendering fillup question:`, {
+                    questionIndex: index,
+                    questionStartIndex: question.startIndex,
+                    propStartIndex: question.startIndex,
+                    questionTitle: question.title?.substring(0, 50),
+                  });
+                }
+                
                 return (
                   <QuestionRender
                     key={`${currentPassageIndex}-${index}`}
@@ -863,7 +1147,9 @@ function ReviewExplanation({
               <h2 className="text-primary text-2xl font-bold">
                 {currentPassage.title}
               </h2>
-              {processedPassageComponent}
+              <SafeRender name="processedPassageComponent">
+                {processedPassageComponent}
+              </SafeRender>
             </div>
           )}
 

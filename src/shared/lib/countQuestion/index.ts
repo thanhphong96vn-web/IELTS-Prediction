@@ -69,9 +69,15 @@ const countSubQuestions = (question: IQuestion): number => {
 type Passage = IPracticeSingle['quizFields']['passages'][number];
 
 // Hàm chính để export
-export function countQuestion(passage: Passage): number {
-    if (!passage || !passage.questions || passage.questions.length === 0) {
+// Hỗ trợ cả Passage và { questions: [...] } để tương thích với PageTakeTheTestWrapper
+export function countQuestion(passage: Passage | { questions: IQuestion[] }): number {
+    if (!passage) return 0;
+    
+    // Xử lý cả hai trường hợp: Passage hoặc { questions: [...] }
+    const questions = 'questions' in passage ? passage.questions : (passage as Passage).questions;
+    
+    if (!questions || questions.length === 0) {
         return 0;
     }
-    return passage.questions.reduce((total: number, q: any) => total + countSubQuestions(q), 0);
+    return questions.reduce((total: number, q: any) => total + countSubQuestions(q), 0);
 }

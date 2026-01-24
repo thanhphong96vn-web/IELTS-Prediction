@@ -4,10 +4,11 @@ import { randomUUID } from "@/shared/lib";
 import { TextSelectionWrapper } from "@/shared/ui/text-selection";
 import { Collapse, Input } from "antd";
 import parse, { Element, HTMLReactParserOptions } from "html-react-parser";
-import { Fragment, useMemo } from "react";
+import React, { Fragment, useMemo } from "react";
 import { Controller, useFormContext } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 import { countQuestion } from "@/shared/lib";
+import { normalizeParseResult, SafeRender } from "@/shared/lib/html-normalize";
 
 // --- HÀM CHUẨN HÓA CHUỖI ---
 const normalizeString = (str: string | undefined | null) => {
@@ -29,6 +30,23 @@ export const Fillup = ({
 
   // ▼▼▼ LOGIC TÌM INDEX MẠNH MẼ (ROBUST SCAN) ▼▼▼
   const realStartIndex = useMemo(() => {
+    // QUAN TRỌNG: Trong review mode (readOnly), propStartIndex đã được tính đúng từ newPost
+    // Nên LUÔN LUÔN dùng propStartIndex khi readOnly mode để đảm bảo khớp với answers array
+    // Nếu question có startIndex property, ưu tiên dùng nó (đã được tính đúng từ newPost)
+    if (readOnly) {
+      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0) 
+        ? question.startIndex 
+        : propStartIndex;
+      
+      console.log(`[Fillup] readOnly mode: Using startIndex=${finalStartIndex} for question`, {
+        questionTitle: question.title,
+        questionType: question.type?.[0],
+        propStartIndex,
+        questionStartIndex: question.startIndex,
+      });
+      return finalStartIndex;
+    }
+
     // 1. Nếu không có dữ liệu, dùng prop
     if (!post?.quizFields?.passages) return propStartIndex;
 
@@ -68,7 +86,14 @@ export const Fillup = ({
              // @ts-ignore
              qCount = Number(q.optionChoose) || 1;
         } else {
-             qCount = countQuestion({ questions: [q] });
+             // countQuestion nhận một Passage, nhưng ở đây ta chỉ có question
+             // Tạo một passage tạm với question này
+             const tempPassage = {
+               title: "",
+               passage_content: "",
+               questions: [q],
+             } as any;
+             qCount = countQuestion(tempPassage);
         }
         if (isNaN(qCount) || qCount < 1) qCount = 1;
         currentCount += qCount;
@@ -77,7 +102,7 @@ export const Fillup = ({
 
     // Nếu không tìm thấy, dùng contextIndex (dù là 0) hoặc prop
     return contextIndex || propStartIndex;
-  }, [question, getQuestionStartIndex, propStartIndex, post]);
+  }, [question, getQuestionStartIndex, propStartIndex, post, readOnly]);
   // ▲▲▲ KẾT THÚC LOGIC ▲▲▲
 
   const questionData = useMemo(() => {
@@ -130,6 +155,20 @@ export const Fillup = ({
           const gapOffset = Number(attribs["data-index"]);
           const absoluteIndex = realStartIndex + gapOffset; 
           const displayIndex = absoluteIndex + 1;
+          
+          // Debug logging chi tiết cho readOnly mode
+          if (readOnly && absoluteIndex >= 15 && absoluteIndex <= 30) {
+            const fieldValue = methods?.getValues(`answers.${absoluteIndex}`);
+            console.log(`[Fillup] Q${displayIndex}:`, {
+              realStartIndex,
+              gapOffset,
+              absoluteIndex,
+              propStartIndex,
+              fieldValue,
+              fieldValueType: typeof fieldValue,
+              questionTitle: question.title?.substring(0, 50),
+            });
+          }
 
           return methods ? (
             <Controller
@@ -141,19 +180,58 @@ export const Fillup = ({
 
                 // === LOGIC REVIEW ===
                 if (readOnly) {
-                  const userAnswer = (field.value?.toString() || "").trim();
+                  // Debug: Log field.value để kiểm tra
+                  if (absoluteIndex >= 15 && absoluteIndex <= 25) { // Log Passage 2 để debug
+                    console.log(`[Fillup Debug] Q${displayIndex} (absoluteIndex: ${absoluteIndex}):`, {
+                      fieldValue: field.value,
+                      fieldValueType: typeof field.value,
+                      isArray: Array.isArray(field.value),
+                      isNull: field.value === null,
+                      isUndefined: field.value === undefined,
+                      isEmptyString: field.value === "",
+                      fieldName: `answers.${absoluteIndex}`,
+                    });
+                    
+                    // Thử lấy giá trị trực tiếp từ form để debug
+                    try {
+                      const directValue = methods?.getValues(`answers.${absoluteIndex}`);
+                      console.log(`[Fillup Debug] Direct getValues('answers.${absoluteIndex}'):`, directValue);
+                    } catch (e) {
+                      console.log(`[Fillup Debug] Error getting direct value:`, e);
+                    }
+                  }
+                  
+                  // Xử lý field.value: chỉ chấp nhận string hoặc number, bỏ qua object/array
+                  let userAnswerValue: string = "";
+                  if (field.value !== null && field.value !== undefined) {
+                    // Không check field.value !== "" vì có thể là số 0 hoặc giá trị hợp lệ khác
+                    if (typeof field.value === 'string') {
+                      userAnswerValue = field.value.trim();
+                    } else if (typeof field.value === 'number') {
+                      userAnswerValue = String(field.value).trim();
+                    } else if (Array.isArray(field.value) && field.value.length > 0) {
+                      // Nếu là array, lấy phần tử đầu tiên nếu là string/number
+                      const firstValue = field.value[0];
+                      if (typeof firstValue === 'string') {
+                        userAnswerValue = firstValue.trim();
+                      } else if (typeof firstValue === 'number') {
+                        userAnswerValue = String(firstValue).trim();
+                      }
+                    }
+                    // Bỏ qua object với numeric keys (có thể là từ matching/checkbox question)
+                  }
                   
                   const correctAnswerString = questionData.questions[gapOffset]?.answers || "";
                   const possibleCorrectAnswers = correctAnswerString.split("|").map((w) => w.trim().toLowerCase());
                   const displayCorrectAnswer = correctAnswerString.split("|")[0] || "";
-                  const isCorrect = userAnswer !== "" && possibleCorrectAnswers.includes(userAnswer.toLowerCase());
+                  const isCorrect = userAnswerValue !== "" && possibleCorrectAnswers.includes(userAnswerValue.toLowerCase());
 
                   if (isCorrect) {
-                    return <span id={`#question-no-${displayIndex}`} className="ml-[5px] align-middle border border-[#000] px-[10px] py-[5px] rounded-[3px] text-green-600 font-semibold ml-[5px] align-middle">{field.value}</span>;
-                  } else if (userAnswer !== "") {
+                    return <span id={`#question-no-${displayIndex}`} className="ml-[5px] align-middle border border-[#000] px-[10px] py-[5px] rounded-[3px] text-green-600 font-semibold ml-[5px] align-middle">{userAnswerValue}</span>;
+                  } else if (userAnswerValue !== "") {
                     return (
                       <span id={`#question-no-${displayIndex}`} className="ml-[5px] align-middle border border-[#000] px-[10px] py-[5px] rounded-[3px]">
-                        <span className="text-red-500 line-through mr-1">{field.value}</span>
+                        <span className="text-red-500 line-through mr-1">{userAnswerValue}</span>
                         <span className="text-green-600 font-semibold">{displayCorrectAnswer}</span>
                       </span>
                     );
@@ -212,7 +290,17 @@ export const Fillup = ({
     ]
   );
 
-  const content = useMemo(() => parse(questionData.content, options), [options, questionData.content]);
+  const parsedContent = useMemo(() => {
+    const result = parse(questionData.content, options);
+    console.log('[Fillup] Parsed content type:', typeof result, 'Is array:', Array.isArray(result), 'Is valid element:', React.isValidElement(result), result);
+    return result;
+  }, [options, questionData.content]);
+  
+  const content = useMemo(() => {
+    const normalized = normalizeParseResult(parsedContent);
+    console.log('[Fillup] Normalized content type:', typeof normalized, 'Is array:', Array.isArray(normalized), 'Is valid element:', React.isValidElement(normalized), normalized);
+    return normalized;
+  }, [parsedContent]);
 
   const numberOfGaps = questionData.questions.length;
   const displayStart = realStartIndex + 1;
@@ -224,7 +312,11 @@ export const Fillup = ({
     <div className="space-y-6" id={`question-block-${realStartIndex + 1}`}>
       <p className="text-lg font-bold">Questions {questionRange}</p>
       <div className="leading-[2] prose prose-sm max-w-none">
-        <TextSelectionWrapper>{content}</TextSelectionWrapper>
+        <TextSelectionWrapper>
+          <SafeRender name="fillup-content">
+            {content}
+          </SafeRender>
+        </TextSelectionWrapper>
       </div>
 
       {readOnly && (
@@ -239,7 +331,9 @@ export const Fillup = ({
                   children: (
                     <div className="prose">
                       <TextSelectionWrapper>
-                        {parse(question.explanations[0].content || "")}
+                        <SafeRender name="fillup-explanation">
+                          {normalizeParseResult(parse(question.explanations[0].content || ""))}
+                        </SafeRender>
                       </TextSelectionWrapper>
                     </div>
                   ),
