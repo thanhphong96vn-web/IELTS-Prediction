@@ -170,8 +170,8 @@ const OrderReceivedPage = ({ order: initialOrder, error }: OrderReceivedPageProp
             {/* Bank Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <InfoRow label="Tên tài khoản" value="TRAN PHAN TIEN PHAT" />
-              <InfoRow label="Số tài khoản" value="0481000847499" />
-              <InfoRow label="Ngân hàng" value="Vietcombank (VCB)" />
+              <InfoRow label="Số tài khoản" value="2447967" />
+              <InfoRow label="Ngân hàng" value="Ngân hàng Thương Mại Cổ Phần Á Châu (ACB) />
               <InfoRow label="Số tiền" value={displayAmount.replace("đ", "vnd")} />
               <InfoRow label="Nội dung chuyển khoản" value={displayNote} className="md:col-span-2" />
               <InfoRow 
