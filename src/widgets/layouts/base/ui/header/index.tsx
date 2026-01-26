@@ -107,11 +107,17 @@ export const Header = () => {
     if (!masterData?.menuData["main-menu"]) return [];
     const menuData = masterData.menuData;
 
-    const menu = [
-      ...createModifiedMenuData(menuData["main-menu"], (item) => (
-        <Link href={item.uri || "#"}>{item.label}</Link>
-      ))!,
-    ];
+    const cmsMenuItems = createModifiedMenuData(menuData["main-menu"], (item) => (
+      <Link href={item.uri || "#"}>{item.label}</Link>
+    ))!;
+
+    // Add subscription link to the menu
+    const subscriptionMenuItem = {
+      key: "subscription",
+      label: <Link href={ROUTES.SUBSCRIPTION}>Subscription</Link>,
+    };
+
+    const menu = [...cmsMenuItems, subscriptionMenuItem];
 
     if (isSignedIn) {
       menu.push(
