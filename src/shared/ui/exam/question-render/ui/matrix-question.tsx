@@ -42,6 +42,15 @@ export const MatrixQuestion = ({
   const { activeQuestionIndex, setActiveQuestionIndex, post } = useExamContext();
 
   const realStartIndex = useMemo(() => {
+    // QUAN TRỌNG: Trong review mode (readOnly), propStartIndex đã được tính đúng từ newPost
+    // Nên LUÔN LUÔN dùng propStartIndex hoặc question.startIndex khi readOnly mode
+    if (readOnly) {
+      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0) 
+        ? question.startIndex 
+        : propStartIndex;
+      return finalStartIndex;
+    }
+
     if (!post?.quizFields?.passages) return propStartIndex;
     const targetTitle = normalizeString(question.title);
     const targetFirstItem = normalizeString(question.matrixQuestion?.matrixItems?.[0]?.itemText);
@@ -71,7 +80,7 @@ export const MatrixQuestion = ({
       }
     }
     return propStartIndex;
-  }, [post, question, propStartIndex]);
+  }, [post, question, propStartIndex, readOnly]);
 
   const matrixData = question.matrixQuestion;
 

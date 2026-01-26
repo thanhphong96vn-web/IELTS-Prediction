@@ -19,7 +19,7 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
   withMasterData,
   async (context: GetServerSidePropsContext) => {
     const {
-      query: { slug },
+      query: { slug, testId },
     } = context;
     const { client } = createServerApolloClient(context);
 
@@ -41,6 +41,37 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
       };
     }
 
+    // Nếu có testId trong query params, dùng test đó thay vì tạo mới
+    if (testId && typeof testId === "string") {
+      try {
+        const {
+          data: { testResult },
+        } = await client.query<ITestResultResponse, { id: string }>({
+          query: GET_TEST_RESULT,
+          variables: {
+            id: testId,
+          },
+          context: {
+            authRequired: true,
+          },
+        });
+
+        if (testResult) {
+          return {
+            props: {
+              post,
+              testID: testId,
+              testResult,
+            },
+          };
+        }
+      } catch (error) {
+        // Nếu không tìm thấy test với testId, tiếp tục tạo test mới
+        console.warn("Test ID not found, creating new test:", error);
+      }
+    }
+
+    // Tạo test mới nếu không có testId hoặc testId không hợp lệ
     const testPart = Array.from(
       { length: post.quizFields.passages.length },
       (_, index) => index

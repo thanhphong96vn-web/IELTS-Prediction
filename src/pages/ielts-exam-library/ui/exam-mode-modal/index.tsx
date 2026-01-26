@@ -61,7 +61,7 @@ function ExamModeModal({
   const onSubmit = handleSubmit(async (data) => {
     _.set(data, "testPart", JSON.stringify(data.testPart));
     try {
-      await takeTest({
+      const result = await takeTest({
         variables: {
           ...data,
           retake: true,
@@ -71,7 +71,12 @@ function ExamModeModal({
         },
       });
 
-      router.push(navigateLink);
+      const testId = result.data?.takeTheTest?.data?.id;
+      if (testId) {
+        router.push(`${navigateLink}?testId=${testId}`);
+      } else {
+        router.push(navigateLink);
+      }
     } catch (error) {
       if (error instanceof ApolloError) {
         toast.error(error.message);

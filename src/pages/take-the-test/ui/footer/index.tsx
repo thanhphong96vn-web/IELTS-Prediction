@@ -63,6 +63,9 @@ function Footer() {
       let passageStartIndex = absoluteQuestionIndex;
       const passageQuestionIndices: number[] = [];
       let totalPassageQuestions = 0;
+      // Use originalPartIndex if available (for filtered passages), otherwise use passageIndex
+      const originalPartIndex = (passage as any).originalPartIndex;
+      const displayPartIndex = originalPartIndex !== undefined ? originalPartIndex : passageIndex;
 
       passage.questions.forEach(q => {
         if (!q) return;
@@ -149,7 +152,8 @@ function Footer() {
       const answeredCount = passageQuestionIndices.filter(idx => localAnsweredMap.has(idx)).length;
 
       return {
-        partIndex: passageIndex,
+        partIndex: passageIndex, // Use filtered index for navigation
+        displayPartIndex: displayPartIndex, // Use original index for display
         totalQuestions: totalPassageQuestions,
         answeredCount,
         startIndex: passageStartIndex,
@@ -469,7 +473,7 @@ function Footer() {
                       <div className="flex items-center gap-[5px] h-full">
                         <div className="flex items-center border-t-[3px] border-gray-200 pt-2">
                           <span className="font-semibold text-[16px] text-[#000] whitespace-nowrap pl-[20px] pr-[30px]">
-                            {isReadingTest ? "Passage" : "Part"} {info.partIndex + 1}
+                            {isReadingTest ? "Passage" : "Part"} {(info.displayPartIndex !== undefined ? info.displayPartIndex : info.partIndex) + 1}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 overflow-x-auto py-1">
@@ -508,7 +512,7 @@ function Footer() {
                   ) : (
                     <div className="flex items-center gap-3 h-full w-full justify-center pt-[10px]">
                       <span className="pl-[20px] text-[16px] text-gray-700 whitespace-nowrap">
-                        {isReadingTest ? "Passage" : "Part"} {info.partIndex + 1}
+                        {isReadingTest ? "Passage" : "Part"} {(info.displayPartIndex !== undefined ? info.displayPartIndex : info.partIndex) + 1}
                       </span>
                       <span className="text-[16px] text-gray-500 whitespace-nowrap">
                         {info.answeredCount} of {info.totalQuestions}

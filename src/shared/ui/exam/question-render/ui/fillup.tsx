@@ -38,12 +38,6 @@ export const Fillup = ({
         ? question.startIndex 
         : propStartIndex;
       
-      console.log(`[Fillup] readOnly mode: Using startIndex=${finalStartIndex} for question`, {
-        questionTitle: question.title,
-        questionType: question.type?.[0],
-        propStartIndex,
-        questionStartIndex: question.startIndex,
-      });
       return finalStartIndex;
     }
 
@@ -156,19 +150,6 @@ export const Fillup = ({
           const absoluteIndex = realStartIndex + gapOffset; 
           const displayIndex = absoluteIndex + 1;
           
-          // Debug logging chi tiết cho readOnly mode
-          if (readOnly && absoluteIndex >= 15 && absoluteIndex <= 30) {
-            const fieldValue = methods?.getValues(`answers.${absoluteIndex}`);
-            console.log(`[Fillup] Q${displayIndex}:`, {
-              realStartIndex,
-              gapOffset,
-              absoluteIndex,
-              propStartIndex,
-              fieldValue,
-              fieldValueType: typeof fieldValue,
-              questionTitle: question.title?.substring(0, 50),
-            });
-          }
 
           return methods ? (
             <Controller
@@ -180,27 +161,6 @@ export const Fillup = ({
 
                 // === LOGIC REVIEW ===
                 if (readOnly) {
-                  // Debug: Log field.value để kiểm tra
-                  if (absoluteIndex >= 15 && absoluteIndex <= 25) { // Log Passage 2 để debug
-                    console.log(`[Fillup Debug] Q${displayIndex} (absoluteIndex: ${absoluteIndex}):`, {
-                      fieldValue: field.value,
-                      fieldValueType: typeof field.value,
-                      isArray: Array.isArray(field.value),
-                      isNull: field.value === null,
-                      isUndefined: field.value === undefined,
-                      isEmptyString: field.value === "",
-                      fieldName: `answers.${absoluteIndex}`,
-                    });
-                    
-                    // Thử lấy giá trị trực tiếp từ form để debug
-                    try {
-                      const directValue = methods?.getValues(`answers.${absoluteIndex}`);
-                      console.log(`[Fillup Debug] Direct getValues('answers.${absoluteIndex}'):`, directValue);
-                    } catch (e) {
-                      console.log(`[Fillup Debug] Error getting direct value:`, e);
-                    }
-                  }
-                  
                   // Xử lý field.value: chỉ chấp nhận string hoặc number, bỏ qua object/array
                   let userAnswerValue: string = "";
                   if (field.value !== null && field.value !== undefined) {
@@ -292,13 +252,11 @@ export const Fillup = ({
 
   const parsedContent = useMemo(() => {
     const result = parse(questionData.content, options);
-    console.log('[Fillup] Parsed content type:', typeof result, 'Is array:', Array.isArray(result), 'Is valid element:', React.isValidElement(result), result);
     return result;
   }, [options, questionData.content]);
   
   const content = useMemo(() => {
     const normalized = normalizeParseResult(parsedContent);
-    console.log('[Fillup] Normalized content type:', typeof normalized, 'Is array:', Array.isArray(normalized), 'Is valid element:', React.isValidElement(normalized), normalized);
     return normalized;
   }, [parsedContent]);
 

@@ -39,7 +39,16 @@ export const Checkbox = ({
 
   // 2. TÍNH TOÁN INDEX THỰC TẾ (GLOBAL INDEX)
   const realStartIndex = useMemo(() => {
-    // Gọi hàm lookup từ Context (đã fix ở bước trước)
+    // QUAN TRỌNG: Trong review mode (readOnly), propStartIndex đã được tính đúng từ newPost
+    // Nên LUÔN LUÔN dùng propStartIndex hoặc question.startIndex khi readOnly mode
+    if (readOnly) {
+      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0) 
+        ? question.startIndex 
+        : propStartIndex;
+      return finalStartIndex;
+    }
+
+    // Gọi hàm lookup từ Context (chỉ khi không phải readOnly)
     const contextIndex = getQuestionStartIndex(question);
 
     // Nếu Context tìm thấy (>0) thì dùng, ngược lại dùng prop (fallback)
@@ -49,7 +58,7 @@ export const Checkbox = ({
     // nhưng để fix lỗi ghosting (trùng 0), ta ưu tiên kết quả từ ContextMap (nếu tin tưởng Context đúng).
     // Với cấu trúc hiện tại, ContextMap là nguồn chân lý.
     return contextIndex; 
-  }, [question, getQuestionStartIndex, propStartIndex]);
+  }, [question, getQuestionStartIndex, propStartIndex, readOnly]);
 
   // Logic tính toán option
   const maxSelectableOptions = Number(question.optionChoose) || 1;

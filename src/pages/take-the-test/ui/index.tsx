@@ -163,42 +163,77 @@ export function PageTakeTheTestWrapper({
   });
 
   const newPost = useMemo(() => {
-    let currentIndex = 0;
     const rawPost = JSON.parse(JSON.stringify(post));
 
-    rawPost.quizFields.passages.forEach(
-      (passage: any, passageIndex: number) => {
-        _.set(
-          rawPost,
-          `quizFields.passages.${passageIndex}.partIndex`,
-          passageIndex
-        );
-
-        passage.questions.forEach((question: any, questionIndex: number) => {
-          _.set(
-            rawPost,
-            `quizFields.passages.${passageIndex}.questions.${questionIndex}.startIndex`,
-            currentIndex
-          );
-
-          const numberOfSubQuestions = countQuestion({ questions: [question] });
-
-          currentIndex += numberOfSubQuestions;
+    _.set(rawPost, "quizFields.time", testResultFields.testTime);
+    let parts: number[] = [];
+    
+    try {
+      parts = JSON.parse(testResultFields.testPart || "[]");
+    } catch (error) {
+      console.error("Failed to parse testPart:", testResultFields.testPart, error);
+    }
+    
+    // Validate parts array
+    if (!Array.isArray(parts) || parts.length === 0) {
+      console.warn("Invalid testPart, using all passages:", testResultFields.testPart);
+      // Fallback to all passages if testPart is invalid
+      parts = Array.from(
+        { length: rawPost.quizFields.passages.length },
+        (_, index) => index
+      );
+    }
+    
+    console.log("Filtering passages. Selected parts:", parts, "Total passages:", rawPost.quizFields.passages.length);
+    
+    // Filter passages based on selected parts and preserve original index
+    const filteredPassagesWithOriginalIndex: Array<{ passage: any; originalIndex: number }> = [];
+    rawPost.quizFields.passages.forEach((passage: any, originalIndex: number) => {
+      if (parts.includes(originalIndex)) {
+        filteredPassagesWithOriginalIndex.push({ passage, originalIndex });
+      }
+    });
+    
+    console.log("Filtered passages count:", filteredPassagesWithOriginalIndex.length);
+    
+    // Ensure at least one passage exists
+    if (filteredPassagesWithOriginalIndex.length === 0) {
+      console.error("No passages found after filtering. Parts:", parts, "Total passages:", rawPost.quizFields.passages.length);
+      // Fallback to first passage if no passages match
+      if (rawPost.quizFields.passages.length > 0) {
+        filteredPassagesWithOriginalIndex.push({ 
+          passage: rawPost.quizFields.passages[0], 
+          originalIndex: 0 
         });
       }
-    );
+    }
+    
+    // Reset partIndex and recalculate startIndex from 0 after filtering
+    // Also preserve originalPartIndex for display purposes
+    let currentIndex = 0;
+    const filteredPassages = filteredPassagesWithOriginalIndex.map(({ passage, originalIndex }, newIndex) => {
+      _.set(passage, "partIndex", newIndex);
+      _.set(passage, "originalPartIndex", originalIndex); // Preserve original index for display
+      
+      passage.questions.forEach((question: any, questionIndex: number) => {
+        _.set(
+          passage,
+          `questions.${questionIndex}.startIndex`,
+          currentIndex
+        );
 
-    _.set(rawPost, "quizFields.time", testResultFields.testTime);
-    const parts: number[] = JSON.parse(testResultFields.testPart || "[]");
+        const numberOfSubQuestions = countQuestion({ questions: [question] });
+        currentIndex += numberOfSubQuestions;
+      });
+      
+      return passage;
+    });
+    
     const newPostData = {
       ...rawPost,
       quizFields: {
         ...rawPost.quizFields,
-        passages: rawPost.quizFields.passages.filter(
-          (_: any, index: number) => {
-            return parts.includes(index);
-          }
-        ),
+        passages: filteredPassages,
       },
     };
     return newPostData;
@@ -273,7 +308,9 @@ export function PageTakeTheTest() {
     }
     const partLabel =
       post.quizFields.skill[0] === "reading" ? "Passage" : "Part";
-    const partNumber = (currentPassage as any).partIndex + 1;
+    // Use originalPartIndex if available (for filtered passages), otherwise use partIndex
+    const originalPartIndex = (currentPassage as any).originalPartIndex;
+    const partNumber = (originalPartIndex !== undefined ? originalPartIndex : (currentPassage as any).partIndex) + 1;
     const startQuestion = currentPassage.questions[0]?.startIndex + 1;
     const questionCountInPassage = countQuestion(currentPassage);
     const endQuestion = startQuestion + questionCountInPassage - 1;

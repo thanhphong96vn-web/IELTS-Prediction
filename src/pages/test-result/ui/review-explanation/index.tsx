@@ -124,71 +124,13 @@ function ReviewExplanation({
         answers: (string | number[] | object | null | undefined)[];
       };
       
-      console.log("[ReviewExplanation] Raw answers string length:", rawAnswers.length);
-      console.log("[ReviewExplanation] Parsed answers array length:", parsed.answers?.length);
-      console.log("[ReviewExplanation] Answers at index 15-25:", parsed.answers?.slice(15, 26));
-      
       // Map answers, chỉ convert null/undefined thành "", giữ nguyên các giá trị khác
-      let mapped = (parsed.answers || []).map((a, index) => {
-        // Log chi tiết cho index 15-25 để debug
-        if (index >= 15 && index <= 25) {
-          console.log(`[ReviewExplanation] Answer[${index}]:`, a, 'Type:', typeof a, 'Is array:', Array.isArray(a), 'Is null:', a === null, 'Is undefined:', a === undefined, 'Value:', JSON.stringify(a));
-        }
+      let mapped = (parsed.answers || []).map((a) => {
         if (a === null || a === undefined) {
           return "";
         }
         return a;
       });
-      
-      console.log("[ReviewExplanation] Mapped answers length:", mapped.length);
-      console.log("[ReviewExplanation] Mapped answers at index 15-25:", mapped.slice(15, 26));
-      
-      // Đảm bảo answers array đủ dài bằng cách tính tổng số câu hỏi từ quiz
-      // Tính tổng số câu hỏi từ TẤT CẢ passages (không filter) để khớp với startIndex
-      // Logic này PHẢI GIỐNG HỆT với cách tính trong newPost useMemo
-      let totalQuestionsNeeded = 0;
-      if (quiz?.quizFields?.passages) {
-        quiz.quizFields.passages.forEach((passage: any) => {
-          if (passage?.questions) {
-            passage.questions.forEach((question: any) => {
-              const questionType = question.type?.[0];
-              let questionCount = 1;
-              
-              // Logic giống hệt với newPost useMemo
-              if (questionType === 'matching' && String(question.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
-                let gapCount = 0;
-                (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
-                questionCount = gapCount > 0 ? gapCount : 1;
-              } else if (questionType === 'checkbox') {
-                // @ts-ignore
-                questionCount = Number(question.optionChoose) || 1;
-              } else {
-                // Dùng countQuestion giống hệt với newPost useMemo
-                questionCount = countQuestion({ questions: [question] } as any);
-              }
-              
-              if (isNaN(questionCount) || questionCount < 1) {
-                questionCount = 1;
-              }
-              
-              totalQuestionsNeeded += questionCount;
-            });
-          }
-        });
-      }
-      
-      console.log("[ReviewExplanation] Total questions needed:", totalQuestionsNeeded);
-      console.log("[ReviewExplanation] Current mapped length:", mapped.length);
-      
-      // Pad answers array nếu thiếu phần tử
-      if (mapped.length < totalQuestionsNeeded) {
-        console.log(`[ReviewExplanation] Padding answers array: ${mapped.length} -> ${totalQuestionsNeeded}`);
-        const padding = Array(totalQuestionsNeeded - mapped.length).fill("");
-        mapped = [...mapped, ...padding];
-      }
-      
-      console.log("[ReviewExplanation] Final answers array length:", mapped.length);
-      console.log("[ReviewExplanation] Final answers at index 15-25:", mapped.slice(15, 26));
       
       return mapped;
     } catch (error) {
@@ -197,21 +139,200 @@ function ReviewExplanation({
     }
   }, [testResult.testResultFields.answers, quiz]);
 
+  // Map answers từ original index (từ tất cả passages) sang filtered index (từ 0)
+  // Answers được lưu với original index từ tất cả passages
+  const mappedAnswers = useMemo(() => {
+    // Parse testPart để biết passages nào được chọn
+    let testParts: number[] = [];
+    try {
+      testParts = JSON.parse(testResult.testResultFields.testPart || "[]");
+      if (!Array.isArray(testParts) || testParts.length === 0) {
+        testParts = Array.from(
+          { length: quiz.quizFields.passages.length },
+          (_, index) => index
+        );
+      }
+    } catch (error) {
+      testParts = Array.from(
+        { length: quiz.quizFields.passages.length },
+        (_, index) => index
+      );
+    }
+    
+    // Tính original startIndex cho tất cả questions (từ tất cả passages)
+    const originalStartIndexMap = new Map<string, number>();
+    let originalCurrentIndex = 0;
+    
+    if (quiz?.quizFields?.passages) {
+      quiz.quizFields.passages.forEach((passage: any, passageIndex: number) => {
+        if (passage && passage.questions) {
+          // Debug logging cho Passage 2 để xem tất cả questions
+          if (passageIndex === 1) {
+            console.log(`[Mapping] Passage 2 has ${passage.questions.length} questions`);
+          }
+          
+          passage.questions.forEach((question: any, questionIndex: number) => {
+            const questionType = question.type?.[0];
+            let numberOfSubQuestions = 1;
+            
+            if (questionType === 'matching' && String(question.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+              let gapCount = 0;
+              (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+              numberOfSubQuestions = gapCount > 0 ? gapCount : 1;
+            } else if (questionType === 'checkbox') {
+              // Dùng countQuestion để đảm bảo nhất quán với logic đếm số options có correct: true
+              numberOfSubQuestions = countQuestion({ questions: [question] } as any);
+            } else {
+              numberOfSubQuestions = countQuestion({ questions: [question] } as any);
+            }
+            
+            if (isNaN(numberOfSubQuestions) || numberOfSubQuestions < 1) {
+              numberOfSubQuestions = 1;
+            }
+            
+            const key = question.id || `passage-${passageIndex}-question-${questionIndex}`;
+            originalStartIndexMap.set(key, originalCurrentIndex);
+            
+            // Debug logging cho tất cả questions trong Passage 2
+            if (passageIndex === 1) {
+              console.log(`[Mapping] Passage 2 question ${questionIndex}:`, {
+                questionType,
+                originalStartIndex: originalCurrentIndex,
+                numberOfSubQuestions,
+                questionTitle: question.title?.substring(0, 50),
+                key,
+              });
+            }
+            
+            originalCurrentIndex += numberOfSubQuestions;
+          });
+        }
+      });
+    }
+    
+    // Tạo mapping từ original index sang new index (chỉ cho passages đã chọn)
+    const indexMapping = new Map<number, number>();
+    let newIndex = 0;
+    
+    quiz.quizFields.passages.forEach((passage: any, passageIndex: number) => {
+      if (!testParts.includes(passageIndex)) return;
+      
+      if (passage && passage.questions) {
+        passage.questions.forEach((question: any, questionIndex: number) => {
+          const questionType = question.type?.[0];
+          let numberOfSubQuestions = 1;
+          
+          if (questionType === 'matching' && String(question.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+            let gapCount = 0;
+            (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+            numberOfSubQuestions = gapCount > 0 ? gapCount : 1;
+          } else if (questionType === 'checkbox') {
+            // Dùng countQuestion để đảm bảo nhất quán với logic đếm số options có correct: true
+            numberOfSubQuestions = countQuestion({ questions: [question] } as any);
+          } else {
+            numberOfSubQuestions = countQuestion({ questions: [question] } as any);
+          }
+          
+          if (isNaN(numberOfSubQuestions) || numberOfSubQuestions < 1) {
+            numberOfSubQuestions = 1;
+          }
+          
+          const key = question.id || `passage-${passageIndex}-question-${questionIndex}`;
+          const originalStartIndex = originalStartIndexMap.get(key);
+          
+          if (originalStartIndex === undefined) {
+            console.warn(`[Mapping] Could not find originalStartIndex for key: ${key}, passageIndex: ${passageIndex}, questionIndex: ${questionIndex}`);
+            return;
+          }
+          
+          // Debug logging cho Passage 2 fillup
+          if (passageIndex === 1 && (questionType === 'fillup' || questionType === 'select')) {
+            console.log(`[Mapping] Mapping Passage 2 ${questionType}:`, {
+              passageIndex,
+              questionIndex,
+              key,
+              originalStartIndex,
+              newStartIndex: newIndex,
+              numberOfSubQuestions,
+              questionTitle: question.title?.substring(0, 50),
+              countQuestionResult: countQuestion({ questions: [question] } as any),
+            });
+          }
+          
+          // Map từng sub-question
+          for (let i = 0; i < numberOfSubQuestions; i++) {
+            indexMapping.set(originalStartIndex + i, newIndex + i);
+            
+            // Debug logging cho Passage 2 fillup mapping
+            if (passageIndex === 1 && (questionType === 'fillup' || questionType === 'select') && i < 5) {
+              console.log(`[Mapping] Mapping sub-question ${i}:`, {
+                originalIndex: originalStartIndex + i,
+                newIndex: newIndex + i,
+                originalValue: parsedAnswers[originalStartIndex + i],
+              });
+            }
+          }
+          
+          newIndex += numberOfSubQuestions;
+        });
+      }
+    });
+    
+    // Remap answers array
+    const maxNewIndex = Math.max(...Array.from(indexMapping.values()), -1);
+    if (maxNewIndex < 0) {
+      return parsedAnswers; // Fallback nếu không có mapping
+    }
+    
+    const remappedAnswers = new Array(maxNewIndex + 1).fill("");
+    
+    indexMapping.forEach((newIdx, originalIdx) => {
+      if (originalIdx >= 0 && originalIdx < parsedAnswers.length) {
+        remappedAnswers[newIdx] = parsedAnswers[originalIdx];
+        
+        // Debug logging cho Passage 2 fillup answers (index 20-25 trong original)
+        if (originalIdx >= 20 && originalIdx <= 25) {
+          console.log(`[Mapping] Remapping answer:`, {
+            originalIdx,
+            newIdx,
+            originalValue: parsedAnswers[originalIdx],
+            newValue: remappedAnswers[newIdx],
+            originalValueType: typeof parsedAnswers[originalIdx],
+            isEmpty: parsedAnswers[originalIdx] === "" || parsedAnswers[originalIdx] === null || parsedAnswers[originalIdx] === undefined,
+          });
+        }
+      }
+    });
+    
+    // Debug logging tổng hợp cho Passage 2 fillup
+    const passage2FillupMappings = Array.from(indexMapping.entries()).filter(([orig, _]) => orig >= 20 && orig <= 25);
+    if (passage2FillupMappings.length > 0) {
+      console.log(`[Mapping] Passage 2 fillup mappings (original 20-25):`, {
+        mappings: passage2FillupMappings,
+        remappedAnswersAtNewIndex: remappedAnswers.slice(passage2FillupMappings[0]?.[1] || 0, (passage2FillupMappings[passage2FillupMappings.length - 1]?.[1] || 0) + 1),
+        originalAnswersAt20to25: parsedAnswers.slice(20, 26),
+        newStartIndex: passage2FillupMappings[0]?.[1],
+        newEndIndex: passage2FillupMappings[passage2FillupMappings.length - 1]?.[1],
+      });
+    }
+    
+    return remappedAnswers;
+  }, [parsedAnswers, quiz, testResult.testResultFields.testPart]);
+
   const methods = useForm<AnswerFormValues>({
     defaultValues: {
-      answers: parsedAnswers,
+      answers: mappedAnswers,
     },
   });
 
-  // Reset form values khi parsedAnswers thay đổi để đảm bảo form có dữ liệu mới nhất
+  // Reset form values khi mappedAnswers thay đổi để đảm bảo form có dữ liệu mới nhất
   useEffect(() => {
-    if (parsedAnswers.length > 0) {
-      console.log("[ReviewExplanation] Resetting form values with parsedAnswers length:", parsedAnswers.length);
+    if (mappedAnswers.length > 0) {
       methods.reset({
-        answers: parsedAnswers,
+        answers: mappedAnswers,
       });
     }
-  }, [parsedAnswers, methods]);
+  }, [mappedAnswers, methods]);
 
   const [isMobileView, setIsMobileView] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -388,60 +509,10 @@ function ReviewExplanation({
   };
   // ▲▲▲ KẾT THÚC CheckboxReviewBlock ▲▲▲
 
-  // ▼▼▼ LOGIC newPost - SỬ DỤNG HÀM TẬP TRUNG ▼▼▼
-  const allQuestionsStartIndexMap = useMemo(() => {
-    return calculateStartIndexForAllQuestions(quiz);
-  }, [quiz]);
-
   const newPost = useMemo(() => {
     const rawPost = JSON.parse(JSON.stringify(quiz));
 
-    // BƯỚC 1: Gán startIndex cho TẤT CẢ questions từ map đã tính sẵn
-    // Điều này đảm bảo startIndex khớp với answers array đã lưu
-    rawPost.quizFields.passages.forEach(
-      (passage: any, passageIndex: number) => {
-        if (passage && passage.questions) {
-          passage.questions.forEach((question: any, questionIndex: number) => {
-            const questionType = question.type?.[0];
-            
-            // Lấy startIndex từ map để đảm bảo nhất quán
-            const key = question.id || `passage-${passageIndex}-question-${questionIndex}`;
-            const startIndexFromMap = allQuestionsStartIndexMap.get(key);
-            
-            if (startIndexFromMap !== undefined) {
-              _.set(
-                rawPost,
-                `quizFields.passages.${passageIndex}.questions.${questionIndex}.startIndex`,
-                startIndexFromMap
-              );
-
-              // Log chi tiết cho fillup questions trong Passage 2 (index 1)
-              if (passageIndex === 1 && questionType === 'fillup') {
-                console.log(`[ReviewExplanation] FILLUP QUESTION in Passage 2:`, {
-                  passageIndex,
-                  questionIndex,
-                  startIndex: startIndexFromMap,
-                  questionTitle: question.title,
-                  questionText: question.question?.substring(0, 100),
-                  key,
-                  mapValue: startIndexFromMap,
-                });
-              }
-            } else {
-              console.warn(`[ReviewExplanation] Could not find startIndex for question:`, {
-                passageIndex,
-                questionIndex,
-                key,
-                questionId: question.id,
-                questionTitle: question.title,
-              });
-            }
-          });
-        }
-      }
-    );
-
-    // BƯỚC 2: Parse testPart và filter passages SAU KHI tính startIndex (giống như khi làm bài)
+    // BƯỚC 1: Parse testPart và filter passages TRƯỚC KHI tính startIndex
     let testParts: number[] = [];
     try {
       testParts = JSON.parse(testResult.testResultFields.testPart || "[]");
@@ -453,12 +524,84 @@ function ReviewExplanation({
       testParts = [];
     }
     
-    rawPost.quizFields.passages = rawPost.quizFields.passages.filter(
-      (_: any, index: number) => testParts.includes(index)
-    );
+    // Validate testParts - fallback to all passages if empty
+    if (testParts.length === 0) {
+      testParts = Array.from(
+        { length: rawPost.quizFields.passages.length },
+        (_, index) => index
+      );
+    }
+    
+    // Filter passages based on selected parts and preserve original index mapping
+    const filteredPassagesWithOriginalIndex: Array<{ passage: any; originalIndex: number }> = [];
+    rawPost.quizFields.passages.forEach((passage: any, originalIndex: number) => {
+      if (testParts.includes(originalIndex)) {
+        filteredPassagesWithOriginalIndex.push({ passage, originalIndex });
+      }
+    });
+    
+    // BƯỚC 2: Tính lại startIndex từ 0 sau khi filter (QUAN TRỌNG!)
+    // Điều này đảm bảo startIndex khớp với answers array đã được lưu khi làm bài
+    // (vì trong take-the-test, startIndex cũng được tính lại từ 0 sau khi filter)
+    let currentIndex = 0;
+    const filteredPassages = filteredPassagesWithOriginalIndex.map(({ passage, originalIndex }, newIndex) => {
+      // Deep clone passage để tránh mutate original
+      const clonedPassage = JSON.parse(JSON.stringify(passage));
+      
+      _.set(clonedPassage, "partIndex", newIndex);
+      // Preserve originalPartIndex for display purposes
+      _.set(clonedPassage, "originalPartIndex", originalIndex);
+      
+      clonedPassage.questions.forEach((question: any, questionIndex: number) => {
+        const questionType = question.type?.[0];
+        let numberOfSubQuestions = 1;
+
+        // Xử lý matching với layoutType = 'heading' - đếm gaps trong passage_content
+        if (questionType === 'matching' && String(question.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+          let gapCount = 0;
+          (clonedPassage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+          numberOfSubQuestions = gapCount > 0 ? gapCount : 1;
+        } else if (questionType === 'checkbox') {
+          // Dùng countQuestion để đảm bảo nhất quán với logic đếm số options có correct: true
+          numberOfSubQuestions = countQuestion({ questions: [question] } as any);
+        } else {
+          // Dùng countQuestion cho các loại câu hỏi khác
+          numberOfSubQuestions = countQuestion({ questions: [question] } as any);
+        }
+
+        if (isNaN(numberOfSubQuestions) || numberOfSubQuestions < 1) {
+          numberOfSubQuestions = 1;
+        }
+
+        // Tính lại startIndex từ 0 - QUAN TRỌNG: Override startIndex cũ
+        _.set(
+          clonedPassage,
+          `questions.${questionIndex}.startIndex`,
+          currentIndex
+        );
+
+        // Debug logging cho Passage 2 fillup/select
+        if (originalIndex === 1 && (questionType === 'fillup' || questionType === 'select')) {
+          console.log(`[newPost] Setting startIndex for Passage 2 ${questionType}:`, {
+            passageIndex: originalIndex,
+            newPassageIndex: newIndex,
+            questionIndex,
+            startIndex: currentIndex,
+            numberOfSubQuestions,
+            questionTitle: question.title?.substring(0, 50),
+          });
+        }
+
+        currentIndex += numberOfSubQuestions;
+      });
+      
+      return clonedPassage;
+    });
+    
+    rawPost.quizFields.passages = filteredPassages;
 
     return rawPost;
-  }, [quiz, testResult.testResultFields.testPart, allQuestionsStartIndexMap]);
+  }, [quiz, testResult.testResultFields.testPart]);
   // ▲▲▲ KẾT THÚC newPost ▲▲▲
 
   const [currentPassageIndex, setCurrentPassageIndex] = useState(0);
@@ -491,11 +634,9 @@ function ReviewExplanation({
 
   // Debug: Log để so sánh answers array với startIndex được tính
   useEffect(() => {
-    console.log("[ReviewExplanation] Form initialized with answers array length:", parsedAnswers.length);
-    console.log("[ReviewExplanation] Answers array (first 30):", parsedAnswers.slice(0, 30));
-    console.log("[ReviewExplanation] Answers at index 15-25:", parsedAnswers.slice(15, 25));
     
     // Tính tổng số câu hỏi từ newPost để so sánh
+    // Validation: Check if total questions match answers length
     if (newPost?.quizFields?.passages) {
       let totalQuestions = 0;
       newPost.quizFields.passages.forEach((passage: any) => {
@@ -503,17 +644,14 @@ function ReviewExplanation({
           passage.questions.forEach((question: any) => {
             const subQuestions = countSubQuestions(question);
             totalQuestions += subQuestions;
-            console.log(`[ReviewExplanation] Question startIndex: ${question.startIndex}, subQuestions: ${subQuestions}`);
           });
         }
       });
-      console.log("[ReviewExplanation] Total questions calculated:", totalQuestions);
-      console.log("[ReviewExplanation] Answers array length:", parsedAnswers.length);
-      if (totalQuestions > parsedAnswers.length) {
-        console.warn(`[ReviewExplanation] WARNING: Total questions (${totalQuestions}) > Answers array length (${parsedAnswers.length})`);
+      if (totalQuestions > mappedAnswers.length) {
+        console.warn(`[ReviewExplanation] WARNING: Total questions (${totalQuestions}) > Mapped answers length (${mappedAnswers.length})`);
       }
     }
-  }, [parsedAnswers, newPost, countSubQuestions]);
+  }, [mappedAnswers, newPost, countSubQuestions]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -961,14 +1099,38 @@ function ReviewExplanation({
                     />
                   );
                 }
-                // Debug: Log để kiểm tra question.startIndex
-                if (question.type?.[0] === 'fillup' && currentPassageIndex === 1) {
-                  console.log(`[QuestionsPanelContent] Rendering fillup question:`, {
-                    questionIndex: index,
-                    questionStartIndex: question.startIndex,
-                    propStartIndex: question.startIndex,
-                    questionTitle: question.title?.substring(0, 50),
-                  });
+                // Debug: Log để kiểm tra question.startIndex và mappedAnswers cho fillup
+                if (question.type?.[0] === 'fillup') {
+                  const fillupStartIndex = question.startIndex || 0;
+                  const numberOfGaps = countQuestion({ questions: [question] } as any);
+                  const fillupAnswers = mappedAnswers.slice(fillupStartIndex, fillupStartIndex + numberOfGaps);
+                  
+                  // Debug chi tiết hơn cho Passage 2
+                  if (currentPassageIndex === 1) {
+                    console.log(`[QuestionsPanelContent] Rendering fillup question (Passage ${currentPassageIndex + 1}):`, {
+                      passageIndex: currentPassageIndex,
+                      questionIndex: index,
+                      questionStartIndex: question.startIndex,
+                      numberOfGaps,
+                      fillupAnswers: fillupAnswers,
+                      fillupAnswersLength: fillupAnswers.length,
+                      mappedAnswersLength: mappedAnswers.length,
+                      questionTitle: question.title?.substring(0, 50),
+                      mappedAnswersAtStartIndex: mappedAnswers.slice(fillupStartIndex, fillupStartIndex + numberOfGaps + 2), // Lấy thêm 2 để debug
+                      mappedAnswersAt20to25: mappedAnswers.slice(20, 26), // Debug index 20-25
+                    });
+                  } else {
+                    console.log(`[QuestionsPanelContent] Rendering fillup question (Passage ${currentPassageIndex + 1}):`, {
+                      passageIndex: currentPassageIndex,
+                      questionIndex: index,
+                      questionStartIndex: question.startIndex,
+                      numberOfGaps,
+                      fillupAnswers: fillupAnswers,
+                      fillupAnswersLength: fillupAnswers.length,
+                      mappedAnswersLength: mappedAnswers.length,
+                      questionTitle: question.title?.substring(0, 50),
+                    });
+                  }
                 }
                 
                 return (

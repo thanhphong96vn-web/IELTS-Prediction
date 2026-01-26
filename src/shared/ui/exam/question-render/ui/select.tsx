@@ -32,15 +32,25 @@ export const Select = ({
 
   // 2. TÍNH TOÁN INDEX THỰC TẾ (GLOBAL INDEX)
   const realStartIndex = useMemo(() => {
-    // Gọi hàm lookup từ Context
+    // QUAN TRỌNG: Trong review mode (readOnly), propStartIndex đã được tính đúng từ newPost
+    // Nên LUÔN LUÔN dùng propStartIndex khi readOnly mode để đảm bảo khớp với answers array
+    if (readOnly) {
+      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0) 
+        ? question.startIndex 
+        : startIndex;
+      
+      return finalStartIndex;
+    }
+
+    // Gọi hàm lookup từ Context (chỉ khi không phải readOnly)
     const contextIndex = getQuestionStartIndex(question);
 
     // Nếu Context tìm thấy (>0) thì dùng, ngược lại dùng prop (fallback)
     if (contextIndex > 0) return contextIndex;
     
-    // Nếu context trả về 0, ta vẫn ưu tiên dùng nó nếu tin tưởng vào map của context
-    return contextIndex; 
-  }, [question, getQuestionStartIndex, startIndex]);
+    // Fallback về prop startIndex nếu context trả về 0
+    return startIndex; 
+  }, [question, getQuestionStartIndex, startIndex, readOnly]);
 
   const questionData = useMemo(() => {
     let newContent = question.question || "";
@@ -128,7 +138,7 @@ export const Select = ({
                           key={absoluteIndex}
                           
                           control={methods.control}
-                          name={fieldName}
+                          name={fieldName as `answers.${number}`}
                           render={({ field }) => (
                             <SelectAnt
                               disabled={readOnly}
