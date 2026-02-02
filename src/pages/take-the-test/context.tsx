@@ -171,7 +171,7 @@ export const ExamProvider = ({
     let absoluteQuestionIndex = 0;
     post.quizFields.passages.forEach((passage, pIndex) => {
       passage.questions.forEach((q, qIndex) => {
-        if (q.id) iMap.set(q.id, absoluteQuestionIndex);
+        if ((q as any).id) iMap.set((q as any).id, absoluteQuestionIndex);
         rMap.set(q, absoluteQuestionIndex);
         const signature = generateSignature(q);
         sMap.set(signature, absoluteQuestionIndex);

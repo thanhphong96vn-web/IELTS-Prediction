@@ -213,7 +213,7 @@ export type IQuestion = {
     content: string;
   }[];
   matchingQuestion?: {
-    layoutType?: 'standard' | 'summary';
+    layoutType?: 'standard' | 'summary' | 'heading';
     summaryText?: string;
     matchingItems?: {
       questionPart: string;

@@ -4,14 +4,12 @@ import { gql } from "@apollo/client";
 export const GET_PRACTICE_HISTORY = gql`
   query GET_PRACTICE_HISTORY(
     $authorId: ID!
-    $quizSkill: String = "reading"
     $offset: Int = 0
     $size: Int = 100
   ) {
     testResults(
       where: {
         authorId: $authorId
-        quizSkill: $quizSkill
         offsetPagination: { offset: $offset, size: $size }
       }
     ) {
@@ -65,6 +63,27 @@ export const GET_PRACTICE_HISTORY = gql`
                           content
                         }
                         question_form
+                        matchingQuestion {
+                          layoutType
+                          summaryText
+                          matchingItems {
+                            questionPart
+                            correctAnswer
+                          }
+                          answerOptions {
+                            optionText
+                          }
+                        }
+                        matrixQuestion {
+                          matrixCategories {
+                            categoryLetter
+                            categoryText
+                          }
+                          matrixItems {
+                            itemText
+                            correctCategoryLetter
+                          }
+                        }
                       }
                     }
                   }
@@ -101,7 +120,7 @@ export type TestResult = {
     };
     score: number;
     testTime: string;
-    testPart: number[];
+    testPart: string;
     timeLeft: string;
   };
 };

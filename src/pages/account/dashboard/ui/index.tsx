@@ -8,10 +8,10 @@ export const PageDashboard = () => {
       <TargetScore />
 
       {/* Practice History Section */}
-      <section className="space-y-6 mt-6">
-        <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900">
+      <section className="mt-8">
+        <h5 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-5">
           Practice History
-        </h3>
+        </h5>
         <PracticeHistory />
       </section>
     </div>

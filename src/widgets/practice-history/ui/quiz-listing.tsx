@@ -67,7 +67,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
         key: "dateTaken",
         render: (dateTaken, record) => {
           // Sử dụng dateTaken nếu có, nếu không thì dùng dateSubmitted
-          const dateToDisplay = dateTaken 
+          const dateToDisplay = dateTaken
             ? Number(dateTaken)
             : Number(record.testResultFields.dateSubmitted);
           return (
@@ -111,7 +111,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
           calculateScore(
             JSON.parse(record.testResultFields.answers).answers,
             record.testResultFields.quiz.node,
-            record.testResultFields.testPart
+            JSON.parse(record.testResultFields.testPart)
           ).correctAns,
       },
       {
@@ -121,7 +121,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
           calculateScore(
             JSON.parse(record.testResultFields.answers).answers,
             record.testResultFields.quiz.node,
-            record.testResultFields.testPart
+            JSON.parse(record.testResultFields.testPart)
           ).incorrect,
       },
       {
@@ -131,7 +131,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
           calculateScore(
             JSON.parse(record.testResultFields.answers).answers,
             record.testResultFields.quiz.node,
-            record.testResultFields.testPart
+            JSON.parse(record.testResultFields.testPart)
           ).missed,
       },
       {
@@ -141,7 +141,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
           const percent = calculateScore(
             JSON.parse(record.testResultFields.answers).answers,
             record.testResultFields.quiz.node,
-            record.testResultFields.testPart
+            JSON.parse(record.testResultFields.testPart)
           ).correctPercent;
 
           return (
@@ -184,33 +184,41 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
           };
         })
         .filter((item) => {
-          // Chỉ hiển thị các bài đã được submit (có dateSubmitted)
-          if (!item.testResultFields.dateSubmitted) {
+          // Check if we have a valid date to check against, or if the status is explicitly publish
+          if (item.status !== 'publish' && !item.testResultFields.dateSubmitted && !item.testResultFields.dateTaken) {
             return false;
           }
-          
+
+          // Filter by skill (since we removed backend filtering)
+          // We check equality with the skill prop. Note: skill array usually has values like ["reading", "Reading"]
+          // so we check if the first element matches or if the array includes it.
+          const itemSkill = item.testResultFields.quiz.node.quizFields.skill?.[0]?.toLowerCase();
+          if (itemSkill !== skill.toLowerCase()) {
+            return false;
+          }
+
           // Sử dụng dateTaken nếu có, nếu không thì dùng dateSubmitted
-          const dateToCheck = item.testResultFields.dateTaken 
+          const dateToCheck = item.testResultFields.dateTaken
             ? Number(item.testResultFields.dateTaken)
             : Number(item.testResultFields.dateSubmitted);
           return dateToCheck >= sixtyDaysAgo;
         })
         .sort((a, b) => {
           // Sắp xếp theo ngày mới nhất trước
-          const dateA = a.testResultFields.dateTaken 
+          const dateA = a.testResultFields.dateTaken
             ? Number(a.testResultFields.dateTaken)
             : Number(a.testResultFields.dateSubmitted);
-          const dateB = b.testResultFields.dateTaken 
+          const dateB = b.testResultFields.dateTaken
             ? Number(b.testResultFields.dateTaken)
             : Number(b.testResultFields.dateSubmitted);
           return dateB - dateA;
         });
-      
+
       // Paginate client-side
       const startIndex = (currentPage - 1) * pageSize;
       const endIndex = startIndex + pageSize;
       const paginated = filtered.slice(startIndex, endIndex);
-      
+
       return {
         filteredDataSource: filtered,
         paginatedDataSource: paginated,
