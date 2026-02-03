@@ -50,6 +50,152 @@ async function getVisits(): Promise<any[]> {
   }
 }
 
+// Helper to fetch user email directly from WP
+async function fetchUserEmail(userId: string, cookie: string | undefined, cmsUrl: string) {
+  console.log('🔍 fetchUserEmail called with:', { userId, hasCookie: !!cookie, cmsUrl });
+
+  try {
+    // Decode the base64 user ID to get database ID
+    let dbId: number | null = null;
+    try {
+      if (userId.includes("dXNlc")) {
+        const decoded = Buffer.from(userId, 'base64').toString('ascii');
+        const parts = decoded.split(':');
+        if (parts.length > 1) {
+          dbId = parseInt(parts[1], 10);
+          console.log('✅ Decoded user ID:', { original: userId, decoded, dbId });
+        }
+      }
+    } catch (e) {
+      console.error('❌ Failed to decode user ID:', e);
+    }
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Cookie": cookie || "",
+    };
+
+    // Approach 1: Try to get user by ID directly (works if admin has proper permissions)
+    const userByIdQuery = `
+      query GetUserById($id: ID!) {
+        user(id: $id) {
+          id
+          databaseId
+          email
+          name
+          firstName
+          lastName
+          username
+          nicename
+        }
+      }
+    `;
+
+    // Try with Global ID first
+    try {
+      console.log('🔄 Attempt 1: Trying user query with Global ID...');
+      const res = await fetch(`${cmsUrl}/graphql`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          query: userByIdQuery,
+          variables: { id: userId }
+        }),
+      });
+      const json = await res.json();
+      console.log('📥 Attempt 1 response:', json);
+
+      if (json.data?.user) {
+        const user = json.data.user;
+        const email = user.email || user.username || null;
+        if (email) {
+          console.log('✅ Success with Global ID!', { email, name: user.name });
+          return { email, name: user.name || user.firstName || user.nicename };
+        }
+      }
+    } catch (e) {
+      console.error("❌ Attempt 1 failed:", e);
+    }
+
+    // Try with Database ID if available
+    if (dbId) {
+      try {
+        console.log('🔄 Attempt 2: Trying user query with Database ID...');
+        const res = await fetch(`${cmsUrl}/graphql`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            query: userByIdQuery,
+            variables: { id: dbId.toString() }
+          }),
+        });
+        const json = await res.json();
+        console.log('📥 Attempt 2 response:', json);
+
+        if (json.data?.user) {
+          const user = json.data.user;
+          const email = user.email || user.username || null;
+          if (email) {
+            console.log('✅ Success with Database ID!', { email, name: user.name });
+            return { email, name: user.name || user.firstName || user.nicename };
+          }
+        }
+      } catch (e) {
+        console.error("❌ Attempt 2 failed:", e);
+      }
+
+      // Approach 2: Use users list query (might have different permissions)
+      try {
+        console.log('🔄 Attempt 3: Trying users list query...');
+        const listQuery = `
+          query GetUsersList($ids: [Int]) {
+            users(where: { include: $ids }) {
+              nodes {
+                id
+                databaseId
+                email
+                name
+                firstName
+                lastName
+                username
+                nicename
+              }
+            }
+          }
+        `;
+
+        const res = await fetch(`${cmsUrl}/graphql`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            query: listQuery,
+            variables: { ids: [dbId] }
+          }),
+        });
+        const json = await res.json();
+        console.log('📥 Attempt 3 response:', json);
+
+        if (json.data?.users?.nodes?.length > 0) {
+          const user = json.data.users.nodes[0];
+          const email = user.email || user.username || null;
+          if (email) {
+            console.log('✅ Success with List query!', { email, name: user.name });
+            return { email, name: user.name || user.firstName || user.nicename };
+          }
+        }
+      } catch (e) {
+        console.error("❌ Attempt 3 failed:", e);
+      }
+    }
+
+    console.log('❌ All attempts failed - Could not fetch user email');
+    return null;
+  } catch (error) {
+    console.error("❌ Error in fetchUserEmail:", error);
+    return null;
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -62,9 +208,9 @@ export default async function handler(
     const { affiliateId } = req.query;
 
     if (!affiliateId || typeof affiliateId !== "string") {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: "Affiliate ID is required" 
+        error: "Affiliate ID is required"
       });
     }
 
@@ -73,9 +219,9 @@ export default async function handler(
 
     if (!affiliate) {
       console.error("Affiliate not found. Requested ID:", affiliateId);
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        error: "Affiliate not found" 
+        error: "Affiliate not found"
       });
     }
 
@@ -104,6 +250,15 @@ export default async function handler(
       console.error("Error fetching visits:", error);
       visits = [];
     }
+
+    // Email and name should come from the affiliate record itself
+    // They are captured during registration from the user's viewer query
+    console.log('📧 Affiliate data:', {
+      hasEmail: !!affiliate.email,
+      email: affiliate.email,
+      hasName: !!affiliate.name,
+      name: affiliate.name
+    });
 
     // Calculate stats
     const totalCommissions = commissions.reduce(
@@ -154,4 +309,3 @@ export default async function handler(
     });
   }
 }
-

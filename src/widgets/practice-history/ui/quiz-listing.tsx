@@ -164,16 +164,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
   const { filteredDataSource, paginatedDataSource } = useMemo(() => {
     if (data) {
       // Debug: Log dữ liệu để kiểm tra
-      console.log("Practice History Data:", {
-        total: data.testResults.edges.length,
-        edges: data.testResults.edges.map(e => ({
-          id: e.node.id,
-          status: e.node.status,
-          dateSubmitted: e.node.testResultFields.dateSubmitted,
-          dateTaken: e.node.testResultFields.dateTaken,
-          hasAnswers: !!e.node.testResultFields.answers,
-        })),
-      });
+
 
       const sixtyDaysAgo = dayjs().subtract(60, "days").unix();
       const filtered = data.testResults.edges
@@ -232,10 +223,7 @@ export const QuizListing = ({ skill }: { skill: "listening" | "reading" }) => {
 
   useEffect(() => {
     if (currentUser?.id) {
-      console.log("Loading practice history for:", {
-        userId: currentUser.id,
-        skill,
-      });
+
       getData({
         variables: {
           quizSkill: skill,

@@ -26,7 +26,8 @@
     "amount": 650000,
     "commissionRate": 0.2,
     "commissionAmount": 130000,
-    "status": "pending",
-    "createdAt": "2025-12-25T16:29:50.115Z"
+    "status": "paid",
+    "createdAt": "2025-12-25T16:29:50.115Z",
+    "paidAt": "2026-02-03T02:50:51.497Z"
   }
 ]

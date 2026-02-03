@@ -5,10 +5,10 @@ import { useAuth } from "@/appx/providers/auth-provider";
 import { MyProfileLayout } from "@/widgets/layouts";
 import { toast } from "react-toastify";
 import { Tabs, Card, Button, Input, Table, Tag, Statistic, Space, message } from "antd";
-import { 
-  DollarOutlined, 
-  EyeOutlined, 
-  LinkOutlined, 
+import {
+  DollarOutlined,
+  EyeOutlined,
+  LinkOutlined,
   CheckCircleOutlined,
   CopyOutlined,
   SettingOutlined
@@ -27,6 +27,7 @@ interface AffiliateUser {
   approvedAt?: string;
   customLink?: string;
   emailNotifications: boolean;
+  commissionRate?: number;
 }
 
 interface AffiliateLink {
@@ -95,32 +96,32 @@ export const PageAffiliate = () => {
         setAffiliate(affiliateData.affiliate);
         setEmailNotifications(affiliateData.affiliate.emailNotifications);
 
-      // Fetch stats, links, commissions, visits
-      const [statsRes, linksRes, commissionsRes, visitsRes] = await Promise.all([
-        fetch(`/api/affiliate/stats?affiliateId=${affiliateData.affiliate.id}`),
-        fetch(`/api/affiliate/links?affiliateId=${affiliateData.affiliate.id}`),
-        fetch(`/api/affiliate/commissions?affiliateId=${affiliateData.affiliate.id}`),
-        fetch(`/api/affiliate/visits?affiliateId=${affiliateData.affiliate.id}`),
-      ]);
+        // Fetch stats, links, commissions, visits
+        const [statsRes, linksRes, commissionsRes, visitsRes] = await Promise.all([
+          fetch(`/api/affiliate/stats?affiliateId=${affiliateData.affiliate.id}`),
+          fetch(`/api/affiliate/links?affiliateId=${affiliateData.affiliate.id}`),
+          fetch(`/api/affiliate/commissions?affiliateId=${affiliateData.affiliate.id}`),
+          fetch(`/api/affiliate/visits?affiliateId=${affiliateData.affiliate.id}`),
+        ]);
 
-      const statsData = await statsRes.json();
-      const linksData = await linksRes.json();
-      const commissionsData = await commissionsRes.json();
-      const visitsData = await visitsRes.json();
+        const statsData = await statsRes.json();
+        const linksData = await linksRes.json();
+        const commissionsData = await commissionsRes.json();
+        const visitsData = await visitsRes.json();
 
-      if (statsData.success) setStats(statsData.stats);
-      if (linksData.success) {
-        // Ensure we only show unique links (remove duplicates)
-        const uniqueLinks = linksData.links.filter((link: AffiliateLink, index: number, self: AffiliateLink[]) => 
-          index === self.findIndex((l: AffiliateLink) => 
-            l.affiliateId === link.affiliateId && 
-            (link.customLink ? l.customLink === link.customLink : !l.customLink)
-          )
-        );
-        setLinks(uniqueLinks);
-      }
-      if (commissionsData.success) setCommissions(commissionsData.commissions);
-      if (visitsData.success) setVisits(visitsData.visits);
+        if (statsData.success) setStats(statsData.stats);
+        if (linksData.success) {
+          // Ensure we only show unique links (remove duplicates)
+          const uniqueLinks = linksData.links.filter((link: AffiliateLink, index: number, self: AffiliateLink[]) =>
+            index === self.findIndex((l: AffiliateLink) =>
+              l.affiliateId === link.affiliateId &&
+              (link.customLink ? l.customLink === link.customLink : !l.customLink)
+            )
+          );
+          setLinks(uniqueLinks);
+        }
+        if (commissionsData.success) setCommissions(commissionsData.commissions);
+        if (visitsData.success) setVisits(visitsData.visits);
       }
     } catch (error) {
       console.error("Error fetching affiliate data:", error);
@@ -140,7 +141,11 @@ export const PageAffiliate = () => {
       const res = await fetch("/api/affiliate/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUser.id }),
+        body: JSON.stringify({
+          userId: currentUser.id,
+          email: (currentUser as any).email,
+          name: currentUser.name || (currentUser as any).username,
+        }),
       });
 
       const data = await res.json();
@@ -178,7 +183,7 @@ export const PageAffiliate = () => {
           toast.success("Tạo link thành công!");
         }
         setCustomLink("");
-        
+
         // Always refresh data to get the latest links
         await fetchAffiliateData();
       } else {
@@ -579,6 +584,10 @@ export const PageAffiliate = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">Trạng thái:</span>
                 <Tag color="green">Đã duyệt</Tag>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Mức hoa hồng:</span>
+                <span className="font-bold text-blue-600">{affiliate.commissionRate || 20}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Ngày đăng ký:</span>

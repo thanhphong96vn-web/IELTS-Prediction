@@ -164,7 +164,7 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
   }) => {
     const cardKey = `${type}-${initialMonths}`;
     const [currentMonths, setCurrentMonths] = useState(initialMonths);
-    const canAdjustMonths = 
+    const canAdjustMonths =
       (type === "combo" && (initialMonths === 1 || initialMonths === 2)) ||
       (type === "single" && initialMonths === 2);
 
@@ -194,51 +194,51 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
         if (priceTable && priceTable[months] !== undefined) {
           return priceTable[months];
         }
-        
+
         if (basePrice && monthlyIncrement) {
           let calculatedPrice: number;
           if (months === 1) {
-            calculatedPrice = 250000;
+            calculatedPrice = 200000;
           } else if (months === 2) {
             calculatedPrice = 400000;
           } else {
             calculatedPrice = 400000 + (months - 2) * 200000;
-            
+
             if (months === 6) {
               calculatedPrice = 1000000;
             } else if (months === 12) {
               calculatedPrice = 1800000;
             }
           }
-          
+
           return calculatedPrice;
         }
       }
-      
+
       if (type === "single") {
         const priceTable = singlePriceTable;
         if (priceTable && priceTable[months] !== undefined) {
           return priceTable[months];
         }
-        
+
         if (basePrice && monthlyIncrement) {
           let calculatedPrice: number;
           if (months === 2) {
             calculatedPrice = 200000;
           } else {
             calculatedPrice = 200000 + (months - 2) * 100000;
-            
+
             if (months === 6) {
               calculatedPrice = 500000;
             } else if (months === 12) {
               calculatedPrice = 900000;
             }
           }
-          
+
           return calculatedPrice;
         }
       }
-      
+
       const priceTable = type === "combo" ? comboPriceTable : singlePriceTable;
       return calculatePrice(type, months, basePrice, monthlyIncrement, priceTable);
     };
@@ -247,11 +247,11 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
     const currentPlanInConfig = type === "combo"
       ? config?.combo.plans.find((p) => p.months === currentMonths)
       : config?.single.plans.find((p) => p.months === currentMonths);
-    
+
     const isFeatured = Boolean(initialPlan?.popular);
     const isDeal = Boolean(currentPlanInConfig?.featuredDeal || currentPlanInConfig?.originalPrice);
-    const dealNote = currentPlanInConfig?.dealNote || 
-      (currentPlanInConfig?.originalPrice 
+    const dealNote = currentPlanInConfig?.dealNote ||
+      (currentPlanInConfig?.originalPrice
         ? `Giảm ${formatPrice((currentPlanInConfig.originalPrice - (price || 0)))}`
         : config?.dealNoteTemplate || "SAME PRICE AS THE SHORTER PLAN");
 
@@ -298,7 +298,7 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
             <>
               <button
                 onClick={handleDecrease}
-                disabled={currentMonths <= 2}
+                disabled={currentMonths <= (type === "single" ? 2 : (initialMonths === 1 ? 1 : 2))}
                 className="flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Minus className="h-4 w-4 text-gray-600" />
@@ -367,27 +367,27 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
               </span>
             </li>
           )) || (
-            <>
-              <li className="flex items-center gap-3">
-                <Check
-                  className="h-4 w-4 text-green-500 shrink-0"
-                  strokeWidth={3}
-                />
-                <span className="text-sm font-medium text-gray-600">
-                  Unlimited Access Courses
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Check
-                  className="h-4 w-4 text-green-500 shrink-0"
-                  strokeWidth={3}
-                />
-                <span className="text-sm font-medium text-gray-600">
-                  Certificate After Completion
-                </span>
-              </li>
-            </>
-          )}
+              <>
+                <li className="flex items-center gap-3">
+                  <Check
+                    className="h-4 w-4 text-green-500 shrink-0"
+                    strokeWidth={3}
+                  />
+                  <span className="text-sm font-medium text-gray-600">
+                    Unlimited Access Courses
+                  </span>
+                </li>
+                <li className="flex items-center gap-3">
+                  <Check
+                    className="h-4 w-4 text-green-500 shrink-0"
+                    strokeWidth={3}
+                  />
+                  <span className="text-sm font-medium text-gray-600">
+                    Certificate After Completion
+                  </span>
+                </li>
+              </>
+            )}
           {config?.features?.excluded?.map((feature, index) => (
             <li key={index} className="flex items-center gap-3 opacity-50">
               <X className="h-4 w-4 text-red-400 shrink-0" strokeWidth={3} />
@@ -396,21 +396,21 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
               </span>
             </li>
           )) || (
-            <>
-              <li className="flex items-center gap-3 opacity-50">
-                <X className="h-4 w-4 text-red-400 shrink-0" strokeWidth={3} />
-                <span className="text-sm font-medium text-gray-400">
-                  24/7 Dedicated Support
-                </span>
-              </li>
-              <li className="flex items-center gap-3 opacity-50">
-                <X className="h-4 w-4 text-red-400 shrink-0" strokeWidth={3} />
-                <span className="text-sm font-medium text-gray-400">
-                  Unlimited Emails
-                </span>
-              </li>
-            </>
-          )}
+              <>
+                <li className="flex items-center gap-3 opacity-50">
+                  <X className="h-4 w-4 text-red-400 shrink-0" strokeWidth={3} />
+                  <span className="text-sm font-medium text-gray-400">
+                    24/7 Dedicated Support
+                  </span>
+                </li>
+                <li className="flex items-center gap-3 opacity-50">
+                  <X className="h-4 w-4 text-red-400 shrink-0" strokeWidth={3} />
+                  <span className="text-sm font-medium text-gray-400">
+                    Unlimited Emails
+                  </span>
+                </li>
+              </>
+            )}
         </ul>
       </div>
     );
@@ -436,8 +436,8 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
         </AutoSlider>
       </section>
 
-      {/* SECTION 2: SINGLE PACK */}
-      <section className="m-0">
+      {/* SECTION 2: SINGLE PACK - HIDDEN */}
+      {/* <section className="m-0">
         <div className="flex flex-col items-center gap-8 text-center">
           <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight block wrap-break-word">
@@ -480,7 +480,7 @@ export const SubscriptionPlans = ({ buyProLink }: { buyProLink: string }) => {
             />
           ))}
         </AutoSlider>
-      </section>
+      </section> */}
 
       <style jsx global>{`
         .no-scrollbar::-webkit-scrollbar {

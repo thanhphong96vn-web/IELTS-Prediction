@@ -11,6 +11,7 @@ import {
   Descriptions,
   Tabs,
   Statistic,
+  InputNumber,
   Row,
   Col,
   Tooltip,
@@ -27,6 +28,19 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 import { formatPrice } from "@/pages/subscription/ui/subscription-plans/pricing";
+import { gql, useApolloClient } from "@apollo/client";
+import { withMasterData } from "@/shared/hoc";
+import { GetServerSideProps } from "next";
+
+const GET_USER_EMAIL = gql`
+  query GetUserEmail($id: ID!, $idType: UserIdType!) {
+    user(id: $id, idType: $idType) {
+      id
+      email
+      name
+    }
+  }
+`;
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -40,6 +54,9 @@ interface AffiliateUser {
   rejectedAt?: string;
   customLink?: string;
   emailNotifications: boolean;
+  email?: string;
+  name?: string;
+  commissionRate?: number;
   stats?: {
     totalLinks: number;
     totalVisits: number;
@@ -63,6 +80,7 @@ export default function AffiliateUsersPage() {
   const [selectedAffiliate, setSelectedAffiliate] = useState<AffiliateUser | null>(null);
   const [affiliateDetail, setAffiliateDetail] = useState<AffiliateDetail | null>(null);
   const [customLink, setCustomLink] = useState("");
+  const [commissionRate, setCommissionRate] = useState<number>(20);
   const [modalVisible, setModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -103,6 +121,8 @@ export default function AffiliateUsersPage() {
     setFilteredAffiliates(filtered);
   };
 
+  const client = useApolloClient();
+
   const fetchAffiliates = async () => {
     try {
       setLoading(true);
@@ -110,8 +130,38 @@ export default function AffiliateUsersPage() {
       const data = await res.json();
 
       if (data.success) {
-        setAffiliates(data.affiliates);
-        setFilteredAffiliates(data.affiliates);
+        let affiliatesData = data.affiliates as AffiliateUser[];
+
+        // Fetch user emails from GraphQL
+        const enrichedAffiliates = await Promise.all(
+          affiliatesData.map(async (affiliate) => {
+            try {
+              // Try to fetch user data
+              // userId is Base64 ID (e.g. "dXNlcjo0ODQ=")
+              const { data: userData } = await client.query({
+                query: GET_USER_EMAIL,
+                variables: { id: affiliate.userId, idType: "GLOBAL_ID" },
+                errorPolicy: 'ignore', // Ignore errors if user not found
+                fetchPolicy: 'network-only' // Ensure freshness
+              });
+
+              if (userData?.user?.email) {
+                return {
+                  ...affiliate,
+                  email: userData.user.email,
+                  name: userData.user.name,
+                };
+              }
+              return affiliate;
+            } catch (err) {
+              console.warn(`Failed to fetch info for user ${affiliate.userId}`, err);
+              return affiliate;
+            }
+          })
+        );
+
+        setAffiliates(enrichedAffiliates);
+        setFilteredAffiliates(enrichedAffiliates);
       } else {
         message.error("Không thể tải danh sách affiliate");
       }
@@ -134,8 +184,24 @@ export default function AffiliateUsersPage() {
       }
 
       if (data.success && data.affiliate) {
+        let email = data.affiliate.email;
+        let name = data.affiliate.name;
+
+        // Also check if we have it in the list (fallback)
+        if (!email) {
+          const currentAffiliate = affiliates.find(a => a.id === affiliateId);
+          if (currentAffiliate?.email) {
+            email = currentAffiliate.email;
+            name = currentAffiliate.name || name;
+          }
+        }
+
         setAffiliateDetail({
-          affiliate: data.affiliate,
+          affiliate: {
+            ...data.affiliate,
+            email,
+            name,
+          },
           links: Array.isArray(data.links) ? data.links : [],
           commissions: Array.isArray(data.commissions) ? data.commissions : [],
           visits: Array.isArray(data.visits) ? data.visits : [],
@@ -181,6 +247,7 @@ export default function AffiliateUsersPage() {
   const handleApprove = async (affiliate: AffiliateUser) => {
     setSelectedAffiliate(affiliate);
     setCustomLink(affiliate.customLink || "");
+    setCommissionRate(affiliate.commissionRate || 20);
     setModalVisible(true);
   };
 
@@ -195,6 +262,7 @@ export default function AffiliateUsersPage() {
           action: "approve",
           affiliateId: selectedAffiliate.id,
           customLink: customLink || undefined,
+          commissionRate,
         }),
       });
 
@@ -244,14 +312,19 @@ export default function AffiliateUsersPage() {
 
   const columns: ColumnsType<AffiliateUser> = [
     {
-      title: "User ID",
+      title: "User ID / Email",
       dataIndex: "userId",
       key: "userId",
-      width: 150,
-      render: (userId: string) => (
-        <Tooltip title={userId}>
-          <span className="font-mono text-xs">{userId.substring(0, 12)}...</span>
-        </Tooltip>
+      width: 200,
+      render: (userId: string, record: AffiliateUser) => (
+        <div className="flex flex-col">
+          <Tooltip title={userId}>
+            <span className="font-mono text-xs text-gray-500">{userId.substring(0, 12)}...</span>
+          </Tooltip>
+          {record.email && (
+            <span className="text-xs font-semibold text-blue-600">{record.email}</span>
+          )}
+        </div>
       ),
     },
     {
@@ -340,6 +413,7 @@ export default function AffiliateUsersPage() {
               onClick={() => {
                 setSelectedAffiliate(record);
                 setCustomLink(record.customLink || "");
+                setCommissionRate(record.commissionRate || 20);
                 setModalVisible(true);
               }}
             >
@@ -357,7 +431,7 @@ export default function AffiliateUsersPage() {
         title={
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold m-0">Quản lý Affiliate Users</h1>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 mr-4">
               Tổng số: <strong className="text-gray-900">{filteredAffiliates?.length || 0}</strong>
             </div>
           </div>
@@ -418,6 +492,20 @@ export default function AffiliateUsersPage() {
                 Nếu để trống, hệ thống sẽ tự động tạo link
               </p>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mức hoa hồng (%)
+              </label>
+              <InputNumber
+                min={0}
+                max={100}
+                value={commissionRate}
+                onChange={(val) => setCommissionRate(val || 0)}
+                className="w-full"
+                addonAfter="%"
+              />
+            </div>
           </div>
         </Modal>
 
@@ -453,21 +541,27 @@ export default function AffiliateUsersPage() {
                     <Descriptions.Item label="User ID">
                       <span className="font-mono text-xs">{affiliateDetail.affiliate.userId}</span>
                     </Descriptions.Item>
+                    <Descriptions.Item label="Email">
+                      {affiliateDetail.affiliate.email || "-"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Mức hoa hồng">
+                      <strong className="text-blue-600">{affiliateDetail.affiliate.commissionRate || 20}%</strong>
+                    </Descriptions.Item>
                     <Descriptions.Item label="Trạng thái">
                       <Tag
                         color={
                           affiliateDetail.affiliate.status === "approved"
                             ? "green"
                             : affiliateDetail.affiliate.status === "pending"
-                            ? "orange"
-                            : "red"
+                              ? "orange"
+                              : "red"
                         }
                       >
                         {affiliateDetail.affiliate.status === "approved"
                           ? "Đã duyệt"
                           : affiliateDetail.affiliate.status === "pending"
-                          ? "Chờ duyệt"
-                          : "Đã từ chối"}
+                            ? "Chờ duyệt"
+                            : "Đã từ chối"}
                       </Tag>
                     </Descriptions.Item>
                     <Descriptions.Item label="Email Notifications">
@@ -590,16 +684,16 @@ export default function AffiliateUsersPage() {
                                     commission.status === "paid"
                                       ? "green"
                                       : commission.status === "pending"
-                                      ? "orange"
-                                      : "red"
+                                        ? "orange"
+                                        : "red"
                                   }
                                   className="text-xs"
                                 >
                                   {commission.status === "paid"
                                     ? "Đã thanh toán"
                                     : commission.status === "pending"
-                                    ? "Chờ thanh toán"
-                                    : "Đã hủy"}
+                                      ? "Chờ thanh toán"
+                                      : "Đã hủy"}
                                 </Tag>
                                 {commission.status === "paid" && commission.paidAt && (
                                   <span className="text-gray-400">
@@ -634,4 +728,6 @@ export default function AffiliateUsersPage() {
     </AdminLayout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = withMasterData;
 

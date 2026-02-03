@@ -9,6 +9,9 @@ const VISITS_FILE = "affiliate-visits.json";
 interface AffiliateUser {
   id: string;
   userId: string;
+  email?: string;
+  name?: string;
+  commissionRate?: number;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   approvedAt?: string;
@@ -119,7 +122,7 @@ export default async function handler(
 
   if (req.method === "POST") {
     try {
-      const { action, affiliateId, status, customLink } = req.body;
+      const { action, affiliateId, status, customLink, commissionRate, email } = req.body;
 
       if (!action || !affiliateId) {
         return res.status(400).json({ error: "Action and affiliate ID are required" });
@@ -137,15 +140,17 @@ export default async function handler(
       if (action === "approve") {
         affiliate.status = "approved";
         affiliate.approvedAt = new Date().toISOString();
-        if (customLink) {
-          affiliate.customLink = customLink;
-        }
+        if (customLink) affiliate.customLink = customLink;
+        if (commissionRate !== undefined) affiliate.commissionRate = Number(commissionRate);
+        if (email) affiliate.email = email;
       } else if (action === "reject") {
         affiliate.status = "rejected";
         affiliate.rejectedAt = new Date().toISOString();
       } else if (action === "update") {
         if (status) affiliate.status = status;
         if (customLink !== undefined) affiliate.customLink = customLink;
+        if (commissionRate !== undefined) affiliate.commissionRate = Number(commissionRate);
+        if (email) affiliate.email = email;
       }
 
       affiliates[affiliateIndex] = affiliate;

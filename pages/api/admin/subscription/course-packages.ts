@@ -6,7 +6,7 @@ import type {
 } from "@/shared/types/admin-config";
 
 const fixedComboTiers = [
-  { months: 1, price: 250000 },
+  { months: 1, price: 200000 },
   { months: 2, price: 400000 },
   { months: 3, price: 600000 },
   { months: 4, price: 800000 },

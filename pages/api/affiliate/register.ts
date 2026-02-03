@@ -4,6 +4,9 @@ import { readData, writeData } from "../../../lib/server/affiliate-data-helper";
 interface AffiliateUser {
   id: string;
   userId: string;
+  email?: string;
+  name?: string;
+  commissionRate?: number;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
   approvedAt?: string;
@@ -25,13 +28,13 @@ async function getAffiliates(): Promise<AffiliateUser[]> {
 async function saveAffiliate(affiliate: AffiliateUser): Promise<void> {
   const affiliates = await getAffiliates();
   const existingIndex = affiliates.findIndex((a) => a.userId === affiliate.userId);
-  
+
   if (existingIndex >= 0) {
     affiliates[existingIndex] = affiliate;
   } else {
     affiliates.push(affiliate);
   }
-  
+
   await Promise.resolve(writeData<AffiliateUser[]>(AFFILIATES_FILE, affiliates));
 }
 
@@ -41,7 +44,7 @@ export default async function handler(
 ) {
   if (req.method === "POST") {
     try {
-      const { userId } = req.body;
+      const { userId, email, name } = req.body;
 
       if (!userId) {
         return res.status(400).json({ error: "User ID is required" });
@@ -51,20 +54,30 @@ export default async function handler(
       const existing = affiliates.find((a) => a.userId === userId);
 
       if (existing) {
+        // Optional: Update email/name if provided
+        if ((email && existing.email !== email) || (name && existing.name !== name)) {
+          if (email) existing.email = email;
+          if (name) existing.name = name;
+          await saveAffiliate(existing);
+        }
+
         return res.status(200).json({
           success: true,
           affiliate: existing,
-          message: existing.status === "pending" 
+          message: existing.status === "pending"
             ? "Đơn đăng ký của bạn đang chờ duyệt"
             : existing.status === "approved"
-            ? "Bạn đã là affiliate"
-            : "Đơn đăng ký của bạn đã bị từ chối",
+              ? "Bạn đã là affiliate"
+              : "Đơn đăng ký của bạn đã bị từ chối",
         });
       }
 
       const newAffiliate: AffiliateUser = {
         id: `affiliate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userId,
+        email,
+        name,
+        commissionRate: 20, // Default 20%
         status: "pending",
         createdAt: new Date().toISOString(),
         emailNotifications: true,

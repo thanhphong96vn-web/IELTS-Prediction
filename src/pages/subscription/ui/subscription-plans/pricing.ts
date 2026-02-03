@@ -1,6 +1,6 @@
 export const PRICING_TIERS = {
   combo: {
-    1: 250000,
+    1: 200000,
     2: 400000,
     3: 600000,
     4: 800000,
