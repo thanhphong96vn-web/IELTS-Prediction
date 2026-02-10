@@ -21,6 +21,8 @@ type IQuestion =
     matrixQuestion?: {
       matrixCategories: IMatrixCategory[];
       matrixItems: IMatrixItem[];
+      layoutType?: "standard" | "simple";
+      legendTitle?: string;
     };
   };
 
@@ -42,11 +44,15 @@ export const MatrixQuestion = ({
   const { activeQuestionIndex, setActiveQuestionIndex, post } = useExamContext();
 
   const realStartIndex = useMemo(() => {
-    // QUAN TRỌNG: Trong review mode (readOnly), propStartIndex đã được tính đúng từ newPost
-    // Nên LUÔN LUÔN dùng propStartIndex hoặc question.startIndex khi readOnly mode
+    // QUAN TRỌNG: Ưu tiên dùng propStartIndex nếu có giá trị hợp lệ (>= 0)
+    // Điều này đảm bảo đồng bộ với PageTakeTheTestWrapper nơi startIndex đã được tính toán chính xác
+    if (typeof propStartIndex === "number" && propStartIndex >= 0) {
+      return propStartIndex;
+    }
+
     if (readOnly) {
-      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0) 
-        ? question.startIndex 
+      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0)
+        ? question.startIndex
         : propStartIndex;
       return finalStartIndex;
     }
@@ -62,18 +68,18 @@ export const MatrixQuestion = ({
         const isTitleMatch = targetTitle && currentTitle && targetTitle === currentTitle;
         const isItemMatch = targetFirstItem && currentFirstItem && targetFirstItem === currentFirstItem;
         if (isTitleMatch || isItemMatch) return currentCount;
-        
+
         let qCount = 1;
         const qType = q.type?.[0];
-        if (qType === 'matching' && String(q.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
-            let gapCount = 0;
-            (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
-            qCount = gapCount > 0 ? gapCount : 1;
+        if (qType === 'matching' && String((q as any).matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+          let gapCount = 0;
+          (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+          qCount = gapCount > 0 ? gapCount : 1;
         } else if (qType === 'checkbox') {
-             // @ts-ignore
-             qCount = Number(q.optionChoose) || 1;
+          // @ts-ignore
+          qCount = Number(q.optionChoose) || 1;
         } else {
-             qCount = countQuestion({ questions: [q] });
+          qCount = countQuestion({ questions: [q] });
         }
         if (isNaN(qCount) || qCount < 1) qCount = 1;
         currentCount += qCount;
@@ -88,13 +94,16 @@ export const MatrixQuestion = ({
     return <div className="p-4 border border-red-200 bg-red-50 rounded-md">Dữ liệu không hợp lệ.</div>;
   }
 
-  const { matrixItems, matrixCategories } = matrixData;
+  const { matrixItems, matrixCategories, layoutType: propLayoutType, legendTitle: propLegendTitle } = matrixData;
+  const rawLayout = propLayoutType ? String(propLayoutType).trim().toLowerCase() : "";
+  const layoutType = rawLayout === "simple" ? "simple" : "standard";
+  const legendTitle = propLegendTitle || "First invented or used by";
   const userAnswers = getValues(`answers.${realStartIndex}`) as { [key: number]: string } | undefined;
 
   const CategoryListJSX = (
     <div className="max-w-xs border border-black text-base text-black">
       <div className="p-2 font-bold border-b border-black">
-        <TextSelectionWrapper>First invented or used by</TextSelectionWrapper>
+        <TextSelectionWrapper>{legendTitle}</TextSelectionWrapper>
       </div>
       <div>
         {matrixCategories.map((category) => (
@@ -148,16 +157,16 @@ export const MatrixQuestion = ({
                   if (isCorrectAnswer) {
                     if (isUserCorrect) {
                       cellContent = <span className="material-symbols-rounded text-green-500">check_circle</span>;
-                      cellBgClass = "bg-green-100"; 
+                      cellBgClass = "bg-green-100";
                     } else if (!userDidAnswer) {
                       cellContent = <span className="material-symbols-rounded text-gray-400">check_circle</span>;
-                      cellBgClass = "bg-gray-100"; 
+                      cellBgClass = "bg-gray-100";
                     } else {
                       cellContent = <span className="material-symbols-rounded text-green-500">check_circle</span>;
                     }
                   } else if (isUserAnswer) {
                     cellContent = <span className="material-symbols-rounded text-red-500">cancel</span>;
-                    cellBgClass = "bg-red-100"; 
+                    cellBgClass = "bg-red-100";
                   }
 
                   return (
@@ -188,7 +197,7 @@ export const MatrixQuestion = ({
       {!readOnly && (
         <>
           <Controller
-            key={realStartIndex} 
+            key={realStartIndex}
             name={`answers.${realStartIndex}`}
             control={control}
             defaultValue={{}}
@@ -231,8 +240,16 @@ export const MatrixQuestion = ({
                               const isChecked = field.value?.[itemIndex] === category.categoryLetter;
                               return (
                                 <td key={category.categoryLetter} className={twMerge("p-2 text-center align-middle", isChecked && "bg-[#bbd8f0]", index > 0 && "border-l", index === 0 && "border-l-2 border-black")}>
-                                  <label className="group flex justify-center items-center cursor-pointer h-full w-full" onClick={(e) => { e.preventDefault(); setActiveQuestionIndex(absoluteIndex); if (!isChecked) handleAnswerChange(itemIndex, category.categoryLetter); }}>
-                                    <input type="radio" className="sr-only" name={`q-${realStartIndex}-matrix-item-${itemIndex}`} value={category.categoryLetter} checked={isChecked} onChange={() => { if (isChecked) return; handleAnswerChange(itemIndex, category.categoryLetter); }} />
+                                  <label className="group relative flex justify-center items-center cursor-pointer h-full w-full">
+                                    <input
+                                      type="radio"
+                                      className="sr-only"
+                                      name={`q-${realStartIndex}-matrix-item-${itemIndex}`}
+                                      value={category.categoryLetter}
+                                      checked={isChecked}
+                                      onChange={() => handleAnswerChange(itemIndex, category.categoryLetter)}
+                                      onClick={() => setActiveQuestionIndex(absoluteIndex)}
+                                    />
                                     <div className="w-[13px] h-[13px] border-[1px] border-gray-700 rounded-full flex items-center justify-center group-has-[:checked]:border-blue-600">
                                       <div className="w-[7px] h-[7px] bg-blue-600 rounded-full opacity-0 group-has-[:checked]:opacity-100"></div>
                                     </div>
@@ -249,14 +266,14 @@ export const MatrixQuestion = ({
               );
             }}
           />
-          {CategoryListJSX}
+          {layoutType === "standard" && CategoryListJSX}
         </>
       )}
 
       {readOnly && (
         <div className="space-y-6">
           {StaticQuestionGridJSX}
-          {CategoryListJSX}
+          {layoutType === "standard" && CategoryListJSX}
           {question.explanations && question.explanations[0]?.content && (
             <div className="mt-4">
               <Collapse size="small" items={[{ key: `general-explanation-${realStartIndex}`, label: "View General Explanation", children: (<div className="prose prose-sm max-w-none p-2 rounded"><TextSelectionWrapper>{parse(question.explanations[0].content)}</TextSelectionWrapper></div>) }]} />

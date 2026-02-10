@@ -83,6 +83,8 @@ export const GET_PRACTICE_HISTORY = gql`
                             itemText
                             correctCategoryLetter
                           }
+                          layoutType
+                          legendTitle
                         }
                       }
                     }

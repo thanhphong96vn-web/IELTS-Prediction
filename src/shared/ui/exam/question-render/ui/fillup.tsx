@@ -34,10 +34,10 @@ export const Fillup = ({
     // Nên LUÔN LUÔN dùng propStartIndex khi readOnly mode để đảm bảo khớp với answers array
     // Nếu question có startIndex property, ưu tiên dùng nó (đã được tính đúng từ newPost)
     if (readOnly) {
-      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0) 
-        ? question.startIndex 
+      const finalStartIndex = (question.startIndex !== undefined && question.startIndex >= 0)
+        ? question.startIndex
         : propStartIndex;
-      
+
       return finalStartIndex;
     }
 
@@ -66,28 +66,28 @@ export const Fillup = ({
 
         // Nếu tìm thấy khớp -> Trả về index hiện tại ngay
         if (isContentMatch || (isTitleMatch && q.type?.[0] === 'fillup')) {
-             return currentCount;
+          return currentCount;
         }
 
         // Logic cộng dồn index (PHẢI GIỐNG HỆT CONTEXT)
         let qCount = 1;
         const qType = q.type?.[0];
-        if (qType === 'matching' && String(q.matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
-            let gapCount = 0;
-            (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
-            qCount = gapCount > 0 ? gapCount : 1;
+        if (qType === 'matching' && String((q as any).matchingQuestion?.layoutType).trim().toLowerCase() === 'heading') {
+          let gapCount = 0;
+          (passage.passage_content || "").replace(/\{(.*?)\}/g, () => { gapCount++; return ''; });
+          qCount = gapCount > 0 ? gapCount : 1;
         } else if (qType === 'checkbox') {
-             // @ts-ignore
-             qCount = Number(q.optionChoose) || 1;
+          // @ts-ignore
+          qCount = Number(q.optionChoose) || 1;
         } else {
-             // countQuestion nhận một Passage, nhưng ở đây ta chỉ có question
-             // Tạo một passage tạm với question này
-             const tempPassage = {
-               title: "",
-               passage_content: "",
-               questions: [q],
-             } as any;
-             qCount = countQuestion(tempPassage);
+          // countQuestion nhận một Passage, nhưng ở đây ta chỉ có question
+          // Tạo một passage tạm với question này
+          const tempPassage = {
+            title: "",
+            passage_content: "",
+            questions: [q],
+          } as any;
+          qCount = countQuestion(tempPassage);
         }
         if (isNaN(qCount) || qCount < 1) qCount = 1;
         currentCount += qCount;
@@ -147,9 +147,9 @@ export const Fillup = ({
           }
 
           const gapOffset = Number(attribs["data-index"]);
-          const absoluteIndex = realStartIndex + gapOffset; 
+          const absoluteIndex = realStartIndex + gapOffset;
           const displayIndex = absoluteIndex + 1;
-          
+
 
           return methods ? (
             <Controller
@@ -180,7 +180,7 @@ export const Fillup = ({
                     }
                     // Bỏ qua object với numeric keys (có thể là từ matching/checkbox question)
                   }
-                  
+
                   const correctAnswerString = questionData.questions[gapOffset]?.answers || "";
                   const possibleCorrectAnswers = correctAnswerString.split("|").map((w) => w.trim().toLowerCase());
                   const displayCorrectAnswer = correctAnswerString.split("|")[0] || "";
@@ -254,7 +254,7 @@ export const Fillup = ({
     const result = parse(questionData.content, options);
     return result;
   }, [options, questionData.content]);
-  
+
   const content = useMemo(() => {
     const normalized = normalizeParseResult(parsedContent);
     return normalized;
@@ -263,7 +263,7 @@ export const Fillup = ({
   const numberOfGaps = questionData.questions.length;
   const displayStart = realStartIndex + 1;
   const displayEnd = realStartIndex + numberOfGaps;
-  
+
   const questionRange = numberOfGaps > 1 ? `${displayStart} - ${displayEnd}` : `${displayStart}`;
 
   return (

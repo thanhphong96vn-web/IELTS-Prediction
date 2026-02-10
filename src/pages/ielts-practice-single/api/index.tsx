@@ -89,6 +89,8 @@ export const GET_PRACTICE_SINGLE = gql`
                 itemText
                 correctCategoryLetter
               }
+              layoutType
+              legendTitle
             }
           }
         }
@@ -207,16 +209,17 @@ export type IPracticeSingle = {
           content: string;
         }[];
 
-        matchingQuestion?: {
-          layoutType?: 'standard' | 'summary' | 'heading';
-          summaryText?: string;
-          matchingItems?: {
-            questionPart: string;
-            correctAnswer: string;
+        matrixQuestion?: {
+          matrixCategories: {
+            categoryLetter: string;
+            categoryText: string;
           }[];
-          answerOptions?: {
-            optionText: string;
+          matrixItems: {
+            itemText: string;
+            correctCategoryLetter: string;
           }[];
+          layoutType?: "standard" | "simple";
+          legendTitle?: string;
         };
       }[];
     }[];

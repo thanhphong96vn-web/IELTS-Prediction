@@ -62,8 +62,8 @@ export const DraggableOption = ({
     isDragging,
   } = useSortable({ id });
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: CSS.Translate.toString(transform),
+    // transition,
     opacity: isDragging && !isOverlay ? 0.3 : 1,
   };
 
@@ -74,12 +74,13 @@ export const DraggableOption = ({
       {...attributes}
       {...listeners}
       className={twMerge(
-        "block rounded-sm bg-white touch-none select-none w-fit",
-        "text-sm font-normal",
+        "block rounded-sm touch-none select-none w-fit",
+        "text-sm font-bold",
+        isDropped ? "bg-transparent" : "bg-white",
         isOverlay
           ? "cursor-grabbing border-2 border-blue-500 shadow-md px-3 py-0.5"
           : "cursor-grab",
-        !isDropped && "border border-gray-400 px-3 py-0.5",
+        !isDropped && "px-3 py-0.5 shadow-sm", // Removed border border-gray-200
         isDragging && "opacity-30",
         className
       )}
@@ -95,12 +96,14 @@ export const StandardDroppableSlot = ({
   isOver,
   isSelected,
   onClick,
+  className,
 }: {
   id: UniqueIdentifier;
   children: React.ReactNode;
   isOver: boolean;
   isSelected: boolean;
   onClick: () => void;
+  className?: string;
 }) => {
   const { setNodeRef } = useSortable({ id, disabled: true });
   return (
@@ -110,11 +113,12 @@ export const StandardDroppableSlot = ({
       tabIndex={0}
       className={twMerge(
         "droppable-slot-mq outline-none max-w-[520px] px-[10px] border border-dashed rounded-md flex items-center relative transition-colors min-h-[27px] text-[14px] text-[#000] cursor-pointer",
-        isSelected || isOver ? "active-slot" : "border-[#c5c5c5]"
+        isOver ? "active-slot" : "border-[#c5c5c5]",
+        className
       )}
     >
       {children}
-    </div>
+    </div >
   );
 };
 
@@ -238,8 +242,8 @@ export function MatchingQuestion({
   const layout = Array.isArray(layoutValue)
     ? layoutValue[0]
     : String(layoutValue || "")
-        .trim()
-        .toLowerCase();
+      .trim()
+      .toLowerCase();
 
   const findContainer = (
     items: Record<string, UniqueIdentifier[]>,
@@ -307,7 +311,7 @@ export function MatchingQuestion({
           <div className="text-[16px] leading-[2] prose prose-sm max-w-none text-[#000]">
             {parse(
               question.instructions ||
-                "Complete the summary using the list of words. Choose the correct answer and move it into the gap."
+              "Complete the summary using the list of words. Choose the correct answer and move it into the gap."
             )}
           </div>
         </div>
@@ -346,7 +350,7 @@ export function MatchingQuestion({
                       : -1;
                     const userAnswerText =
                       userAnswerOptionIndex !== -1 &&
-                      answerOptions[userAnswerOptionIndex]
+                        answerOptions[userAnswerOptionIndex]
                         ? answerOptions[userAnswerOptionIndex].optionText
                         : undefined;
                     const correctAnswerText = correctAnswers[gapIndex];
@@ -356,48 +360,48 @@ export function MatchingQuestion({
                     const isCorrect =
                       userDidAnswer &&
                       userAnswerText.trim().toLowerCase() ===
-                        correctAnswerText.trim().toLowerCase();
+                      correctAnswerText.trim().toLowerCase();
 
                     let content: React.ReactNode;
-                    let boxClasses = "border-gray-400"; // Mặc định border xám
+                    let boxClasses = "border-gray-200"; // Changed diff: Lighter border
 
                     if (isCorrect) {
-                      // 1. ĐÚNG: Text xanh
+                      // 1. Correct: Green text
                       content = (
-                        <span className="text-green-700 font-semibold">
+                        <span className="text-green-700 font-bold">
                           {userAnswerText}
                         </span>
                       );
-                      boxClasses = "border-green-500 bg-green-50"; // Nền xanh
+                      boxClasses = "border-green-500 bg-green-50";
                     } else if (userDidAnswer) {
-                      // 2. SAI: Text đỏ (gạch) + xanh
+                      // 2. Incorrect: Red text (strikethrough) + Green text
                       content = (
                         <>
-                          <span className="text-red-500 line-through mr-1">
+                          <span className="text-red-500 line-through mr-1 font-bold">
                             {userAnswerText}
                           </span>
-                          <span className="text-green-700 font-semibold">
+                          <span className="text-green-700 font-bold">
                             {correctAnswerText}
                           </span>
                         </>
                       );
-                      boxClasses = "border-red-500 bg-red-50"; // Nền đỏ
+                      boxClasses = "border-red-500 bg-red-50";
                     } else {
-                      // 3. BỎ LỠ: Text xám
+                      // 3. Missed: Gray text
                       content = (
-                        <span className="text-gray-500 font-semibold">
+                        <span className="text-gray-500 font-bold">
                           {correctAnswerText}
                         </span>
                       );
-                      boxClasses = "border-gray-400 bg-gray-50"; // Nền xám
+                      boxClasses = "border-gray-200 bg-gray-50"; // Changed diff: Lighter border
                     }
 
-                    // 4. Trả về component với viền đứt VÀ MÀU NỀN
+                    // 4. Return component with dashed border AND BACKGROUND COLOR
                     return (
                       <span
                         className={twMerge(
-                          "inline-block border border-dashed px-2 py-0.5 align-baseline min-w-[80px] text-center rounded-sm", // Style cơ bản
-                          boxClasses // Áp dụng màu nền/viền
+                          "inline-block border border-dashed px-2 py-0.5 align-baseline min-w-[80px] text-center rounded-sm font-bold", // Added font-bold
+                          boxClasses
                         )}
                       >
                         {content}
@@ -414,7 +418,7 @@ export function MatchingQuestion({
                     {answerOptions.map((option, index) => (
                       <div
                         key={index}
-                        className="border rounded-md px-3 py-0.5 bg-gray-50 text-gray-700 text-sm"
+                        className="border rounded-md px-3 py-0.5 bg-gray-50 text-[#000] text-sm"
                       >
                         <TextSelectionWrapper>
                           {parse(option.optionText)}
@@ -740,7 +744,7 @@ export function MatchingQuestion({
           <div className="text-[16px] leading-[2] prose prose-sm max-w-none text-[#000]">
             {parse(
               question.instructions ||
-                "Choose the correct heading for each section."
+              "Choose the correct heading for each section."
             )}
           </div>
         </div>
@@ -799,7 +803,7 @@ export function MatchingQuestion({
                 {answerOptions.map((option, index) => (
                   <div
                     key={`heading-opt-${index}`}
-                    className="block rounded-sm border border-gray-300 px-3 py-0 font-bold text-[17px] text-[#888]"
+                    className="block rounded-sm border border-gray-200 px-3 py-0 font-bold text-[17px] text-[#000]"
                   >
                     <TextSelectionWrapper>
                       {parse(option.optionText)}
@@ -870,14 +874,13 @@ export function MatchingQuestion({
         <div className="heading-group">
           <h3 className="text-[16px] font-bold ">
             {question.title ||
-              `Questions ${startIndex + 1} - ${
-                startIndex + standardQuestionCount
+              `Questions ${startIndex + 1} - ${startIndex + standardQuestionCount
               }`}
           </h3>
           <div className="text-[16px] leading-[2] prose prose-sm max-w-none text-[#000]">
             {parse(
               question.instructions ||
-                "Complete each sentence with the correct ending. Choose the correct answer and move it into the gap."
+              "Complete each sentence with the correct ending. Choose the correct answer and move it into the gap."
             )}
           </div>
         </div>
@@ -982,8 +985,268 @@ export function MatchingQuestion({
             };
 
             // === [LOGIC MỚI] ===
+            // === LIST LAYOUT ===
+            if (layout === "list") {
+              if (readOnly) {
+                // === READONLY MODE FOR LIST LAYOUT ===
+                return (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Left Column: Questions with visual results */}
+                      <div className="space-y-4">
+                        {itemsToMatch.map((item, itemIndex) => {
+                          const questionAbsoluteIndex = startIndex + itemIndex;
+
+                          const userAnswers =
+                            typeof field.value === "object" &&
+                              field.value !== null
+                              ? (field.value as { [key: number]: number })
+                              : {};
+                          const userAnswerOptionIndex = userAnswers
+                            ? userAnswers[itemIndex]
+                            : undefined;
+                          const userAnswerText =
+                            userAnswerOptionIndex !== undefined
+                              ? answerOptions[userAnswerOptionIndex]?.optionText
+                              : undefined;
+                          const correctAnswerText = item.correctAnswer;
+
+                          const userDidAnswer = userAnswerText !== undefined;
+                          const isCorrect =
+                            userDidAnswer &&
+                            userAnswerText.trim().toLowerCase() ===
+                            correctAnswerText.trim().toLowerCase();
+
+                          return (
+                            <div
+                              key={`result-list-${itemIndex}`}
+                              className="flex items-center justify-start gap-4"
+                              id={`question-no-${questionAbsoluteIndex + 1}`}
+                            >
+                              <div className="text-[16px] text-[#000]">
+                                <TextSelectionWrapper>
+                                  {parse(item.questionPart)}
+                                </TextSelectionWrapper>
+                              </div>
+
+                              <div
+                                className={twMerge(
+                                  "droppable-slot-mq outline-none min-w-[60px] px-[10px] border border-dashed rounded-md flex items-center justify-center relative transition-colors min-h-[36px] text-[14px] text-[#000]",
+                                  isCorrect
+                                    ? "border-green-500 bg-green-50"
+                                    : !userDidAnswer
+                                      ? "border-gray-400 bg-gray-50"
+                                      : "border-red-500 bg-red-50"
+                                )}
+                              >
+                                {isCorrect && (
+                                  <span className="text-green-700 font-semibold text-center">
+                                    {userAnswerText}
+                                  </span>
+                                )}
+                                {!isCorrect && userDidAnswer && (
+                                  <span className="flex-grow text-center">
+                                    <span className="text-red-500 line-through mr-2">
+                                      {userAnswerText}
+                                    </span>
+                                    <span className="text-green-700 font-semibold">
+                                      {correctAnswerText}
+                                    </span>
+                                  </span>
+                                )}
+                                {!userDidAnswer && (
+                                  <span className="text-gray-500 font-semibold text-center">
+                                    {correctAnswerText}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Right Column: Options List (Static) */}
+                      <div>
+                        <h4 className="text-[16px] font-bold mb-4">
+                          List of options
+                        </h4>
+                        <div className="flex flex-col gap-3">
+                          {answerOptions.map((option, index) => (
+                            <div
+                              key={`list-opt-readonly-${index}`}
+                              className="block rounded-md px-4 py-2 bg-white text-[#000] text-center font-bold"
+                            >
+                              <TextSelectionWrapper>
+                                {parse(option.optionText)}
+                              </TextSelectionWrapper>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Explanation Section */}
+                    {question.explanations?.[0]?.content && (
+                      <div className="mt-4">
+                        <Collapse
+                          size="small"
+                          items={[
+                            {
+                              key: `exp-list-general-${startIndex}`,
+                              label: "Explanation",
+                              children: (
+                                <div className="prose prose-sm max-w-none p-2 rounded">
+                                  <TextSelectionWrapper>
+                                    {parse(question.explanations[0].content)}
+                                  </TextSelectionWrapper>
+                                </div>
+                              ),
+                            },
+                          ]}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // === INTERACTIVE MODE FOR LIST LAYOUT ===
+              return (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={rectIntersection}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Left Column: Questions */}
+                    <div className="space-y-6">
+                      {itemsToMatch.map((item, itemIndex) => {
+                        const containerId = `item-${itemIndex}`;
+                        const questionAbsoluteIndex = startIndex + itemIndex;
+                        return (
+                          <div
+                            key={containerId}
+                            className="flex items-center justify-start gap-4"
+                            id={`question-no-${questionAbsoluteIndex + 1}`}
+                          >
+                            <div className="text-[16px] text-[#000]">
+                              <TextSelectionWrapper>
+                                {parse(item.questionPart)}
+                              </TextSelectionWrapper>
+                            </div>
+
+                            <SortableContext
+                              items={items[containerId] || []}
+                              id={containerId}
+                            >
+                              <StandardDroppableSlot
+                                id={containerId}
+                                isOver={
+                                  overId === containerId ||
+                                  (overId
+                                    ? findContainer(items, overId) ===
+                                    containerId
+                                    : false)
+                                }
+                                isSelected={
+                                  activeQuestionIndex === questionAbsoluteIndex
+                                }
+                                onClick={() =>
+                                  setActiveQuestionIndex(questionAbsoluteIndex)
+                                }
+                                className="min-w-[60px] w-auto justify-center"
+                              >
+                                {(items[containerId] || []).map((id) => {
+                                  const optionIndex = parseInt(
+                                    id.toString().split("-")[2]
+                                  );
+                                  if (
+                                    isNaN(optionIndex) ||
+                                    optionIndex < 0 ||
+                                    optionIndex >= answerOptions.length
+                                  )
+                                    return null;
+                                  return (
+                                    <DraggableOption
+                                      key={id}
+                                      id={id}
+                                      content={
+                                        answerOptions[optionIndex].optionText
+                                      }
+                                      isDropped={true}
+                                      className="text-[#000] text-center font-bold"
+                                    />
+                                  );
+                                })}
+                                {(!items[containerId] ||
+                                  items[containerId].length === 0) && (
+                                    <span className="font-bold text-[16px] text-[#000] pointer-events-none">
+                                      {questionAbsoluteIndex + 1}
+                                    </span>
+                                  )}
+                              </StandardDroppableSlot>
+                            </SortableContext>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Right Column: Options */}
+                    <div>
+                      <h4 className="text-[16px] font-bold mb-4">
+                        List of options
+                      </h4>
+                      <SortableContext
+                        items={items["available"] || []}
+                        id="available"
+                      >
+                        <div className="flex flex-col gap-3">
+                          {(items["available"] || []).map((id) => {
+                            const optionIndex = parseInt(
+                              String(id).split("-")[2]
+                            );
+                            const optionText =
+                              answerOptions[optionIndex]?.optionText;
+                            if (!optionText) return null;
+
+                            return (
+                              <DraggableOption
+                                key={id}
+                                id={id}
+                                content={optionText}
+                                isDropped={false}
+                                className="block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200"
+                              />
+                            );
+                          })}
+                        </div>
+                      </SortableContext>
+                    </div>
+                  </div>
+
+                  <DragOverlay>
+                    {activeId ? (
+                      <DraggableOption
+                        id={activeId}
+                        content={
+                          answerOptions[
+                            parseInt(String(activeId).split("-")[2])
+                          ]?.optionText || ""
+                        }
+                        isOverlay
+                        isDropped={false}
+                        className="block rounded-md border border-gray-200 px-4 py-2 bg-white text-[#000] shadow-lg text-center cursor-grabbing z-50"
+                      />
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
+              );
+            }
+
+            // === STANDARD LAYOUT (Fallback) ===
             if (readOnly) {
-              // === CHẾ ĐỘ READONLY ===
               return (
                 <div className="space-y-6">
                   {/* 1. List of questions with inline results */}
@@ -991,7 +1254,6 @@ export function MatchingQuestion({
                     {itemsToMatch.map((item, itemIndex) => {
                       const questionAbsoluteIndex = startIndex + itemIndex;
 
-                      // Lấy câu trả lời
                       const userAnswers =
                         typeof field.value === "object" && field.value !== null
                           ? (field.value as { [key: number]: number })
@@ -1005,12 +1267,11 @@ export function MatchingQuestion({
                           : undefined;
                       const correctAnswerText = item.correctAnswer;
 
-                      // Xác định trạng thái
                       const userDidAnswer = userAnswerText !== undefined;
                       const isCorrect =
                         userDidAnswer &&
                         userAnswerText.trim().toLowerCase() ===
-                          correctAnswerText.trim().toLowerCase();
+                        correctAnswerText.trim().toLowerCase();
 
                       return (
                         <div
@@ -1018,42 +1279,39 @@ export function MatchingQuestion({
                           className="space-y-2"
                           id={`#question-no-${questionAbsoluteIndex + 1}`}
                         >
-                          {/* Question Text */}
                           <div className="text-[16px] mb-[2px]">
                             <TextSelectionWrapper>
                               {parse(item.questionPart)}
                             </TextSelectionWrapper>
                           </div>
 
-                          {/* Result Slot */}
                           <div
                             className={twMerge(
                               "droppable-slot-mq outline-none max-w-[520px] px-[10px] border border-dashed rounded-md flex items-center relative transition-colors min-h-[27px] text-[14px] text-[#000]",
-                              // Áp dụng màu sắc dựa trên trạng thái
                               isCorrect
                                 ? "border-green-500 bg-green-50"
                                 : !userDidAnswer
-                                ? "border-gray-400 bg-gray-50"
-                                : "border-red-500 bg-red-50"
+                                  ? "border-gray-200 bg-gray-50"
+                                  : "border-red-500 bg-red-50"
                             )}
                           >
                             {isCorrect && (
-                              <span className="text-green-700 font-semibold">
+                              <span className="text-green-700 font-bold">
                                 {userAnswerText}
                               </span>
                             )}
                             {!isCorrect && userDidAnswer && (
                               <span className="flex-grow">
-                                <span className="text-red-500 line-through mr-2">
+                                <span className="text-red-500 line-through mr-2 font-bold">
                                   {userAnswerText}
                                 </span>
-                                <span className="text-green-700 font-semibold">
+                                <span className="text-green-700 font-bold">
                                   {correctAnswerText}
                                 </span>
                               </span>
                             )}
                             {!userDidAnswer && (
-                              <span className="text-gray-500 font-semibold">
+                              <span className="text-gray-500 font-bold">
                                 {correctAnswerText}
                               </span>
                             )}
@@ -1072,7 +1330,7 @@ export function MatchingQuestion({
                       {answerOptions.map((option, index) => (
                         <div
                           key={`sa-opt-${index}`}
-                          className="block rounded-sm border border-gray-300 px-3 py-0.5 bg-gray-50 text-gray-700"
+                          className="block rounded-sm border border-gray-200 px-3 py-0.5 bg-gray-50 text-[#000] font-bold"
                         >
                           <TextSelectionWrapper>
                             {parse(option.optionText)}
@@ -1093,11 +1351,9 @@ export function MatchingQuestion({
                             label: "Explanation",
                             children: (
                               <div className="prose prose-sm max-w-none p-2 rounded">
-                                {" "}
                                 <TextSelectionWrapper>
-                                  {" "}
-                                  {parse(question.explanations[0].content)}{" "}
-                                </TextSelectionWrapper>{" "}
+                                  {parse(question.explanations[0].content)}
+                                </TextSelectionWrapper>
                               </div>
                             ),
                           },
@@ -1108,9 +1364,8 @@ export function MatchingQuestion({
                 </div>
               );
             }
-            // === HẾT CHẾ ĐỘ READONLY ===
 
-            // === CHẾ ĐỘ LÀM BÀI (Tương tác) ===
+            // === STANDARD LAYOUT INTERACTIVE ===
             return (
               <DndContext
                 sensors={sensors}
@@ -1120,7 +1375,6 @@ export function MatchingQuestion({
                 onDragEnd={handleDragEnd}
               >
                 <div className="flex flex-col gap-5">
-                  {/* Đây là phần render các câu hỏi (slot) - GIỮ NGUYÊN */}
                   <div className="space-y-4">
                     {itemsToMatch.map((item, itemIndex) => {
                       const containerId = `item-${itemIndex}`;
@@ -1178,10 +1432,10 @@ export function MatchingQuestion({
                               })}
                               {(!items[containerId] ||
                                 items[containerId].length === 0) && (
-                                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-[16px] text-[#000] pointer-events-none">
-                                  {questionAbsoluteIndex + 1}
-                                </span>
-                              )}
+                                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-[16px] text-[#000] pointer-events-none">
+                                    {questionAbsoluteIndex + 1}
+                                  </span>
+                                )}
                             </StandardDroppableSlot>
                           </SortableContext>
                         </div>
@@ -1189,7 +1443,6 @@ export function MatchingQuestion({
                     })}
                   </div>
 
-                  {/* Đây là phần render các lựa chọn (options) - CODE MÀ BẠN ĐÃ SỬA */}
                   {!readOnly && (
                     <div className="pt-3">
                       <SortableContext items={allOptionIds} id="available">
@@ -1231,9 +1484,8 @@ export function MatchingQuestion({
                       </SortableContext>
                     </div>
                   )}
-                </div>{" "}
-                {/* <--- Thẻ đóng cho "flex flex-col gap-5" */}
-                {/* Phần DragOverlay - GIỮ NGUYÊN */}
+                </div>
+
                 <DragOverlay>
                   {activeId ? (
                     <DraggableOption
@@ -1247,7 +1499,7 @@ export function MatchingQuestion({
                     />
                   ) : null}
                 </DragOverlay>
-              </DndContext> /* <--- Thẻ đóng cho DndContext */
+              </DndContext>
             );
           }}
         />

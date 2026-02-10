@@ -166,7 +166,7 @@ async function handleAffiliateCommission(
   try {
     // Try to get affiliate ref from cookie if not provided
     let affiliateCode = affiliateRef;
-    
+
     // If no affiliate code provided, skip
     if (!affiliateCode) {
       return;
@@ -297,7 +297,7 @@ export default async function handler(
       couponCode: couponCode || undefined,
       discountAmount: discountAmount || 0,
       status: "pending",
-      paymentMethod: "Ngân hàng VCB (Vietcombank)",
+      paymentMethod: "Ngân hàng ACB (Ngân hàng Á Châu)",
       transferContent,
       createdAt: new Date().toISOString(),
       affiliateRef: affiliateRef || undefined,

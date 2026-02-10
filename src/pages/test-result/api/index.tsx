@@ -136,6 +136,8 @@ export const GET_PRACTICE_SINGLE = gql`
                 itemText
                 correctCategoryLetter
               }
+              layoutType
+              legendTitle
             }
             # ▲▲▲ KẾT THÚC CẬP NHẬT ▲▲▲
           }
@@ -213,7 +215,7 @@ export type IQuestion = {
     content: string;
   }[];
   matchingQuestion?: {
-    layoutType?: 'standard' | 'summary' | 'heading';
+    layoutType?: 'standard' | 'summary' | 'heading' | 'list';
     summaryText?: string;
     matchingItems?: {
       questionPart: string;
@@ -233,6 +235,8 @@ export type IQuestion = {
       itemText: string;
       correctCategoryLetter: string;
     }[];
+    layoutType?: "standard" | "simple";
+    legendTitle?: string;
   };
   // ▲▲▲ KẾT THÚC CẬP NHẬT TYPE ▲▲▲
 };

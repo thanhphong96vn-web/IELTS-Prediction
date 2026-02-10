@@ -11,12 +11,21 @@ export type AnswerFormValues = {
 export type IQuestion = IPracticeSingle["quizFields"]["passages"][number]["questions"][number] & {
     // Thêm trường matchingQuestion vào type để TypeScript không báo lỗi
     matchingQuestion?: {
-        matchingItems: {
-            questionPart: string;
-            correctAnswer: string;
+        layoutType?: "standard" | "summary" | "heading" | "list" | string[];
+        matchingItems?: { questionPart: string; correctAnswer: string }[];
+        summaryText?: string;
+        answerOptions?: { optionText: string }[];
+    };
+    matrixQuestion?: {
+        matrixCategories: {
+            categoryLetter: string;
+            categoryText: string;
         }[];
-        answerOptions: {
-            optionText: string;
+        matrixItems: {
+            itemText: string;
+            correctCategoryLetter: string;
         }[];
+        layoutType?: "standard" | "simple";
+        legendTitle?: string;
     };
 };

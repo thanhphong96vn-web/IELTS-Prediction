@@ -22,8 +22,8 @@ const countSubQuestions = (question: IQuestion): number => {
             }
         }
 
-        // B. Nếu là dạng "standard", đếm số item cần nối
-        if (layoutType === 'standard' && question.matchingQuestion.matchingItems?.length > 0) {
+        // B. Nếu là dạng "standard" hoặc "list", đếm số item cần nối
+        if ((layoutType === 'standard' || layoutType === 'list') && question.matchingQuestion.matchingItems?.length > 0) {
             return question.matchingQuestion.matchingItems.length;
         }
     }
@@ -72,10 +72,10 @@ type Passage = IPracticeSingle['quizFields']['passages'][number];
 // Hỗ trợ cả Passage và { questions: [...] } để tương thích với PageTakeTheTestWrapper
 export function countQuestion(passage: Passage | { questions: IQuestion[] }): number {
     if (!passage) return 0;
-    
+
     // Xử lý cả hai trường hợp: Passage hoặc { questions: [...] }
     const questions = 'questions' in passage ? passage.questions : (passage as Passage).questions;
-    
+
     if (!questions || questions.length === 0) {
         return 0;
     }

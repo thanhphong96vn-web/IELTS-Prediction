@@ -88,6 +88,8 @@ export const GET_PRACTICE_SINGLE = gql`
                 itemText
                 correctCategoryLetter
               }
+              layoutType
+              legendTitle
             }
             # ▲▲▲ KẾT THÚC CẬP NHẬT ▲▲▲
           }
