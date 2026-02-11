@@ -14,37 +14,42 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
     } = context;
     const { client } = createServerApolloClient(context);
 
-    const {
-      data: { quiz: post },
-    } = await client.query<IPracticeSingleResponse, { id: string }>({
-      query: GET_PRACTICE_SINGLE,
-      variables: {
-        id: slug?.toString() || "",
-      },
-      context: {
-        authRequired: true,
-      },
-    });
+    try {
+      const {
+        data: { quiz: post },
+      } = await client.query<IPracticeSingleResponse, { id: string }>({
+        query: GET_PRACTICE_SINGLE,
+        variables: {
+          id: slug?.toString() || "",
+        },
+        context: {
+          authRequired: true,
+        },
+      });
 
-    if (!post) {
-      return {
-        notFound: true,
-      };
-    }
+      if (!post) {
+        return {
+          notFound: true,
+        };
+      }
 
-    if (!post.hasAccess) {
+      if (!post.hasAccess) {
+        return {
+          redirect: {
+            destination: ROUTES.HOME,
+            permanent: false,
+          },
+        };
+      }
+
       return {
-        redirect: {
-          destination: ROUTES.HOME,
-          permanent: false,
+        props: {
+          post,
         },
       };
+    } catch (error) {
+      console.error("Error retrieving practice single:", JSON.stringify(error, null, 2));
+      throw error;
     }
-
-    return {
-      props: {
-        post,
-      },
-    };
   }
 );

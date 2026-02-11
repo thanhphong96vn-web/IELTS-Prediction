@@ -183,17 +183,26 @@ export const MatrixQuestion = ({
     </div>
   );
 
-  return (
-    <div className="space-y-6" id={`#question-no-${realStartIndex + 1}`}>
-      <div className="heading-group space-y-2">
-        <h3 className="font-bold text-base">
-          {question.title || `Questions ${realStartIndex + 1}–${realStartIndex + matrixItems.length}`}
-        </h3>
-        <div className="leading-[2] prose prose-sm max-w-none">
-          {parse(question.question || question.instructions || "")}
-        </div>
-      </div>
+  /* ... inside MatrixQuestion ... */
+  const isListening = post?.quizFields?.skill?.[0] === "listening";
+  const contentToCheck = question.question || question.instructions || "";
+  const hasMedia = /<img|<video|<canvas/i.test(contentToCheck);
 
+  // Content 1: Title & Instructions (contains media)
+  const InstructionsContent = (
+    <div className="heading-group space-y-2">
+      <h3 className="font-bold text-base">
+        {question.title || `Questions ${realStartIndex + 1}–${realStartIndex + matrixItems.length}`}
+      </h3>
+      <div className="leading-[2] prose prose-sm max-w-none text-black">
+        {parse(contentToCheck)}
+      </div>
+    </div>
+  );
+
+  // Content 2: Matrix Table & Categories
+  const MatrixTableContent = (
+    <>
       {!readOnly && (
         <>
           <Controller
@@ -281,6 +290,62 @@ export const MatrixQuestion = ({
           )}
         </div>
       )}
+    </>
+  );
+
+  // ... (inside MatrixQuestion)
+
+  if (isListening && hasMedia) {
+    // 1. Instructions Text with Media Removed
+    const InstructionsTextOnly = (
+      <div className="heading-group space-y-2 mb-4">
+        <h3 className="font-bold text-base">
+          {question.title || `Questions ${realStartIndex + 1}–${realStartIndex + matrixItems.length}`}
+        </h3>
+        <div className="leading-[2] prose prose-sm max-w-none text-black">
+          {parse(contentToCheck, {
+            replace: (domNode: any) => {
+              if (domNode.name === 'img' || domNode.name === 'video' || domNode.name === 'canvas' || domNode.name === 'figure') {
+                return <></>;
+              }
+            }
+          })}
+        </div>
+      </div>
+    );
+
+    // 2. Extracted Media Only
+    const mediaMatches = contentToCheck.match(/<img[^>]*>|<video[^>]*>.*?<\/video>|<canvas[^>]*>.*?<\/canvas>|<figure[^>]*>.*?<\/figure>/g) || [];
+    const MediaOnly = (
+      <div className="flex flex-col gap-4">
+        {mediaMatches.map((mediaHtml, idx) => (
+          <div key={idx}>{parse(mediaHtml)}</div>
+        ))}
+      </div>
+    );
+
+    return (
+      <div id={`#question-no-${realStartIndex + 1}`}>
+        {/* Row 1: Text Instructions */}
+        {InstructionsTextOnly}
+
+        {/* Row 2: Media + Table Side-by-Side */}
+        <div className="flex flex-col lg:flex-row items-start gap-8">
+          <div className="w-fit max-w-[50%] shrink-0">
+            {MediaOnly}
+          </div>
+          <div className="flex-1 min-w-0">
+            {MatrixTableContent}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6" id={`#question-no-${realStartIndex + 1}`}>
+      {InstructionsContent}
+      {MatrixTableContent}
     </div>
   );
 };

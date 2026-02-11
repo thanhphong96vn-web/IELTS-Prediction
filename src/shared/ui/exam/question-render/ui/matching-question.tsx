@@ -229,7 +229,7 @@ export function MatchingQuestion({
   }
 
   const methods = useFormContext<AnswerFormValues>();
-  const { activeQuestionIndex, setActiveQuestionIndex } = useExamContext();
+  const { activeQuestionIndex, setActiveQuestionIndex, post } = useExamContext();
   const { answerOptions = [] } = matchingData;
 
   const allOptionIds = useMemo(
@@ -644,62 +644,94 @@ export function MatchingQuestion({
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
               >
-                <div className="prose-base text-black leading-relaxed">
-                  <TextSelectionWrapper>
-                    {parse(processedText, parserOptions)}
-                  </TextSelectionWrapper>
-                </div>
-                {!readOnly && (
-                  <div className="mt-[60px] border-gray-200">
-                    {/* [SỬA] Dùng allOptionIds ổn định */}
-                    <SortableContext items={allOptionIds} id="available">
-                      {/* [SỬA] Giữ nguyên style "flex-wrap" của summary */}
-                      <div className="flex flex-wrap gap-3">
-                        {/* [SỬA] Lặp qua allOptionIds */}
-                        {allOptionIds.map((id, optionIndex) => {
-                          const optionText =
-                            answerOptions[optionIndex]?.optionText;
-                          if (!optionText) return null;
+                {/* --- LAYOUT LOGIC --- */}
+                {(() => {
+                  const isListening = post?.quizFields?.skill?.[0] === "listening";
 
-                          // [SỬA] Kiểm tra tính khả dụng
-                          const isAvailable = (
-                            items["available"] || []
-                          ).includes(id);
+                  const TextContent = (
+                    <div className="prose-base w-fit max-w-full text-black leading-relaxed">
+                      <TextSelectionWrapper>
+                        {parse(processedText, parserOptions)}
+                      </TextSelectionWrapper>
+                    </div>
+                  );
 
-                          if (isAvailable) {
-                            // [SỬA] Render DraggableOption nếu có
-                            return (
-                              <DraggableOption
-                                key={id}
-                                id={id}
-                                content={optionText}
-                                isDropped={false}
-                              />
-                            );
-                          } else {
-                            // [SỬA] Render Placeholder nếu không (style copy từ layout 'standard')
-                            return (
-                              <div
-                                key={`placeholder-${id}`}
-                                className="block rounded-sm bg-white px-3 py-0.5 w-fit"
-                              >
-                                <div className="invisible text-sm font-normal">
-                                  <TextSelectionWrapper>
-                                    {parse(optionText)}
-                                  </TextSelectionWrapper>
+                  const OptionsContent = !readOnly && (
+                    <div
+                      className={twMerge(
+                        "scale-100 origin-top-left",
+                        isListening ? "mt-0" : "mt-[60px] border-gray-200"
+                      )}
+                    >
+                      <SortableContext items={allOptionIds} id="available">
+                        <div className={twMerge(
+                          "flex gap-3",
+                          isListening ? "flex-col" : "flex-wrap"
+                        )}>
+                          {allOptionIds.map((id, optionIndex) => {
+                            const optionText = answerOptions[optionIndex]?.optionText;
+                            if (!optionText) return null;
+
+                            const isAvailable = (items["available"] || []).includes(id);
+
+                            if (isAvailable) {
+                              return (
+                                <DraggableOption
+                                  key={id}
+                                  id={id}
+                                  content={optionText}
+                                  isDropped={false}
+                                  className={isListening ? "block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200 w-fit max-w-full" : ""}
+                                />
+                              );
+                            } else {
+                              return (
+                                <div
+                                  key={`placeholder-${id}`}
+                                  className="block rounded-sm bg-white px-3 py-0.5 w-fit"
+                                >
+                                  <div className="invisible text-sm font-normal">
+                                    <TextSelectionWrapper>
+                                      {parse(optionText)}
+                                    </TextSelectionWrapper>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          }
-                        })}
+                              );
+                            }
+                          })}
+                        </div>
+                      </SortableContext>
+                    </div>
+                  );
+
+                  if (isListening) {
+                    return (
+                      <div className="flex flex-col lg:flex-row items-start gap-8">
+                        <div>
+                          {TextContent}
+                        </div>
+                        <div className="w-full lg:w-[350px] shrink-0">
+                          <div className="sticky top-4">
+                            <p className="text-[16px] font-bold mb-4">List of options</p>
+                            {OptionsContent}
+                          </div>
+                        </div>
                       </div>
-                    </SortableContext>
-                  </div>
-                )}
+                    );
+                  }
+
+                  return (
+                    <div>
+                      {TextContent}
+                      {OptionsContent}
+                    </div>
+                  );
+                })()}
+
                 <DragOverlay>
                   {activeId ? (
                     <DraggableOption
-                      id={activeId}
+                      id={activeId as UniqueIdentifier}
                       content={
                         answerOptions[parseInt(String(activeId).split("-")[2])]
                           ?.optionText || ""
@@ -715,8 +747,6 @@ export function MatchingQuestion({
         />
       </div>
     );
-
-    // ================== LAYOUT: 'heading' ==================
   } else if (layout === "heading") {
     // ... (Code 'heading' không thay đổi) ...
     const { items } = useExamContext();
@@ -761,7 +791,7 @@ export function MatchingQuestion({
                   if (!optionText) return null; // An toàn
 
                   // Kiểm tra xem ID này có "available" không
-                  const isAvailable = (items["available"] || []).includes(id);
+                  const isAvailable = (items?.["available"] || []).includes(id);
 
                   if (isAvailable) {
                     // CÓ: Render DraggableOption
@@ -991,9 +1021,12 @@ export function MatchingQuestion({
                 // === READONLY MODE FOR LIST LAYOUT ===
                 return (
                   <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="flex flex-col md:flex-row gap-8">
                       {/* Left Column: Questions with visual results */}
                       <div className="space-y-4">
+                        <h4 className="text-[16px] font-bold mb-4 invisible hidden md:block">
+                          placeholder
+                        </h4>
                         {itemsToMatch.map((item, itemIndex) => {
                           const questionAbsoluteIndex = startIndex + itemIndex;
 
@@ -1119,9 +1152,12 @@ export function MatchingQuestion({
                   onDragOver={handleDragOver}
                   onDragEnd={handleDragEnd}
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="flex flex-col md:flex-row gap-8">
                     {/* Left Column: Questions */}
                     <div className="space-y-6">
+                      <h4 className="text-[16px] font-bold mb-4 invisible hidden md:block">
+                        placeholder
+                      </h4>
                       {itemsToMatch.map((item, itemIndex) => {
                         const containerId = `item-${itemIndex}`;
                         const questionAbsoluteIndex = startIndex + itemIndex;
@@ -1202,7 +1238,7 @@ export function MatchingQuestion({
                         items={items["available"] || []}
                         id="available"
                       >
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-3 items-start">
                           {(items["available"] || []).map((id) => {
                             const optionIndex = parseInt(
                               String(id).split("-")[2]
@@ -1217,7 +1253,7 @@ export function MatchingQuestion({
                                 id={id}
                                 content={optionText}
                                 isDropped={false}
-                                className="block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200"
+                                className="block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200 w-fit max-w-full"
                               />
                             );
                           })}
