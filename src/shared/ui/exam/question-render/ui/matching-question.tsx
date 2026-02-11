@@ -97,6 +97,7 @@ export const StandardDroppableSlot = ({
   isSelected,
   onClick,
   className,
+  hitAreaOffset = 0,
 }: {
   id: UniqueIdentifier;
   children: React.ReactNode;
@@ -104,21 +105,43 @@ export const StandardDroppableSlot = ({
   isSelected: boolean;
   onClick: () => void;
   className?: string;
+  hitAreaOffset?: number;
 }) => {
   const { setNodeRef } = useSortable({ id, disabled: true });
+
+  const visualClasses = twMerge(
+    "droppable-slot-mq outline-none max-w-[520px] px-[10px] border border-dashed rounded-md flex items-center relative transition-colors min-h-[27px] text-[14px] text-[#000] cursor-pointer",
+    isOver ? "active-slot" : "border-[#c5c5c5]",
+    className
+  );
+
+  if (hitAreaOffset > 0) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{ padding: hitAreaOffset, margin: -hitAreaOffset }}
+        className="inline-flex"
+      >
+        <div
+          onClick={onClick}
+          tabIndex={0}
+          className={visualClasses}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       ref={setNodeRef}
       onClick={onClick}
       tabIndex={0}
-      className={twMerge(
-        "droppable-slot-mq outline-none max-w-[520px] px-[10px] border border-dashed rounded-md flex items-center relative transition-colors min-h-[27px] text-[14px] text-[#000] cursor-pointer",
-        isOver ? "active-slot" : "border-[#c5c5c5]",
-        className
-      )}
+      className={visualClasses}
     >
       {children}
-    </div >
+    </div>
   );
 };
 
@@ -1237,7 +1260,8 @@ export function MatchingQuestion({
                                 onClick={() =>
                                   setActiveQuestionIndex(questionAbsoluteIndex)
                                 }
-                                className="min-w-[60px] w-auto justify-center"
+                                className="min-w-[120px] w-auto justify-center"
+                                hitAreaOffset={3} // Expand hit area by 3px
                               >
                                 {(items[containerId] || []).map((id) => {
                                   const optionIndex = parseInt(
