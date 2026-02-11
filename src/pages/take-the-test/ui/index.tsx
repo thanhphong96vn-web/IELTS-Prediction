@@ -167,13 +167,13 @@ export function PageTakeTheTestWrapper({
 
     _.set(rawPost, "quizFields.time", testResultFields.testTime);
     let parts: number[] = [];
-    
+
     try {
       parts = JSON.parse(testResultFields.testPart || "[]");
     } catch (error) {
       console.error("Failed to parse testPart:", testResultFields.testPart, error);
     }
-    
+
     // Validate parts array
     if (!Array.isArray(parts) || parts.length === 0) {
       console.warn("Invalid testPart, using all passages:", testResultFields.testPart);
@@ -183,9 +183,9 @@ export function PageTakeTheTestWrapper({
         (_, index) => index
       );
     }
-    
+
     console.log("Filtering passages. Selected parts:", parts, "Total passages:", rawPost.quizFields.passages.length);
-    
+
     // Filter passages based on selected parts and preserve original index
     const filteredPassagesWithOriginalIndex: Array<{ passage: any; originalIndex: number }> = [];
     rawPost.quizFields.passages.forEach((passage: any, originalIndex: number) => {
@@ -193,28 +193,28 @@ export function PageTakeTheTestWrapper({
         filteredPassagesWithOriginalIndex.push({ passage, originalIndex });
       }
     });
-    
+
     console.log("Filtered passages count:", filteredPassagesWithOriginalIndex.length);
-    
+
     // Ensure at least one passage exists
     if (filteredPassagesWithOriginalIndex.length === 0) {
       console.error("No passages found after filtering. Parts:", parts, "Total passages:", rawPost.quizFields.passages.length);
       // Fallback to first passage if no passages match
       if (rawPost.quizFields.passages.length > 0) {
-        filteredPassagesWithOriginalIndex.push({ 
-          passage: rawPost.quizFields.passages[0], 
-          originalIndex: 0 
+        filteredPassagesWithOriginalIndex.push({
+          passage: rawPost.quizFields.passages[0],
+          originalIndex: 0
         });
       }
     }
-    
+
     // Reset partIndex and recalculate startIndex from 0 after filtering
     // Also preserve originalPartIndex for display purposes
     let currentIndex = 0;
     const filteredPassages = filteredPassagesWithOriginalIndex.map(({ passage, originalIndex }, newIndex) => {
       _.set(passage, "partIndex", newIndex);
       _.set(passage, "originalPartIndex", originalIndex); // Preserve original index for display
-      
+
       passage.questions.forEach((question: any, questionIndex: number) => {
         _.set(
           passage,
@@ -225,10 +225,10 @@ export function PageTakeTheTestWrapper({
         const numberOfSubQuestions = countQuestion({ questions: [question] });
         currentIndex += numberOfSubQuestions;
       });
-      
+
       return passage;
     });
-    
+
     const newPostData = {
       ...rawPost,
       quizFields: {
@@ -256,7 +256,7 @@ PageTakeTheTestWrapper.Layout = BlankLayout;
 export function PageTakeTheTest() {
   const examContext = useExamContext();
   const {
-    part, 
+    part,
     post,
     isFormDisabled,
     testID,
@@ -607,7 +607,7 @@ export function PageTakeTheTest() {
       <form onSubmit={handleSubmit(handleSubmitAnswer)}>
         <div className="flex flex-col h-screen">
           <Header post={post} />
-          
+
           {/* 🔥 FIX QUAN TRỌNG: ĐẶT key={part.current} ĐỂ BUỘC UNMOUNT/MOUNT */}
           <TextSelectionProvider key={part.current}>
             <main className="shrink grow overflow-hidden flex flex-col pb-[60px]">
@@ -639,7 +639,7 @@ export function PageTakeTheTest() {
                     >
                       <Splitter layout={isMobileView ? "vertical" : undefined}>
                         {post.quizFields.skill[0] === "reading" && (
-                          <Splitter.Panel min="40%" max="60%">
+                          <Splitter.Panel min="20%" max="80%">
                             <div className="prose-sm max-w-none p-[16px] pt-[30px] bg-white h-full overflow-y-auto text-[#000]">
                               {headingQuestion ? (
                                 <PassageRenderer
@@ -670,7 +670,7 @@ export function PageTakeTheTest() {
                             className={twMerge(
                               "p-6 space-y-6 h-full overflow-y-auto",
                               post.quizFields.skill[0] === "listening" &&
-                                "mx-auto bg-white listening-board"
+                              "mx-auto bg-white listening-board"
                             )}
                           >
                             {(currentPassage?.questions || []).map(
@@ -727,7 +727,7 @@ export function PageTakeTheTest() {
               </ExamContext.Provider>
             </main>
           </TextSelectionProvider>
-          
+
           {/* Footer is outside TextSelectionProvider so AudioPlayer won't unmount */}
           <Footer />
         </div>

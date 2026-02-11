@@ -136,19 +136,19 @@ export const Header = () => {
         },
         ...(currentUser?.roles.nodes[0].name === "administrator"
           ? [
-              { type: "divider" as const },
-              {
-                key: "4",
-                label: (
-                  <Link href={ROUTES.ADMIN.DASHBOARD}>Admin Dashboard</Link>
-                ),
-                icon: (
-                  <i className="material-symbols-rounded">
-                    admin_panel_settings
-                  </i>
-                ),
-              },
-            ]
+            { type: "divider" as const },
+            {
+              key: "4",
+              label: (
+                <Link href={ROUTES.ADMIN.DASHBOARD}>Admin Dashboard</Link>
+              ),
+              icon: (
+                <i className="material-symbols-rounded">
+                  admin_panel_settings
+                </i>
+              ),
+            },
+          ]
           : []),
         { type: "divider" },
         {
@@ -365,6 +365,18 @@ export const Header = () => {
                 drag_indicator
               </span>
             </div> */}
+
+            <a
+              href="https://cms.ieltspredictiontest.com/wp-admin/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden lg:flex w-8 h-8 rounded-full bg-[#d94a56] items-center justify-center text-white hover:opacity-90 transition-opacity"
+            >
+              <span className="material-symbols-rounded text-[20px]">
+                home
+              </span>
+            </a>
+
             <div className="hidden lg:block h-6 w-[2px] bg-gray-300"></div>
             {isSignedIn ? (
               <div className="hidden lg:block">
@@ -410,15 +422,15 @@ export const Header = () => {
                         </Link>
                         {currentUser?.roles.nodes[0].name ===
                           "administrator" && (
-                          <>
-                            <Divider className="my-1" />
-                            <Link href={ROUTES.ADMIN.DASHBOARD}>
-                              <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
-                                Admin Dashboard
-                              </div>
-                            </Link>
-                          </>
-                        )}
+                            <>
+                              <Divider className="my-1" />
+                              <Link href={ROUTES.ADMIN.DASHBOARD}>
+                                <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
+                                  Admin Dashboard
+                                </div>
+                              </Link>
+                            </>
+                          )}
                         <Divider className="my-1" />
                         <div
                           className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer flex items-center gap-2"
