@@ -964,18 +964,59 @@ export function MatchingQuestion({
               setActiveId(null);
               setOverId(null);
               const { active, over } = event;
-              if (!over) return;
+              if (!over) {
+                return;
+              }
               const activeContainer = findContainer(items, active.id);
               const overContainerId =
                 over.id in items
                   ? (over.id as string)
                   : findContainer(items, over.id);
+
               if (
                 !activeContainer ||
                 !overContainerId ||
                 activeContainer === overContainerId
               )
                 return;
+
+              // --- 1. Cập nhật State Local (UI) ---
+              const newItems = { ...items };
+
+              // Xóa item khỏi container cũ
+              if (newItems[activeContainer]) {
+                newItems[activeContainer] = newItems[activeContainer].filter(
+                  (id) => id !== active.id
+                );
+              }
+
+              // Xử lý container đích
+              if (String(overContainerId).startsWith("item-")) {
+                // Nếu slot đã có item, đẩy item cũ về available
+                if (
+                  newItems[overContainerId] &&
+                  newItems[overContainerId].length > 0
+                ) {
+                  const existingItemId = newItems[overContainerId][0];
+                  newItems[overContainerId] = []; // Xóa item cũ khỏi slot
+
+                  if (!newItems["available"]) newItems["available"] = [];
+                  if (!newItems["available"].includes(existingItemId)) {
+                    newItems["available"].push(existingItemId);
+                  }
+                }
+                // Đặt item mới vào slot
+                newItems[overContainerId] = [active.id];
+              } else {
+                // Nếu drop về available (hoặc container khác không phải slot)
+                if (!newItems["available"]) newItems["available"] = [];
+                if (!newItems["available"].includes(active.id)) {
+                  newItems["available"].push(active.id);
+                }
+              }
+              setItems(newItems);
+
+              // --- 2. Cập nhật Form Data ---
               const newAnswers =
                 typeof field.value === "object" && field.value !== null
                   ? { ...(field.value as { [key: number]: number }) }
@@ -983,14 +1024,18 @@ export function MatchingQuestion({
               const activeOptionIndex = parseInt(
                 active.id.toString().split("-")[2]
               );
+
+              // Remove current active option from any answer
               Object.keys(newAnswers).forEach((keyStr) => {
                 if (newAnswers[parseInt(keyStr)] === activeOptionIndex)
                   delete newAnswers[parseInt(keyStr)];
               });
+
               if (String(overContainerId).startsWith("item-")) {
                 const targetSlot = parseInt(
                   String(overContainerId).split("-")[1]
                 );
+
                 if (!isNaN(targetSlot) && targetSlot < standardQuestionCount) {
                   if (
                     items[overContainerId] &&
