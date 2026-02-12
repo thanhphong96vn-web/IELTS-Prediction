@@ -144,7 +144,7 @@ export const Header = () => {
               ),
               icon: (
                 <i className="material-symbols-rounded">
-                  admin_panel_settings
+                  home
                 </i>
               ),
             },
@@ -261,7 +261,7 @@ export const Header = () => {
               )}
               {(topBarConfig?.phoneNumber || phoneNumber) && (
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="material-symbols-rounded !text-[17px] shrink-0">
+                  <span className="material-symbols-rounded text-[17px]! shrink-0">
                     phone
                   </span>
                   <span className="text-xs wrap-break-word line-clamp-1 max-w-[150px]">
@@ -360,23 +360,6 @@ export const Header = () => {
 
           {/* Right Side - User Actions */}
           <div className="flex items-center gap-4">
-            {/* <div className="text-gray-700">
-              <span className="material-symbols-rounded text-xl">
-                drag_indicator
-              </span>
-            </div> */}
-
-            <a
-              href="https://cms.ieltspredictiontest.com/wp-admin/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden lg:flex w-8 h-8 rounded-full bg-[#d94a56] items-center justify-center text-white hover:opacity-90 transition-opacity"
-            >
-              <span className="material-symbols-rounded text-[20px]">
-                home
-              </span>
-            </a>
-
             <div className="hidden lg:block h-6 w-[2px] bg-gray-300"></div>
             {isSignedIn ? (
               <div className="hidden lg:block">
@@ -425,8 +408,11 @@ export const Header = () => {
                             <>
                               <Divider className="my-1" />
                               <Link href={ROUTES.ADMIN.DASHBOARD}>
-                                <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer">
-                                  Admin Dashboard
+                                <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer flex items-center gap-2">
+                                  <span className="material-symbols-rounded text-base">
+                                    home
+                                  </span>
+                                  <span>Admin Dashboard</span>
                                 </div>
                               </Link>
                             </>

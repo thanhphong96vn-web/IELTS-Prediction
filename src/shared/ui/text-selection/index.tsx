@@ -294,66 +294,70 @@ export const TextSelectionProvider = ({
 
   // --- RESTORE & CLEANUP LOGIC (FIX LỖI CÂY DOM) ---
   const revertDOM = useCallback(() => {
-    const sandbox = document.querySelector(`.${SANDBOX_ID}`);
-    if (!sandbox) return;
+    const sandboxes = document.querySelectorAll(`.${SANDBOX_ID}`);
+    if (!sandboxes.length) return;
     
-    // 1. Hoàn nguyên SPAN về Text Node gốc
-    const spans = sandbox.querySelectorAll(`span[data-node-id^="highlighted_"], span[data-node-id^="underlined_"]`);
-    
-    spans.forEach(span => {
-        const parent = span.parentNode;
+    sandboxes.forEach(sandbox => {
+        // 1. Hoàn nguyên SPAN về Text Node gốc
+        const spans = sandbox.querySelectorAll(`span[data-node-id^="highlighted_"], span[data-node-id^="underlined_"]`);
         
-        if (parent) {
-             const childNodes = Array.from(span.childNodes);
-             const fragment = document.createDocumentFragment();
-             childNodes.forEach((child) => fragment.appendChild(child));
+        spans.forEach(span => {
+            const parent = span.parentNode;
             
-             // Chỉ thay thế nếu span vẫn còn trong cây DOM
-             if (parent.contains(span)) {
-                try {
-                    parent.replaceChild(fragment, span);
-                    // Dùng normalize để hợp nhất Text Node sau khi replace
-                    parent.normalize(); 
-                } catch (e) {
-                    // Bỏ qua lỗi DOM không tìm thấy node
-                    console.warn("Revert DOM failed for span", e);
-                }
-             }
-        }
+            if (parent) {
+                 const childNodes = Array.from(span.childNodes);
+                 const fragment = document.createDocumentFragment();
+                 childNodes.forEach((child) => fragment.appendChild(child));
+                
+                 // Chỉ thay thế nếu span vẫn còn trong cây DOM
+                 if (parent.contains(span)) {
+                    try {
+                        parent.replaceChild(fragment, span);
+                        // Dùng normalize để hợp nhất Text Node sau khi replace
+                        parent.normalize(); 
+                    } catch (e) {
+                        // Bỏ qua lỗi DOM không tìm thấy node
+                        console.warn("Revert DOM failed for span", e);
+                    }
+                 }
+            }
+        });
+
+        // 2. Hợp nhất Text Node trên toàn bộ sandbox sau khi hoàn nguyên
+        sandbox.normalize();
     });
-
-    // 2. Hợp nhất Text Node trên toàn bộ sandbox sau khi hoàn nguyên
-    // Bước này là BẮT BUỘC để loại bỏ Text Node rò rỉ và chuẩn hóa cấu trúc
-    sandbox.normalize();
-    
-    // Đã loại bỏ logic TreeWalker vì normalize() thường đủ khi kết hợp với key
-
   }, [SANDBOX_ID]);
 
   const restoreHighlights = useCallback((itemsToRestore: HighlightItem[]) => {
     if (!itemsToRestore.length) return;
-    const sandbox = document.querySelector(`.${SANDBOX_ID}`);
-    if (!sandbox) return;
+    const sandboxes = document.querySelectorAll(`.${SANDBOX_ID}`);
+    if (!sandboxes.length) return;
 
     const sel = window.getSelection();
     sel?.removeAllRanges();
 
     itemsToRestore.forEach(item => {
-        const walker = document.createTreeWalker(sandbox, NodeFilter.SHOW_TEXT, null);
-        let currentNode = walker.nextNode();
-        
-        while (currentNode) {
-            const nodeVal = currentNode.nodeValue || "";
-            const idx = nodeVal.indexOf(item.text);
+        let restored = false;
+        // Duyệt qua tất cả các sandbox cho đến khi tìm thấy và restore được text
+        for (const sandbox of Array.from(sandboxes)) {
+            const walker = document.createTreeWalker(sandbox, NodeFilter.SHOW_TEXT, null);
+            let currentNode = walker.nextNode();
             
-            if (idx !== -1) {
-                const range = document.createRange();
-                range.setStart(currentNode, idx);
-                range.setEnd(currentNode, idx + item.text.length);
-                applySelection(item.type, item.nodeId, range);
-                break;
+            while (currentNode) {
+                const nodeVal = currentNode.nodeValue || "";
+                const idx = nodeVal.indexOf(item.text);
+                
+                if (idx !== -1) {
+                    const range = document.createRange();
+                    range.setStart(currentNode, idx);
+                    range.setEnd(currentNode, idx + item.text.length);
+                    applySelection(item.type, item.nodeId, range);
+                    restored = true;
+                    break;
+                }
+                currentNode = walker.nextNode();
             }
-            currentNode = walker.nextNode();
+            if (restored) break;
         }
     });
     sel?.removeAllRanges();

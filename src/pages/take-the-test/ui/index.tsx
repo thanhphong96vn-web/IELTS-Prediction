@@ -668,34 +668,38 @@ export function PageTakeTheTest() {
                           <div
                             ref={questionPanelRef}
                             className={twMerge(
-                              "p-6 space-y-6 h-full overflow-y-auto",
+                              "h-full overflow-y-auto",
                               post.quizFields.skill[0] === "listening" &&
                               "mx-auto bg-white listening-board"
                             )}
                           >
-                            {(currentPassage?.questions || []).map(
-                              (question, index) => {
-                                const isHeadingQ =
-                                  String(question.matchingQuestion?.layoutType)
-                                    .trim()
-                                    .toLowerCase() === "heading";
-                                const QuestionComponent = (
-                                  <QuestionRender
-                                    question={question}
-                                    // @ts-ignore
-                                    startIndex={question.startIndex}
-                                  />
-                                );
-                                return isHeadingQ ? (
-                                  <div key={index}> {QuestionComponent} </div>
-                                ) : (
-                                  <fieldset key={index} disabled={isFormDisabled}>
-                                    {" "}
-                                    {QuestionComponent}{" "}
-                                  </fieldset>
-                                );
-                              }
-                            )}
+                            <TextSelectionWrapper>
+                              <div className="p-6 space-y-6">
+                                {(currentPassage?.questions || []).map(
+                                  (question, index) => {
+                                    const isHeadingQ =
+                                      String(question.matchingQuestion?.layoutType)
+                                        .trim()
+                                        .toLowerCase() === "heading";
+                                    const QuestionComponent = (
+                                      <QuestionRender
+                                        question={question}
+                                        // @ts-ignore
+                                        startIndex={question.startIndex}
+                                      />
+                                    );
+                                    return isHeadingQ ? (
+                                      <div key={index}> {QuestionComponent} </div>
+                                    ) : (
+                                      <fieldset key={index} disabled={isFormDisabled}>
+                                        {" "}
+                                        {QuestionComponent}{" "}
+                                      </fieldset>
+                                    );
+                                  }
+                                )}
+                              </div>
+                            </TextSelectionWrapper>
                           </div>
                         </Splitter.Panel>
                       </Splitter>

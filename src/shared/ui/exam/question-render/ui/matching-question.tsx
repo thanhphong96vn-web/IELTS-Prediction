@@ -46,12 +46,14 @@ export const DraggableOption = ({
   isOverlay = false,
   isDropped = false,
   className = "",
+  bold = true,
 }: {
   id: UniqueIdentifier;
   content: string;
   isOverlay?: boolean;
   isDropped?: boolean;
   className?: string;
+  bold?: boolean;
 }) => {
   const {
     attributes,
@@ -75,7 +77,8 @@ export const DraggableOption = ({
       {...listeners}
       className={twMerge(
         "block rounded-sm touch-none select-none w-fit",
-        "text-sm font-bold",
+        "text-sm",
+        bold ? "font-bold" : "font-normal",
         isDropped ? "bg-transparent" : "bg-white",
         isOverlay
           ? "cursor-grabbing border-2 border-blue-500 shadow-md px-3 py-0.5"
@@ -268,6 +271,9 @@ export function MatchingQuestion({
       .trim()
       .toLowerCase();
 
+  const isReading = post?.quizFields?.skill?.[0] === "reading";
+  const shouldBeBold = layout === "heading" && isReading;
+
   const findContainer = (
     items: Record<string, UniqueIdentifier[]>,
     id: UniqueIdentifier
@@ -423,7 +429,8 @@ export function MatchingQuestion({
                     return (
                       <span
                         className={twMerge(
-                          "inline-block border border-dashed px-2 py-0.5 align-baseline min-w-[80px] text-center rounded-sm font-bold", // Added font-bold
+                          "inline-block border border-dashed px-2 py-0.5 align-baseline min-w-[80px] text-center rounded-sm",
+                          shouldBeBold ? "font-bold" : "font-normal",
                           boxClasses
                         )}
                       >
@@ -648,6 +655,7 @@ export function MatchingQuestion({
                               id={optionId}
                               content={answerOptions[optionIndex].optionText}
                               isDropped
+                              bold={shouldBeBold}
                               className="px-1"
                             />
                           );
@@ -702,10 +710,11 @@ export function MatchingQuestion({
                                 <DraggableOption
                                   key={id}
                                   id={id}
-                                  content={optionText}
-                                  isDropped={false}
-                                  className={isListening ? "block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200 w-fit max-w-full" : ""}
-                                />
+                                   content={optionText}
+                                   isDropped={false}
+                                   bold={shouldBeBold}
+                                   className={isListening ? "block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200 w-fit max-w-full" : ""}
+                                 />
                               );
                             } else {
                               return (
@@ -713,7 +722,7 @@ export function MatchingQuestion({
                                   key={`placeholder-${id}`}
                                   className="block rounded-sm bg-white px-3 py-0.5 w-fit"
                                 >
-                                  <div className="invisible text-sm font-normal">
+                                  <div className={twMerge("invisible text-sm", shouldBeBold ? "font-bold" : "font-normal")}>
                                     <TextSelectionWrapper>
                                       {parse(optionText)}
                                     </TextSelectionWrapper>
@@ -761,6 +770,7 @@ export function MatchingQuestion({
                       }
                       isOverlay
                       isDropped={false}
+                      bold={shouldBeBold}
                     />
                   ) : null}
                 </DragOverlay>
@@ -824,6 +834,7 @@ export function MatchingQuestion({
                         id={id}
                         content={optionText}
                         isDropped={false}
+                        bold={shouldBeBold}
                       />
                     );
                   } else {
@@ -835,7 +846,7 @@ export function MatchingQuestion({
                         className="block rounded-sm  px-3 py-0.5 w-fit"
                       >
                         {/* Nội dung tàng hình để giữ chiều cao */}
-                        <div className="invisible text-sm font-normal">
+                        <div className={twMerge("invisible text-sm", shouldBeBold ? "font-bold" : "font-normal")}>
                           <TextSelectionWrapper>
                             {parse(optionText)}
                           </TextSelectionWrapper>
@@ -856,7 +867,7 @@ export function MatchingQuestion({
                 {answerOptions.map((option, index) => (
                   <div
                     key={`heading-opt-${index}`}
-                    className="block rounded-sm border border-gray-200 px-3 py-0 font-bold text-[17px] text-[#000]"
+                    className={twMerge("block rounded-sm border border-gray-200 px-3 py-0 text-[17px] text-[#000]", shouldBeBold ? "font-bold" : "font-normal")}
                   >
                     <TextSelectionWrapper>
                       {parse(option.optionText)}
@@ -921,6 +932,8 @@ export function MatchingQuestion({
     const handleDragOver = (event: DragOverEvent) => {
       setOverId(event.over?.id ?? null);
     };
+
+
 
     return (
       <div className="space-y-6" id={`#question-no-${startIndex + 1}`}>
@@ -1137,11 +1150,12 @@ export function MatchingQuestion({
                                     ? "border-green-500 bg-green-50"
                                     : !userDidAnswer
                                       ? "border-gray-400 bg-gray-50"
-                                      : "border-red-500 bg-red-50"
+                                      : "border-red-500 bg-red-50",
+                                  shouldBeBold ? "font-bold" : "font-normal"
                                 )}
                               >
                                 {isCorrect && (
-                                  <span className="text-green-700 font-semibold text-center">
+                                  <span className="text-green-700 text-center">
                                     {userAnswerText}
                                   </span>
                                 )}
@@ -1150,13 +1164,13 @@ export function MatchingQuestion({
                                     <span className="text-red-500 line-through mr-2">
                                       {userAnswerText}
                                     </span>
-                                    <span className="text-green-700 font-semibold">
+                                    <span className="text-green-700">
                                       {correctAnswerText}
                                     </span>
                                   </span>
                                 )}
                                 {!userDidAnswer && (
-                                  <span className="text-gray-500 font-semibold text-center">
+                                  <span className="text-gray-500 text-center">
                                     {correctAnswerText}
                                   </span>
                                 )}
@@ -1175,7 +1189,7 @@ export function MatchingQuestion({
                           {answerOptions.map((option, index) => (
                             <div
                               key={`list-opt-readonly-${index}`}
-                              className="block rounded-md px-4 py-2 bg-white text-[#000] text-center font-bold"
+                              className={twMerge("block rounded-md px-4 py-2 bg-white text-[#000] text-center", shouldBeBold ? "font-bold" : "font-normal")}
                             >
                               <TextSelectionWrapper>
                                 {parse(option.optionText)}
@@ -1280,14 +1294,14 @@ export function MatchingQuestion({
                                       content={
                                         answerOptions[optionIndex].optionText
                                       }
-                                      isDropped={true}
-                                      className="text-[#000] text-center font-bold"
+                                      bold={shouldBeBold}
+                                      className="text-[#000] text-center"
                                     />
                                   );
                                 })}
                                 {(!items[containerId] ||
                                   items[containerId].length === 0) && (
-                                    <span className="font-bold text-[16px] text-[#000] pointer-events-none">
+                                    <span className={twMerge("text-[16px] text-[#000] pointer-events-none", shouldBeBold ? "font-bold" : "font-normal")}>
                                       {questionAbsoluteIndex + 1}
                                     </span>
                                   )}
@@ -1322,6 +1336,7 @@ export function MatchingQuestion({
                                 id={id}
                                 content={optionText}
                                 isDropped={false}
+                                bold={shouldBeBold}
                                 className="block rounded-md px-4 py-2 bg-white text-[#000] text-center shadow-sm border border-gray-200 w-fit max-w-full"
                               />
                             );
@@ -1435,7 +1450,7 @@ export function MatchingQuestion({
                       {answerOptions.map((option, index) => (
                         <div
                           key={`sa-opt-${index}`}
-                          className="block rounded-sm border border-gray-200 px-3 py-0.5 bg-gray-50 text-[#000] font-bold"
+                          className={twMerge("block rounded-sm border border-gray-200 px-3 py-0.5 bg-gray-50 text-[#000]", shouldBeBold ? "font-bold" : "font-normal")}
                         >
                           <TextSelectionWrapper>
                             {parse(option.optionText)}
@@ -1532,12 +1547,13 @@ export function MatchingQuestion({
                                       answerOptions[optionIndex].optionText
                                     }
                                     isDropped
+                                    bold={shouldBeBold}
                                   />
                                 );
                               })}
                               {(!items[containerId] ||
                                 items[containerId].length === 0) && (
-                                  <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-bold text-[16px] text-[#000] pointer-events-none">
+                                  <span className={twMerge("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[16px] text-[#000] pointer-events-none", shouldBeBold ? "font-bold" : "font-normal")}>
                                     {questionAbsoluteIndex + 1}
                                   </span>
                                 )}
@@ -1568,6 +1584,7 @@ export function MatchingQuestion({
                                   id={id}
                                   content={optionText}
                                   isDropped={false}
+                                  bold={shouldBeBold}
                                 />
                               );
                             } else {
@@ -1576,7 +1593,7 @@ export function MatchingQuestion({
                                   key={`placeholder-${id}`}
                                   className="block rounded-sm bg-white px-3 py-0.5 w-fit"
                                 >
-                                  <div className="invisible text-sm font-normal">
+                                  <div className={twMerge("invisible text-sm", shouldBeBold ? "font-bold" : "font-normal")}>
                                     <TextSelectionWrapper>
                                       {parse(optionText)}
                                     </TextSelectionWrapper>

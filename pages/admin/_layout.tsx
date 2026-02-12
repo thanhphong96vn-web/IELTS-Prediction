@@ -10,6 +10,7 @@ import {
   GlobalOutlined,
   DollarOutlined,
   UserOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 
@@ -164,6 +165,14 @@ const menuItems: MenuItem[] = [
       },
     ],
   },
+  {
+    type: "divider",
+  },
+  {
+    key: "https://cms.ieltspredictiontest.com/wp-admin/",
+    icon: <LogoutOutlined />,
+    label: "Back to CMS",
+  },
 ];
 
 interface AdminLayoutProps {
@@ -174,8 +183,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
-    if (e.key && typeof e.key === "string" && e.key.startsWith("/")) {
-      router.push(e.key);
+    if (e.key && typeof e.key === "string") {
+      if (e.key.startsWith("/")) {
+        router.push(e.key);
+      } else if (e.key.startsWith("http")) {
+        window.location.href = e.key;
+      }
     }
   };
 
@@ -352,7 +365,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           right: 16px !important;
         }
 
-        .ant-menu-inline .ant-menu-item {
+        .ant-menu-inline .ant-menu-sub .ant-menu-item {
           padding-left: 48px !important;
         }
 

@@ -52,7 +52,7 @@ export function HeaderAccount() {
               key: "4",
               label: <Link href={ROUTES.ADMIN.DASHBOARD}>Admin Dashboard</Link>,
               icon: (
-                <i className="material-symbols-rounded">admin_panel_settings</i>
+                <i className="material-symbols-rounded">home</i>
               ),
             },
           ]
