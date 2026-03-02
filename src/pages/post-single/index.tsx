@@ -10,7 +10,7 @@ export const getServerSideProps = async (
   context: GetServerSidePropsContext,
   singleID: string
 ): ReturnType<GetServerSideProps> => {
-  const { client } = createServerApolloClient(context);
+  const { client, isSignedIn } = createServerApolloClient(context);
 
   const {
     data: { post },
@@ -18,6 +18,9 @@ export const getServerSideProps = async (
     query: GET_POST_DATA,
     variables: {
       id: singleID,
+    },
+    context: {
+      authRequired: isSignedIn,
     },
   });
 
