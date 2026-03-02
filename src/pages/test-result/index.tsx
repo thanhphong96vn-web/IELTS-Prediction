@@ -1,5 +1,5 @@
 import { createServerApolloClient } from "@/shared/graphql";
-import { withMasterData, withMultipleWrapper } from "@/shared/hoc";
+import { withAuth, withMasterData, withMultipleWrapper } from "@/shared/hoc";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import {
   GET_PRACTICE_SINGLE,
@@ -15,12 +15,13 @@ import { calculateScore } from "@/shared/lib";
 export { PageTestResult } from "./ui";
 
 export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
+  withAuth,
   withMasterData,
   async (context: GetServerSidePropsContext) => {
     const {
       query: { id },
     } = context;
-    const { client } = createServerApolloClient(context);
+    const { client, isSignedIn } = createServerApolloClient(context);
 
     // 1. Fetch dữ liệu bài làm (testResult)
     const {
@@ -29,6 +30,9 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
       query: GET_TEST_RESULT,
       variables: {
         id: id?.toString() || "",
+      },
+      context: {
+        authRequired: isSignedIn,
       },
     });
 
@@ -45,6 +49,9 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
       variables: {
         id: testResult.testResultFields.quiz.node.id,
       },
+      context: {
+        authRequired: isSignedIn,
+      },
     });
 
     if (!post) {
@@ -60,6 +67,9 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
     } = await client.query<IUserResponse, { id: string }>({
       query: GET_USER,
       variables: { id: testResult.authorId },
+      context: {
+        authRequired: isSignedIn,
+      },
     });
 
     // 4. Chấm điểm

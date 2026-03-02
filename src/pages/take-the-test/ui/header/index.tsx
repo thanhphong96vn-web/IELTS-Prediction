@@ -1,7 +1,7 @@
 import { Container } from "@/shared/ui";
 import { Button, Modal, Tooltip } from "antd";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import { IPracticeSingle } from "@/pages/ielts-practice-single/api";
 import { AnswerFormValues, useExamContext } from "../../context";
@@ -62,46 +62,65 @@ function Header({ post }: { post: IPracticeSingle }) {
     { key: "xlarge", name: "Extra Large" },
   ];
 
+  // Use refs to avoid stale closures and prevent re-creating intervals
+  const isFormDisabledRef = useRef(isFormDisabled);
+  const handleSubmitRef = useRef(handleSubmit);
+  const handleSubmitAnswerRef = useRef(handleSubmitAnswer);
+  const hasSubmittedRef = useRef(false);
+
+  useEffect(() => { isFormDisabledRef.current = isFormDisabled; }, [isFormDisabled]);
+  useEffect(() => { handleSubmitRef.current = handleSubmit; }, [handleSubmit]);
+  useEffect(() => { handleSubmitAnswerRef.current = handleSubmitAnswer; }, [handleSubmitAnswer]);
+
+  // Initialize timer once
   useEffect(() => {
     if (!timer && !isReady) {
       const timeLeft = testResult.timeLeft?.toString().split(":") || [
         post.quizFields.time,
       ];
-      const duration = dayjs.duration({
+      const d = dayjs.duration({
         minutes: Number(timeLeft[0]) || post.quizFields.time,
         seconds: Number(timeLeft[1]) || 0,
       });
-
-      setTimer(duration);
+      setTimer(d);
     }
+  }, [timer, isReady, testResult.timeLeft, post.quizFields.time, setTimer]);
 
-    if (timer && isReady) {
-      const interval = setInterval(() => {
-        setTimer((prev) => {
-          if (isFormDisabled) {
-            clearInterval(interval);
-            return prev?.subtract(1, "second");
-          }
+  // Countdown timer - only start when isReady, does NOT depend on timer value
+  useEffect(() => {
+    if (!isReady) return;
 
-          if (prev?.seconds() === 0 && prev?.minutes() === 0) {
-            handleSubmit(handleSubmitAnswer)();
-            clearInterval(interval);
-          }
-          return prev?.subtract(1, "second");
-        });
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [
-    isFormDisabled,
-    isReady,
-    timer,
-    handleSubmit,
-    handleSubmitAnswer,
-    post.quizFields.time,
-    setTimer,
-    testResult.timeLeft,
-  ]);
+    hasSubmittedRef.current = false;
+
+    const interval = setInterval(() => {
+      if (isFormDisabledRef.current) {
+        clearInterval(interval);
+        return;
+      }
+
+      setTimer((prev) => {
+        if (!prev) return prev;
+
+        const totalSeconds = prev.asSeconds();
+
+        // Time is up - auto submit
+        if (totalSeconds <= 1 && !hasSubmittedRef.current) {
+          hasSubmittedRef.current = true;
+          clearInterval(interval);
+          // Use setTimeout to avoid calling submit inside setState
+          setTimeout(() => {
+            handleSubmitRef.current(handleSubmitAnswerRef.current)();
+          }, 0);
+          return dayjs.duration({ minutes: 0, seconds: 0 });
+        }
+
+        return prev.subtract(1, "second");
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+    // Only depend on isReady - NOT on timer
+  }, [isReady, setTimer]);
 
   const handleNotesView = () => {
     if (!setIsNotesViewOpen) return;
