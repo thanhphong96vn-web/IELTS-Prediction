@@ -152,7 +152,7 @@ function Header({ post }: { post: IPracticeSingle }) {
                     >
                       timer
                     </span>
-                    <span className={`font-bold px-2 text-base ${timer && timer.asSeconds() < 0 ? 'text-red-600' : 'text-primary'}`}>
+                    <span className={`font-bold px-2 text-base ${timer && timer.asSeconds() < 0 ? 'text-gray-400' : 'text-primary'}`}>
                       {timer ? (
                         timer.asSeconds() < 0
                           ? `-${dayjs.duration(Math.abs(timer.asSeconds()), 'seconds').format("mm:ss")}`
