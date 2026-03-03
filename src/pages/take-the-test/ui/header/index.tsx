@@ -66,7 +66,6 @@ function Header({ post }: { post: IPracticeSingle }) {
   const isFormDisabledRef = useRef(isFormDisabled);
   const handleSubmitRef = useRef(handleSubmit);
   const handleSubmitAnswerRef = useRef(handleSubmitAnswer);
-  const hasSubmittedRef = useRef(false);
 
   useEffect(() => { isFormDisabledRef.current = isFormDisabled; }, [isFormDisabled]);
   useEffect(() => { handleSubmitRef.current = handleSubmit; }, [handleSubmit]);
@@ -87,10 +86,9 @@ function Header({ post }: { post: IPracticeSingle }) {
   }, [timer, isReady, testResult.timeLeft, post.quizFields.time, setTimer]);
 
   // Countdown timer - only start when isReady, does NOT depend on timer value
+  // Timer continues into negative when time runs out (no auto-submit)
   useEffect(() => {
     if (!isReady) return;
-
-    hasSubmittedRef.current = false;
 
     const interval = setInterval(() => {
       if (isFormDisabledRef.current) {
@@ -100,20 +98,6 @@ function Header({ post }: { post: IPracticeSingle }) {
 
       setTimer((prev) => {
         if (!prev) return prev;
-
-        const totalSeconds = prev.asSeconds();
-
-        // Time is up - auto submit
-        if (totalSeconds <= 1 && !hasSubmittedRef.current) {
-          hasSubmittedRef.current = true;
-          clearInterval(interval);
-          // Use setTimeout to avoid calling submit inside setState
-          setTimeout(() => {
-            handleSubmitRef.current(handleSubmitAnswerRef.current)();
-          }, 0);
-          return dayjs.duration({ minutes: 0, seconds: 0 });
-        }
-
         return prev.subtract(1, "second");
       });
     }, 1000);
@@ -168,8 +152,12 @@ function Header({ post }: { post: IPracticeSingle }) {
                     >
                       timer
                     </span>
-                    <span className="text-primary font-bold px-2 text-base">
-                      {timer?.format("mm:ss")}
+                    <span className={`font-bold px-2 text-base ${timer && timer.asSeconds() < 0 ? 'text-red-600' : 'text-primary'}`}>
+                      {timer ? (
+                        timer.asSeconds() < 0
+                          ? `-${dayjs.duration(Math.abs(timer.asSeconds()), 'seconds').format("mm:ss")}`
+                          : timer.format("mm:ss")
+                      ) : "00:00"}
                     </span>
                   </div>
                 </div>
