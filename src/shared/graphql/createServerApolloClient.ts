@@ -120,10 +120,9 @@ export const createServerApolloClient = (context: GetServerSidePropsContext) => 
                 ]);
             }
         } else {
-            userCredentials = null;
-            context.res.setHeader("Set-Cookie", [
-                "userCredentials=; Max-Age=0; path=/",
-            ]);
+            // Không xóa cookie khi không có refreshToken - có thể cookie bị parse sai
+            // Chỉ log warning thay vì xóa cookie gây logout
+            console.warn("No refresh token available for server-side refresh");
         }
     };
 

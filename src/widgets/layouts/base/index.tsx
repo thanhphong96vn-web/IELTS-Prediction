@@ -1,15 +1,15 @@
-// ieltspredictiontes\src\widgets\layouts\base\index.tsx (Bản cuối cùng)
+// ieltspredictiontes\src\widgets\layouts\base\index.tsx
 
 import { useAppContext, useAuth } from "@/appx/providers";
 import { FloatingButton, Footer, SaleNotification } from "./ui";
 import { Header } from "./ui/header";
-import { ClipboardEvent, MouseEvent, useCallback, useEffect, useState } from "react";
+import { ClipboardEvent, MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { gql, useLazyQuery } from "@apollo/client";
 import { useDeviceID } from "@/shared/hooks";
 import { toast } from "react-toastify";
 
 // ========================================================================
-// === BƯỚC 1: DI CHUYỂN TOÀN BỘ LOGIC "THẰNG GÁC CỔNG" VỀ ĐÂY ===
+// === DEVICE CHECKER: Kiểm tra thiết bị, chỉ chạy khi user đã login ===
 // ========================================================================
 const CHECK_DEVICE_QUERY = gql`
   query CHECK($deviceId: String!, $deviceType: String!) {
@@ -18,49 +18,54 @@ const CHECK_DEVICE_QUERY = gql`
 `;
 
 const DeviceChecker = () => {
-  const { signOut } = useAuth();
+  const { signOut, isSignedIn } = useAuth();
   const getDeviceID = useDeviceID((state) => state.getDeviceID);
   const getDeviceType = useDeviceID((state) => state.getDeviceType);
   const [deviceId, setDeviceId] = useState<string>("");
+  const hasLoggedOut = useRef(false); // Tránh gọi signOut nhiều lần
 
   const [checkMutation, { data }] = useLazyQuery(CHECK_DEVICE_QUERY, {
     variables: { deviceId, deviceType: getDeviceType() },
     context: { authRequired: true },
     fetchPolicy: "no-cache",
-    // Lỗi sẽ được bắt ở đây thay vì làm sập trang
     onError: (error) => {
       console.error("CheckDevice Error:", error.message);
     }
   });
 
   useEffect(() => {
-    getDeviceID().then((id) => setDeviceId(id));
-  }, [getDeviceID]);
+    // Chỉ lấy deviceId khi user đã login
+    if (isSignedIn) {
+      getDeviceID().then((id) => setDeviceId(id));
+    }
+  }, [getDeviceID, isSignedIn]);
 
   const checkBlur = useCallback(() => {
-    if (deviceId) {
+    // Chỉ check device khi user đã login và có deviceId
+    if (deviceId && isSignedIn && !hasLoggedOut.current) {
       checkMutation();
     }
-  }, [checkMutation, deviceId]);
+  }, [checkMutation, deviceId, isSignedIn]);
 
   useEffect(() => {
-    if (deviceId) {
+    if (deviceId && isSignedIn) {
       checkMutation(); // Kiểm tra khi component được tải
       window.addEventListener("focus", checkBlur);
       return () => {
         window.removeEventListener("focus", checkBlur);
       };
     }
-  }, [checkBlur, deviceId, checkMutation]);
+  }, [checkBlur, deviceId, checkMutation, isSignedIn]);
 
   useEffect(() => {
-    if (data && !data.checkDevice) {
+    if (data && !data.checkDevice && !hasLoggedOut.current) {
+      hasLoggedOut.current = true; // Đánh dấu đã logout, tránh gọi lại
       toast.error("Your account has been logged in from another device, you will be logged out.");
       signOut();
     }
   }, [data, signOut]);
 
-  return null; // Component này không render ra giao diện
+  return null;
 }
 
 export const BaseLayout = ({ children }: { children: React.ReactNode }) => {

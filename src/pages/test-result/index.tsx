@@ -21,7 +21,11 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
     const {
       query: { id },
     } = context;
-    const { client, isSignedIn } = createServerApolloClient(context);
+    const { client } = createServerApolloClient(context);
+
+    // Luôn dùng authRequired: true vì trang này yêu cầu đăng nhập (withAuth)
+    // Nếu dùng isSignedIn, khi token hết hạn sẽ query không có auth
+    // → WordPress có thể trả về testResult của user khác
 
     // 1. Fetch dữ liệu bài làm (testResult)
     const {
@@ -32,7 +36,7 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
         id: id?.toString() || "",
       },
       context: {
-        authRequired: isSignedIn,
+        authRequired: true,
       },
     });
 
@@ -42,6 +46,7 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
       };
     }
 
+    // 2. Fetch bài quiz
     const {
       data: { quiz: post },
     } = await client.query<IPracticeSingleResponse, { id: string }>({
@@ -50,7 +55,7 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
         id: testResult.testResultFields.quiz.node.id,
       },
       context: {
-        authRequired: isSignedIn,
+        authRequired: true,
       },
     });
 
@@ -59,23 +64,24 @@ export const getServerSideProps: GetServerSideProps = withMultipleWrapper(
         notFound: true,
       };
     }
-    // ▲▲▲ [KẾT THÚC KHÔI PHỤC] ▲▲▲
 
-    // 3. Fetch người dùng
+    // 3. Fetch người dùng (dùng viewer thay vì authorId để đảm bảo đúng user đang login)
+    // Trước đây dùng testResult.authorId → nếu query không có auth,
+    // authorId có thể là của user khác
     const {
       data: { user },
     } = await client.query<IUserResponse, { id: string }>({
       query: GET_USER,
       variables: { id: testResult.authorId },
       context: {
-        authRequired: isSignedIn,
+        authRequired: true,
       },
     });
 
     // 4. Chấm điểm
     const scoreData = calculateScore(
       JSON.parse(testResult.testResultFields.answers).answers,
-      post, // Dùng 'post' vừa fetch được
+      post,
       JSON.parse(testResult.testResultFields.testPart)
     );
 

@@ -3,7 +3,6 @@ import {
   gql,
   HttpLink,
   InMemoryCache,
-  useLazyQuery,
   useMutation,
 } from "@apollo/client";
 import { MasterData, useAppContext } from "@/appx/providers";
@@ -12,8 +11,7 @@ import { useRouter } from "next/router";
 import dayjs, { Dayjs } from "dayjs";
 import axios from "axios";
 import { useDeviceID } from "@/shared/hooks";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
 import { ROUTES } from "@/shared/routes";
 // import { useEffect, useState } from "react";
 // import FingerprintJS from "@fingerprintjs/fingerprintjs";
@@ -131,7 +129,6 @@ export const useAuth = () => {
   
   // Safe access với default values để tránh lỗi SSR/prerender
   const viewer = masterData?.viewer;
-  const userCredentials = masterData?.userCredentials;
 
   const isSignedIn = Boolean(viewer);
 
@@ -242,19 +239,23 @@ export const useAuth = () => {
   };
 
   const refreshToken = async () => {
-    if (userCredentials?.refreshToken) {
-      const {
-        data: { data },
-      } = await axios.post<{
-        data: {
-          refreshToken: {
-            authToken: string;
-            authTokenExpiration: number;
-            success: boolean;
+    // Luôn đọc credentials mới nhất từ Cookie thay vì dùng masterData (stale SSR data)
+    const currentCredentials = getUserCredentials();
+    
+    if (currentCredentials?.refreshToken) {
+      try {
+        const {
+          data: { data },
+        } = await axios.post<{
+          data: {
+            refreshToken: {
+              authToken: string;
+              authTokenExpiration: number;
+              success: boolean;
+            };
           };
-        };
-      }>(process.env.NEXT_PUBLIC_WORDPRESS_CMS_URL + "/graphql", {
-        query: `mutation refreshToken(
+        }>(process.env.NEXT_PUBLIC_WORDPRESS_CMS_URL + "/graphql", {
+          query: `mutation refreshToken(
   $refreshToken: String!
 ) {
   refreshToken( input: {refreshToken: $refreshToken} ) {
@@ -263,31 +264,38 @@ export const useAuth = () => {
     success
   }
 }`,
-        variables: {
-          refreshToken: userCredentials.refreshToken,
-        },
-      });
-
-      if (!data.refreshToken.success) {
-        signOut();
-      }
-
-      if (data.refreshToken.authToken) {
-        const newUserCredentials = {
-          ...userCredentials,
-          authToken: data.refreshToken.authToken,
-        };
-
-        Cookies.set("userCredentials", JSON.stringify(newUserCredentials), {
-          expires: dayjs.unix(data.refreshToken.authTokenExpiration).toDate(),
-          path: "/",
+          variables: {
+            refreshToken: currentCredentials.refreshToken,
+          },
         });
 
-        return data.refreshToken.authToken;
+        if (!data.refreshToken.success) {
+          signOut();
+          return;
+        }
+
+        if (data.refreshToken.authToken) {
+          const newUserCredentials = {
+            ...currentCredentials,
+            authToken: data.refreshToken.authToken,
+          };
+
+          // Sử dụng 30 ngày cho cookie expiration thay vì authTokenExpiration (quá ngắn, 5-15 phút)
+          Cookies.set("userCredentials", JSON.stringify(newUserCredentials), {
+            expires: 30,
+            path: "/",
+          });
+
+          return data.refreshToken.authToken;
+        }
+      } catch (error) {
+        // Network error - không logout, chỉ log lỗi
+        console.error("Refresh token network error:", error);
+        return;
       }
-    } else {
-      signOut();
     }
+    // Chỉ signOut nếu KHÔNG có refreshToken trong cookie (user thực sự chưa login)
+    // Không signOut khi network error
   };
 
   const getUserCredentials = (): MasterData["userCredentials"] | null => {
@@ -306,63 +314,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { signOut } = useAuth();
-  const getDeviceID = useDeviceID((state) => state.getDeviceID);
-  const getDeviceType = useDeviceID((state) => state.getDeviceType);
-  const [deviceId, setDeviceId] = useState<string>("");
-
-  const [checkMutation, { data }] = useLazyQuery(
-    gql`
-      query CHECK($deviceId: String!, $deviceType: String!) {
-        checkDevice(deviceId: $deviceId, deviceType: $deviceType)
-      }
-    `,
-    {
-      variables: {
-        deviceId,
-        deviceType: getDeviceType(),
-      },
-      context: {
-        authRequired: true,
-      },
-      fetchPolicy: "no-cache",
-    }
-  );
-
-  useEffect(() => {
-    getDeviceID().then((id) => {
-      setDeviceId(id);
-    });
-  }, [getDeviceID]);
-
-  const checkBlur = useCallback(() => {
-    if (deviceId === "") return;
-    checkMutation();
-  }, [checkMutation, deviceId]);
-
-  useEffect(() => {
-    window.addEventListener("blur", checkBlur);
-    window.addEventListener("focus", checkBlur);
-    return () => {
-      window.removeEventListener("blur", checkBlur);
-      window.removeEventListener("focus", checkBlur);
-    };
-  }, [checkBlur]);
-
-  useEffect(() => {
-    if (deviceId === "") return;
-    checkMutation();
-  }, [checkMutation, deviceId]);
-
-  useEffect(() => {
-    if (!data) return;
-    if (!data.checkDevice) {
-      toast.error(
-        "Your account has been logged in from another device, you will be logged out."
-      );
-      signOut();
-    }
-  }, [data, signOut]);
-
+  // Logic checkDevice đã được chuyển sang DeviceChecker component trong BaseLayout
+  // để tránh chạy trùng lặp và chỉ chạy khi user đã login
   return <>{children}</>;
 };
