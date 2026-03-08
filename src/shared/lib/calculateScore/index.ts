@@ -51,66 +51,108 @@ const processMatchingQuestion = (
   question: IQuestion,
   answers: AnswersArray,
   answerIndex: number,
-  passageContent?: string
-): { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number } => {
+  passageContent?: string,
+): {
+  details: QuestionDetail[];
+  correct: number;
+  incorrect: number;
+  total: number;
+  questionIndex: number;
+} => {
   const details: QuestionDetail[] = [];
-  let correct = 0, incorrect = 0;
+  let correct = 0,
+    incorrect = 0;
 
   const matchingData = question.matchingQuestion;
   if (!matchingData) {
-    console.error(`>>> [Matching] Lỗi: Không tìm thấy matchingQuestion data tại answerIndex ${answerIndex}`);
-    return { details, correct, incorrect, total: 1, questionIndex: answerIndex + 1 };
+    console.error(
+      `>>> [Matching] Lỗi: Không tìm thấy matchingQuestion data tại answerIndex ${answerIndex}`,
+    );
+    return {
+      details,
+      correct,
+      incorrect,
+      total: 1,
+      questionIndex: answerIndex + 1,
+    };
   }
 
-  const layoutType = String(matchingData.layoutType || 'standard').trim().toLowerCase();
+  const layoutType = String(matchingData.layoutType || "standard")
+    .trim()
+    .toLowerCase();
   const answerOptions = matchingData.answerOptions || [];
-  const userAnswerObject = (typeof answers[answerIndex] === 'object' && answers[answerIndex] !== null)
-    ? (answers[answerIndex] as { [key: string]: any })
-    : {};
+  const userAnswerObject =
+    typeof answers[answerIndex] === "object" && answers[answerIndex] !== null
+      ? (answers[answerIndex] as { [key: string]: any })
+      : {};
 
   // --- LOGIC CHO SUMMARY ---
-  if (layoutType === 'summary') {
-    const correctAnswersFromText = extractWords(matchingData.summaryText || '');
+  if (layoutType === "summary") {
+    const correctAnswersFromText = extractWords(matchingData.summaryText || "");
     const total = correctAnswersFromText.length;
     correctAnswersFromText.forEach((correctAnswerText, gapIndex) => {
       const userAnswerOptionId = userAnswerObject[gapIndex] as string;
       let userAnswerText: string | null = null;
       if (userAnswerOptionId) {
-        const parts = userAnswerOptionId.split('-');
+        const parts = userAnswerOptionId.split("-");
         const optionIndexStr = parts[parts.length - 1];
         if (optionIndexStr && !isNaN(parseInt(optionIndexStr, 10))) {
           const optionIndex = parseInt(optionIndexStr, 10);
           userAnswerText = answerOptions[optionIndex]?.optionText ?? null;
         }
       }
-      const isCorrect = userAnswerText?.trim().toLowerCase() === correctAnswerText.trim().toLowerCase();
+      const isCorrect =
+        userAnswerText?.trim().toLowerCase() ===
+        correctAnswerText.trim().toLowerCase();
       if (isCorrect) correct++;
       else if (userAnswerText !== null) incorrect++;
-      details.push({ correct: isCorrect, userAnswer: userAnswerText, answer: correctAnswerText });
+      details.push({
+        correct: isCorrect,
+        userAnswer: userAnswerText,
+        answer: correctAnswerText,
+      });
     });
-    return { details, correct, incorrect, total, questionIndex: answerIndex + 1 };
+    return {
+      details,
+      correct,
+      incorrect,
+      total,
+      questionIndex: answerIndex + 1,
+    };
   }
   // --- LOGIC CHO HEADING ---
-  else if (layoutType === 'heading') {
-    const correctAnswersFromText = extractWords(passageContent || '');
+  else if (layoutType === "heading") {
+    const correctAnswersFromText = extractWords(passageContent || "");
     const total = correctAnswersFromText.length;
     correctAnswersFromText.forEach((correctAnswerText, gapIndex) => {
       const userAnswerOptionId = userAnswerObject[gapIndex] as string;
       let userAnswerText: string | null = null;
       if (userAnswerOptionId) {
-        const parts = userAnswerOptionId.split('-');
+        const parts = userAnswerOptionId.split("-");
         const optionIndexStr = parts[parts.length - 1];
         if (optionIndexStr && !isNaN(parseInt(optionIndexStr, 10))) {
           const optionIndex = parseInt(optionIndexStr, 10);
           userAnswerText = answerOptions[optionIndex]?.optionText ?? null;
         }
       }
-      const isCorrect = userAnswerText?.trim().toLowerCase() === correctAnswerText.trim().toLowerCase();
+      const isCorrect =
+        userAnswerText?.trim().toLowerCase() ===
+        correctAnswerText.trim().toLowerCase();
       if (isCorrect) correct++;
       else if (userAnswerText !== null) incorrect++;
-      details.push({ correct: isCorrect, userAnswer: userAnswerText, answer: correctAnswerText });
+      details.push({
+        correct: isCorrect,
+        userAnswer: userAnswerText,
+        answer: correctAnswerText,
+      });
     });
-    return { details, correct, incorrect, total, questionIndex: answerIndex + 1 };
+    return {
+      details,
+      correct,
+      incorrect,
+      total,
+      questionIndex: answerIndex + 1,
+    };
   }
   // --- LOGIC CHO STANDARD (Mặc định) ---
   else {
@@ -118,16 +160,31 @@ const processMatchingQuestion = (
     const total = matchingItems.length;
     matchingItems.forEach((item, index) => {
       const userChoiceIndex = userAnswerObject[index] as number;
-      const userAnswerText = (userChoiceIndex !== undefined && userChoiceIndex !== null && answerOptions[userChoiceIndex])
-        ? answerOptions[userChoiceIndex].optionText
-        : null;
+      const userAnswerText =
+        userChoiceIndex !== undefined &&
+        userChoiceIndex !== null &&
+        answerOptions[userChoiceIndex]
+          ? answerOptions[userChoiceIndex].optionText
+          : null;
       const correctAnswerText = item.correctAnswer;
-      const isCorrect = userAnswerText?.trim().toLowerCase() === correctAnswerText?.trim().toLowerCase();
+      const isCorrect =
+        userAnswerText?.trim().toLowerCase() ===
+        correctAnswerText?.trim().toLowerCase();
       if (isCorrect) correct++;
       else if (userAnswerText !== null) incorrect++;
-      details.push({ correct: isCorrect, userAnswer: userAnswerText, answer: correctAnswerText });
+      details.push({
+        correct: isCorrect,
+        userAnswer: userAnswerText,
+        answer: correctAnswerText,
+      });
     });
-    return { details, correct, incorrect, total, questionIndex: answerIndex + 1 };
+    return {
+      details,
+      correct,
+      incorrect,
+      total,
+      questionIndex: answerIndex + 1,
+    };
   }
 };
 
@@ -137,59 +194,90 @@ const processMatchingQuestion = (
 const processMatrixQuestion = (
   question: IQuestion,
   answers: AnswersArray,
-  answerIndex: number
-): { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number } => {
+  answerIndex: number,
+): {
+  details: QuestionDetail[];
+  correct: number;
+  incorrect: number;
+  total: number;
+  questionIndex: number;
+} => {
   const details: QuestionDetail[] = [];
   let correct = 0;
   let incorrect = 0;
 
   const matrixData = question.matrixQuestion;
   if (!matrixData || !Array.isArray(matrixData.matrixItems)) {
-    console.error(`>>> [Matrix] Lỗi: Không tìm thấy matrixItems data tại answerIndex ${answerIndex}`);
-    return { details, correct, incorrect, total: 1, questionIndex: answerIndex + 1 };
+    console.error(
+      `>>> [Matrix] Lỗi: Không tìm thấy matrixItems data tại answerIndex ${answerIndex}`,
+    );
+    return {
+      details,
+      correct,
+      incorrect,
+      total: 1,
+      questionIndex: answerIndex + 1,
+    };
   }
 
   const matrixRows = matrixData.matrixItems; // Các dòng (câu hỏi)
   const answerOptions = matrixData.matrixCategories || []; // Các cột (A, B, C...)
-  const userAnswerObject = (typeof answers[answerIndex] === 'object' && answers[answerIndex] !== null)
-    ? (answers[answerIndex] as { [key: string]: any })
-    : {}; // { 0: "B", 1: "A", ... }
+  const userAnswerObject =
+    typeof answers[answerIndex] === "object" && answers[answerIndex] !== null
+      ? (answers[answerIndex] as { [key: string]: any })
+      : {}; // { 0: "B", 1: "A", ... }
   const total = matrixRows.length; // Tổng số câu hỏi con
 
   matrixRows.forEach((row, rowIndex) => {
     // Lấy đáp án đúng (chữ cái)
-    const correctAnswerLetter = (row.correctCategoryLetter || '').trim().toLowerCase();
+    const correctAnswerLetter = (row.correctCategoryLetter || "")
+      .trim()
+      .toLowerCase();
 
     // Lấy chữ cái user chọn (vd: "A", "B") từ object { 0: "A", 1: "B" }
-    const userAnswerLetterRaw = userAnswerObject[rowIndex] as string | null;
-    const userAnswerLetter = (userAnswerLetterRaw || '').trim().toLowerCase(); // vd: "a"
+    const userAnswerLetterRaw = userAnswerObject[rowIndex];
+    const userAnswerLetter = String(userAnswerLetterRaw ?? "")
+      .trim()
+      .toLowerCase(); // vd: "a"
 
     let userAnswerFullText: string | null = null;
     let correctAnswerFullText: string | null = null;
 
     // Tìm text đầy đủ của câu trả lời user
     if (userAnswerLetter) {
-      const userOption = answerOptions.find((opt: any) => opt.categoryLetter.trim().toLowerCase() === userAnswerLetter);
-      userAnswerFullText = userOption ? userOption.categoryText : userAnswerLetter.toUpperCase();
+      const userOption = answerOptions.find(
+        (opt: any) =>
+          opt.categoryLetter.trim().toLowerCase() === userAnswerLetter,
+      );
+      userAnswerFullText = userOption
+        ? userOption.categoryText
+        : userAnswerLetter.toUpperCase();
     }
 
     // Tìm text đầy đủ của đáp án đúng
-    const correctOption = answerOptions.find((opt: any) => opt.categoryLetter.trim().toLowerCase() === correctAnswerLetter);
-    correctAnswerFullText = correctOption ? correctOption.categoryText : correctAnswerLetter.toUpperCase();
+    const correctOption = answerOptions.find(
+      (opt: any) =>
+        opt.categoryLetter.trim().toLowerCase() === correctAnswerLetter,
+    );
+    correctAnswerFullText = correctOption
+      ? correctOption.categoryText
+      : correctAnswerLetter.toUpperCase();
 
     // So sánh chữ cái
-    const isCorrect = userAnswerLetter === correctAnswerLetter && correctAnswerLetter !== '';
+    const isCorrect =
+      userAnswerLetter === correctAnswerLetter && correctAnswerLetter !== "";
 
     if (isCorrect) {
       correct++;
-    } else if (userAnswerLetter) { // Chỉ tính sai nếu user CÓ chọn
+    } else if (userAnswerLetter) {
+      // Chỉ tính sai nếu user CÓ chọn
       incorrect++;
     }
 
     details.push({
       correct: isCorrect,
       userAnswer: userAnswerFullText, // Hiển thị text đầy đủ
-      answer: correctAnswerFullText // Hiển thị text đầy đủ
+      answer: correctAnswerFullText, // Hiển thị text đầy đủ
     });
   });
 
@@ -198,7 +286,7 @@ const processMatrixQuestion = (
     correct,
     incorrect,
     total,
-    questionIndex: answerIndex + 1 // Tăng index lên 1 cho cả nhóm matrix
+    questionIndex: answerIndex + 1, // Tăng index lên 1 cho cả nhóm matrix
   };
 };
 
@@ -208,18 +296,31 @@ const processMatrixQuestion = (
 const processRadioQuestion = (
   question: IQuestion,
   answers: AnswersArray,
-  questionIndex: number
-): { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number } => {
+  questionIndex: number,
+): {
+  details: QuestionDetail[];
+  correct: number;
+  incorrect: number;
+  total: number;
+  questionIndex: number;
+} => {
   const details: QuestionDetail[] = [];
-  let correctCount = 0, incorrectCount = 0;
+  let correctCount = 0,
+    incorrectCount = 0;
   const subQuestions = question.list_of_questions || [];
   const total = subQuestions.length;
   let currentAnswerIndex = questionIndex;
 
-  subQuestions.forEach(subQ => {
+  subQuestions.forEach((subQ) => {
     if (currentAnswerIndex >= answers.length) {
-      console.warn(`>>> [Radio] Cảnh báo: Thiếu câu trả lời cho sub-question tại index ${currentAnswerIndex}`);
-      details.push({ correct: false, userAnswer: null, answer: subQ.options?.[subQ.correct ?? 0]?.content ?? 'N/A' });
+      console.warn(
+        `>>> [Radio] Cảnh báo: Thiếu câu trả lời cho sub-question tại index ${currentAnswerIndex}`,
+      );
+      details.push({
+        correct: false,
+        userAnswer: null,
+        answer: subQ.options?.[subQ.correct ?? 0]?.content ?? "N/A",
+      });
       currentAnswerIndex++;
       return;
     }
@@ -234,11 +335,17 @@ const processRadioQuestion = (
     details.push({
       correct: isCorrect,
       userAnswer: subQ.options?.[userAnswer]?.content ?? null,
-      answer: subQ.options?.[correctAnswer]?.content ?? 'N/A',
+      answer: subQ.options?.[correctAnswer]?.content ?? "N/A",
     });
     currentAnswerIndex++;
   });
-  return { details, correct: correctCount, incorrect: incorrectCount, total, questionIndex: currentAnswerIndex };
+  return {
+    details,
+    correct: correctCount,
+    incorrect: incorrectCount,
+    total,
+    questionIndex: currentAnswerIndex,
+  };
 };
 
 // ========================================================================
@@ -247,38 +354,65 @@ const processRadioQuestion = (
 const processSelectQuestion = (
   question: IQuestion,
   answers: AnswersArray,
-  questionIndex: number
-): { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number } => {
+  questionIndex: number,
+): {
+  details: QuestionDetail[];
+  correct: number;
+  incorrect: number;
+  total: number;
+  questionIndex: number;
+} => {
   const details: QuestionDetail[] = [];
-  let correctCount = 0, incorrectCount = 0;
+  let correctCount = 0,
+    incorrectCount = 0;
   let currentAnswerIndex = questionIndex;
-  const correctAnswersFromText = extractWords(question.question || '');
+  const correctAnswersFromText = extractWords(question.question || "");
   const total = correctAnswersFromText.length;
   const optionsList = question.list_of_options || [];
 
   if (total === 0) {
-    console.warn(`>>> [Select] Cảnh báo: Không tìm thấy đáp án đúng dạng {} trong text câu hỏi.`);
+    console.warn(
+      `>>> [Select] Cảnh báo: Không tìm thấy đáp án đúng dạng {} trong text câu hỏi.`,
+    );
   }
 
-  correctAnswersFromText.forEach(correctAnswerText => {
+  correctAnswersFromText.forEach((correctAnswerText) => {
     if (currentAnswerIndex >= answers.length) {
-      console.warn(`>>> [Select] Cảnh báo: Thiếu câu trả lời cho select tại index ${currentAnswerIndex}`);
-      details.push({ correct: false, userAnswer: null, answer: correctAnswerText });
+      console.warn(
+        `>>> [Select] Cảnh báo: Thiếu câu trả lời cho select tại index ${currentAnswerIndex}`,
+      );
+      details.push({
+        correct: false,
+        userAnswer: null,
+        answer: correctAnswerText,
+      });
       currentAnswerIndex++;
       return;
     }
 
     const userAnswerIndex = answers[currentAnswerIndex] as number;
     const userAnswerText = optionsList[userAnswerIndex]?.option ?? null;
-    const isCorrect = userAnswerText?.trim().toLowerCase() === correctAnswerText.trim().toLowerCase();
+    const isCorrect =
+      userAnswerText?.trim().toLowerCase() ===
+      correctAnswerText.trim().toLowerCase();
 
     if (isCorrect) correctCount++;
     else if (userAnswerText !== null) incorrectCount++;
 
-    details.push({ correct: isCorrect, userAnswer: userAnswerText, answer: correctAnswerText });
+    details.push({
+      correct: isCorrect,
+      userAnswer: userAnswerText,
+      answer: correctAnswerText,
+    });
     currentAnswerIndex++;
   });
-  return { details, correct: correctCount, incorrect: incorrectCount, total, questionIndex: currentAnswerIndex };
+  return {
+    details,
+    correct: correctCount,
+    incorrect: incorrectCount,
+    total,
+    questionIndex: currentAnswerIndex,
+  };
 };
 
 // ========================================================================
@@ -287,70 +421,102 @@ const processSelectQuestion = (
 const processFillupQuestion = (
   question: IQuestion,
   answers: AnswersArray,
-  questionIndex: number
-): { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number } => {
+  questionIndex: number,
+): {
+  details: QuestionDetail[];
+  correct: number;
+  incorrect: number;
+  total: number;
+  questionIndex: number;
+} => {
   const details: QuestionDetail[] = [];
-  let correctCount = 0, incorrectCount = 0;
+  let correctCount = 0,
+    incorrectCount = 0;
   let currentAnswerIndex = questionIndex;
 
-  const correctAnswersFromText = extractWords(question.question || '');
+  const correctAnswersFromText = extractWords(question.question || "");
 
   if (correctAnswersFromText.length > 0) {
     const total = correctAnswersFromText.length;
-    correctAnswersFromText.forEach(correctWordWithOptions => {
+    correctAnswersFromText.forEach((correctWordWithOptions) => {
       if (currentAnswerIndex >= answers.length) {
-        console.warn(`>>> [Fillup-Text] Cảnh báo: Thiếu câu trả lời cho fillup tại index ${currentAnswerIndex}`);
-        details.push({ correct: false, userAnswer: null, answer: correctWordWithOptions.replace(/\|/g, ' / ') });
+        console.warn(
+          `>>> [Fillup-Text] Cảnh báo: Thiếu câu trả lời cho fillup tại index ${currentAnswerIndex}`,
+        );
+        details.push({
+          correct: false,
+          userAnswer: null,
+          answer: correctWordWithOptions.replace(/\|/g, " / "),
+        });
         currentAnswerIndex++;
         return;
       }
-      const possibleCorrectAnswers = correctWordWithOptions.split("|").map(w => w.trim().toLowerCase());
+      const possibleCorrectAnswers = correctWordWithOptions
+        .split("|")
+        .map((w) => w.trim().toLowerCase());
 
       // ▼▼▼ [FIX] Ép kiểu String() trước khi trim() để tránh crash nếu user nhập số
       const userAnswerRaw = answers[currentAnswerIndex];
-      const userAnswer = String(userAnswerRaw ?? "").trim().toLowerCase();
+      const userAnswer = String(userAnswerRaw ?? "")
+        .trim()
+        .toLowerCase();
       // ▲▲▲ [END FIX]
 
-      const isCorrect = userAnswer !== '' && possibleCorrectAnswers.includes(userAnswer);
+      const isCorrect =
+        userAnswer !== "" && possibleCorrectAnswers.includes(userAnswer);
 
       if (isCorrect) correctCount++;
-      else if (userAnswer !== '') incorrectCount++;
+      else if (userAnswer !== "") incorrectCount++;
 
       details.push({
         correct: isCorrect,
         userAnswer: String(userAnswerRaw ?? ""), // Hiển thị nguyên gốc
-        answer: correctWordWithOptions.replace(/\|/g, ' / '),
+        answer: correctWordWithOptions.replace(/\|/g, " / "),
       });
       currentAnswerIndex++;
     });
-    return { details, correct: correctCount, incorrect: incorrectCount, total, questionIndex: currentAnswerIndex };
-
+    return {
+      details,
+      correct: correctCount,
+      incorrect: incorrectCount,
+      total,
+      questionIndex: currentAnswerIndex,
+    };
   } else {
     const correctAnswersFromExplanations = question.explanations || [];
     const total = correctAnswersFromExplanations.length;
 
     if (total === 0) {
-      console.warn(`>>> [Fillup-Exp] Cảnh báo: Không tìm thấy đáp án đúng trong explanations.`);
+      console.warn(
+        `>>> [Fillup-Exp] Cảnh báo: Không tìm thấy đáp án đúng trong explanations.`,
+      );
     }
 
-    correctAnswersFromExplanations.forEach(exp => {
+    correctAnswersFromExplanations.forEach((exp) => {
       if (currentAnswerIndex >= answers.length) {
-        console.warn(`>>> [Fillup-Exp] Cảnh báo: Thiếu câu trả lời cho fillup tại index ${currentAnswerIndex}`);
+        console.warn(
+          `>>> [Fillup-Exp] Cảnh báo: Thiếu câu trả lời cho fillup tại index ${currentAnswerIndex}`,
+        );
         details.push({ correct: false, userAnswer: null, answer: exp.content });
         currentAnswerIndex++;
         return;
       }
-      
+
       // ▼▼▼ [FIX] Ép kiểu String() trước khi trim()
       const userAnswerRaw = answers[currentAnswerIndex];
-      const userAnswer = String(userAnswerRaw ?? "").trim().toLowerCase();
+      const userAnswer = String(userAnswerRaw ?? "")
+        .trim()
+        .toLowerCase();
       // ▲▲▲ [END FIX]
 
-      const possibleCorrectAnswers = (exp.content || '').split("/").map(w => w.trim().toLowerCase());
-      const isCorrect = userAnswer !== '' && possibleCorrectAnswers.includes(userAnswer);
+      const possibleCorrectAnswers = (exp.content || "")
+        .split("/")
+        .map((w) => w.trim().toLowerCase());
+      const isCorrect =
+        userAnswer !== "" && possibleCorrectAnswers.includes(userAnswer);
 
       if (isCorrect) correctCount++;
-      else if (userAnswer !== '') incorrectCount++;
+      else if (userAnswer !== "") incorrectCount++;
 
       details.push({
         correct: isCorrect,
@@ -359,7 +525,13 @@ const processFillupQuestion = (
       });
       currentAnswerIndex++;
     });
-    return { details, correct: correctCount, incorrect: incorrectCount, total, questionIndex: currentAnswerIndex };
+    return {
+      details,
+      correct: correctCount,
+      incorrect: incorrectCount,
+      total,
+      questionIndex: currentAnswerIndex,
+    };
   }
 };
 
@@ -369,39 +541,60 @@ const processFillupQuestion = (
 const processCheckboxQuestion = (
   question: IQuestion,
   answers: AnswersArray,
-  answerIndex: number
-): { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number } => {
+  answerIndex: number,
+): {
+  details: QuestionDetail[];
+  correct: number;
+  incorrect: number;
+  total: number;
+  questionIndex: number;
+} => {
   const details: QuestionDetail[] = [];
   if (answerIndex >= answers.length) {
-    console.warn(`>>> [Checkbox] Cảnh báo: Thiếu câu trả lời cho checkbox tại answerIndex ${answerIndex}`);
-    const correctOptions = question.list_of_options?.filter(opt => opt.correct) || [];
+    console.warn(
+      `>>> [Checkbox] Cảnh báo: Thiếu câu trả lời cho checkbox tại answerIndex ${answerIndex}`,
+    );
+    const correctOptions =
+      question.list_of_options?.filter((opt) => opt.correct) || [];
     const total = correctOptions.length || 1;
     details.push({
       correct: false,
       userAnswer: null,
-      answer: correctOptions.map(opt => opt.option).join(', ')
+      answer: correctOptions.map((opt) => opt.option).join(", "),
     });
-    return { details, correct: 0, incorrect: 0, total, questionIndex: answerIndex + 1 };
+    return {
+      details,
+      correct: 0,
+      incorrect: 0,
+      total,
+      questionIndex: answerIndex + 1,
+    };
   }
 
   const rawAnswer = answers[answerIndex];
-  const userAnswer = (Array.isArray(rawAnswer) ? rawAnswer.map(Number).sort((a, b) => a - b) : []);
-  const correctAnswersIndices = question.list_of_options
-    ?.map((opt, idx) => (opt.correct ? idx : -1))
-    .filter((idx) => idx !== -1)
-    .sort((a, b) => a - b) || [];
+  const userAnswer = Array.isArray(rawAnswer)
+    ? rawAnswer.map(Number).sort((a, b) => a - b)
+    : [];
+  const correctAnswersIndices =
+    question.list_of_options
+      ?.map((opt, idx) => (opt.correct ? idx : -1))
+      .filter((idx) => idx !== -1)
+      .sort((a, b) => a - b) || [];
 
   const total = correctAnswersIndices.length || 1;
   const allOptions = question.list_of_options || [];
-  const getOptionText = (index: number): string | null => allOptions[index]?.option || null;
+  const getOptionText = (index: number): string | null =>
+    allOptions[index]?.option || null;
 
   let correctCount = 0;
   let incorrectCount = 0;
 
   if (total === 1) {
     const userChoiceIndex = userAnswer.length > 0 ? userAnswer[0] : undefined;
-    const correctChoiceIndex = correctAnswersIndices.length > 0 ? correctAnswersIndices[0] : undefined;
-    const isSingleCorrect = userChoiceIndex !== undefined && userChoiceIndex === correctChoiceIndex;
+    const correctChoiceIndex =
+      correctAnswersIndices.length > 0 ? correctAnswersIndices[0] : undefined;
+    const isSingleCorrect =
+      userChoiceIndex !== undefined && userChoiceIndex === correctChoiceIndex;
 
     if (isSingleCorrect) {
       correctCount = 1;
@@ -411,16 +604,24 @@ const processCheckboxQuestion = (
 
     details.push({
       correct: isSingleCorrect,
-      userAnswer: userChoiceIndex !== undefined ? getOptionText(userChoiceIndex) : null,
-      answer: correctChoiceIndex !== undefined ? getOptionText(correctChoiceIndex) : "N/A",
+      userAnswer:
+        userChoiceIndex !== undefined ? getOptionText(userChoiceIndex) : null,
+      answer:
+        correctChoiceIndex !== undefined
+          ? getOptionText(correctChoiceIndex)
+          : "N/A",
     });
-
   } else {
-    const missedCorrectChoices = correctAnswersIndices.filter(idx => !userAnswer.includes(idx));
-    const missedCorrectText = missedCorrectChoices.map(getOptionText).filter(Boolean) as string[];
+    const missedCorrectChoices = correctAnswersIndices.filter(
+      (idx) => !userAnswer.includes(idx),
+    );
+    const missedCorrectText = missedCorrectChoices
+      .map(getOptionText)
+      .filter(Boolean) as string[];
 
-    userAnswer.forEach(userChoiceIndex => {
-      const isThisChoiceCorrect = correctAnswersIndices.includes(userChoiceIndex);
+    userAnswer.forEach((userChoiceIndex) => {
+      const isThisChoiceCorrect =
+        correctAnswersIndices.includes(userChoiceIndex);
       const userText = getOptionText(userChoiceIndex);
 
       if (isThisChoiceCorrect) {
@@ -432,7 +633,7 @@ const processCheckboxQuestion = (
       details.push({
         correct: isThisChoiceCorrect,
         userAnswer: userText,
-        answer: isThisChoiceCorrect ? userText : missedCorrectText.join(', '),
+        answer: isThisChoiceCorrect ? userText : missedCorrectText.join(", "),
       });
     });
   }
@@ -442,7 +643,7 @@ const processCheckboxQuestion = (
     correct: correctCount,
     incorrect: incorrectCount,
     total,
-    questionIndex: answerIndex + 1
+    questionIndex: answerIndex + 1,
   };
 };
 
@@ -452,13 +653,22 @@ const processCheckboxQuestion = (
 export const calculateScore = (
   userAnswersRaw: AnswersArray | undefined | null,
   quizData: IPracticeSingle | undefined | null,
-  testPart: number[] | undefined | null
+  testPart: number[] | undefined | null,
 ): ScoreResult => {
-
   const answers = Array.isArray(userAnswersRaw) ? userAnswersRaw : [];
   if (!quizData?.quizFields?.passages) {
-    console.error(">>> Lỗi calculateScore: Dữ liệu quizData hoặc passages không hợp lệ.");
-    return { score: "0.0", details: {}, correctAns: 0, correctPercent: 0, incorrect: 0, missed: 0, total_questions: 0 };
+    console.error(
+      ">>> Lỗi calculateScore: Dữ liệu quizData hoặc passages không hợp lệ.",
+    );
+    return {
+      score: "0.0",
+      details: {},
+      correctAns: 0,
+      correctPercent: 0,
+      incorrect: 0,
+      missed: 0,
+      total_questions: 0,
+    };
   }
   const validTestPart = Array.isArray(testPart) ? testPart : [];
 
@@ -469,42 +679,79 @@ export const calculateScore = (
 
   let answerIndex = 0;
 
-  const passagesToScore = quizData.quizFields.passages.filter((_, index) => validTestPart.includes(index));
+  const passagesToScore = quizData.quizFields.passages.filter((_, index) =>
+    validTestPart.includes(index),
+  );
 
   passagesToScore.forEach((passage, passageIndexInFiltered) => {
     const passageDetails: QuestionDetail[] = [];
     let passageTotalQuestions = 0;
-    const originalPassageIndex = quizData.quizFields.passages.findIndex(p => p === passage);
+    const originalPassageIndex = quizData.quizFields.passages.findIndex(
+      (p) => p === passage,
+    );
 
     const startQuestionIndex = totalQuestions + 1;
 
-    (passage.questions || []).forEach(question => {
-      let result: { details: QuestionDetail[]; correct: number; incorrect: number; total: number; questionIndex: number };
+    (passage.questions || []).forEach((question) => {
+      let result: {
+        details: QuestionDetail[];
+        correct: number;
+        incorrect: number;
+        total: number;
+        questionIndex: number;
+      };
       let questionType: string | undefined = undefined;
 
-      if (typeof question.type === 'string') {
+      if (typeof question.type === "string") {
         questionType = question.type;
       } else if (Array.isArray(question.type) && question.type.length > 0) {
         questionType = question.type[0];
       } else {
-        console.error(`>>> Lỗi calculateScore: Không xác định được loại câu hỏi tại passage index ${originalPassageIndex}`);
+        console.error(
+          `>>> Lỗi calculateScore: Không xác định được loại câu hỏi tại passage index ${originalPassageIndex}`,
+        );
         return;
       }
 
       answerIndex = totalQuestions;
 
       switch (questionType) {
-        case "matching": result = processMatchingQuestion(question, answers, answerIndex, passage.passage_content); break;
-        case "matrix": result = processMatrixQuestion(question, answers, answerIndex); break;
-        case "checkbox": result = processCheckboxQuestion(question, answers, answerIndex); break;
+        case "matching":
+          result = processMatchingQuestion(
+            question,
+            answers,
+            answerIndex,
+            passage.passage_content,
+          );
+          break;
+        case "matrix":
+          result = processMatrixQuestion(question, answers, answerIndex);
+          break;
+        case "checkbox":
+          result = processCheckboxQuestion(question, answers, answerIndex);
+          break;
 
-        case "radio": result = processRadioQuestion(question, answers, answerIndex); break;
-        case "select": result = processSelectQuestion(question, answers, answerIndex); break;
-        case "fillup": result = processFillupQuestion(question, answers, answerIndex); break;
+        case "radio":
+          result = processRadioQuestion(question, answers, answerIndex);
+          break;
+        case "select":
+          result = processSelectQuestion(question, answers, answerIndex);
+          break;
+        case "fillup":
+          result = processFillupQuestion(question, answers, answerIndex);
+          break;
 
         default:
-          console.warn(`>>> Cảnh báo calculateScore: Loại câu hỏi '${questionType}' chưa được hỗ trợ.`);
-          result = { details: [], correct: 0, incorrect: 0, total: 1, questionIndex: answerIndex + 1 };
+          console.warn(
+            `>>> Cảnh báo calculateScore: Loại câu hỏi '${questionType}' chưa được hỗ trợ.`,
+          );
+          result = {
+            details: [],
+            correct: 0,
+            incorrect: 0,
+            total: 1,
+            questionIndex: answerIndex + 1,
+          };
           break;
       }
 
@@ -513,34 +760,46 @@ export const calculateScore = (
       passageTotalQuestions += result.total;
       passageDetails.push(...result.details);
 
-      if (questionType === 'radio' || questionType === 'select' || questionType === 'fillup') {
+      if (
+        questionType === "radio" ||
+        questionType === "select" ||
+        questionType === "fillup"
+      ) {
         totalQuestions = result.questionIndex;
       } else {
         totalQuestions += result.total;
       }
-
     }); // Kết thúc lặp qua questions
 
     const endQuestionIndex = totalQuestions;
 
     details[originalPassageIndex] = {
       questions: passageTotalQuestions,
-      questionRange: passageTotalQuestions > 0 ? `Question ${startQuestionIndex} to ${endQuestionIndex}` : "No questions",
+      questionRange:
+        passageTotalQuestions > 0
+          ? `Question ${startQuestionIndex} to ${endQuestionIndex}`
+          : "No questions",
       details: passageDetails,
     };
   }); // Kết thúc lặp qua passages
 
-  const scoreValue = totalQuestions > 0 ? (correctCount / totalQuestions) * 9 : 0;
+  const scoreValue =
+    totalQuestions > 0 ? (correctCount / totalQuestions) * 9 : 0;
   const roundedScore = (Math.round(scoreValue * 2) / 2).toFixed(1);
   const missedCount = totalQuestions - correctCount - incorrectCount;
 
-  console.log(`>>> KẾT QUẢ TÍNH ĐIỂM CUỐI CÙNG (V10): Correct=${correctCount}, Incorrect=${incorrectCount}, Missed=${missedCount}, Total=${totalQuestions}, Score=${roundedScore}`);
+  console.log(
+    `>>> KẾT QUẢ TÍNH ĐIỂM CUỐI CÙNG (V10): Correct=${correctCount}, Incorrect=${incorrectCount}, Missed=${missedCount}, Total=${totalQuestions}, Score=${roundedScore}`,
+  );
 
   const finalResult: ScoreResult = {
     score: roundedScore,
     details,
     correctAns: correctCount,
-    correctPercent: totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0,
+    correctPercent:
+      totalQuestions > 0
+        ? Math.round((correctCount / totalQuestions) * 100)
+        : 0,
     incorrect: incorrectCount,
     missed: missedCount < 0 ? 0 : missedCount,
     total_questions: totalQuestions,
